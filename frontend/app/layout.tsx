@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import NavBar from "@/components/NavBar";
+import Script from "next/script";
+import Sidebar from "@/components/Sidebar";
 import { USE_MOCK } from "@/lib/api";
 import "./globals.css";
 
@@ -20,21 +21,33 @@ export const metadata: Metadata = {
     "Parametric drought-index insurance simulator for smallholder maize farmers in Eastern Rwanda.",
 };
 
+// Apply a saved theme before first paint so there is no flash.
+const THEME_SCRIPT = `try{var t=localStorage.getItem("theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}`;
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
-      <body className="flex min-h-full flex-col font-sans">
-        <NavBar />
-        {USE_MOCK && (
-          <div className="border-b border-pay/20 bg-pay-soft px-4 py-1.5 text-center text-xs text-pay">
-            Showing saved notebook results. Seasons without yield data and per-district history
-            need the backend.
-          </div>
-        )}
-        <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6">{children}</main>
-        <footer className="border-t border-line px-4 py-4 text-center text-xs text-muted">
-          Season A maize, Eastern Province. District-level data only; no farmer records.
-        </footer>
+    <html
+      lang="en"
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
+    >
+      <body className="min-h-full font-sans lg:flex">
+        <Script id="theme" strategy="beforeInteractive">
+          {THEME_SCRIPT}
+        </Script>
+        <Sidebar />
+        <div className="flex min-h-screen min-w-0 flex-1 flex-col">
+          {USE_MOCK && (
+            <div className="border-b border-line bg-pay-soft px-4 py-2 text-center text-xs text-ink">
+              Showing saved notebook results. Seasons without yield data and per-district history
+              need the backend.
+            </div>
+          )}
+          <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-8 lg:py-10">{children}</main>
+          <footer className="px-4 pb-6 text-center text-xs text-faint sm:px-8">
+            Season A maize, Eastern Province · District-level data only, no farmer records
+          </footer>
+        </div>
       </body>
     </html>
   );

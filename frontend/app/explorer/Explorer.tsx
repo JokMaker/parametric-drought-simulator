@@ -1,11 +1,14 @@
 "use client";
 
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useEffectEvent, useRef } from "react";
 import PayoutPanel from "@/components/PayoutPanel";
-import { ErrorNote, Loading } from "@/components/ui";
+import { Badge, ErrorNote, Loading } from "@/components/ui";
 import { canSimulate, getModel, getSimulation } from "@/lib/api";
 import {
   DISTRICTS,
+  FIRST_SEASON,
   isDroughtSeason,
   LAST_SEASON,
   SEASONS,
@@ -14,8 +17,64 @@ import {
 } from "@/lib/constants";
 import { useApi } from "@/lib/useApi";
 
-const selectClass =
-  "mt-1 block w-full rounded-md border border-line bg-surface px-3 py-2 text-sm focus:border-accent focus:outline-none";
+function SeasonTimeline({ season, onSelect }: { season: number; onSelect: (s: number) => void }) {
+  const selected = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    selected.current?.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
+  }, [season]);
+
+  const step = (d: number) => onSelect(Math.min(LAST_SEASON, Math.max(FIRST_SEASON, season + d)));
+
+  return (
+    <div className="flex items-center gap-2">
+      <button
+        onClick={() => step(-1)}
+        disabled={season <= FIRST_SEASON}
+        className="rounded-lg border border-line p-2 text-muted hover:bg-surface-2 hover:text-ink disabled:opacity-40"
+        aria-label="Previous season"
+      >
+        <ChevronLeft size={16} />
+      </button>
+      <div className="no-scrollbar flex flex-1 gap-1 overflow-x-auto py-1">
+        {SEASONS.map((y) => {
+          const active = y === season;
+          const drought = isDroughtSeason(y);
+          const hasYield = YIELD_SEASONS.includes(y);
+          return (
+            <button
+              key={y}
+              ref={active ? selected : undefined}
+              onClick={() => onSelect(y)}
+              aria-pressed={active}
+              title={`Season A ${y}${hasYield ? " · yield data" : ""}${drought ? " · documented drought" : ""}`}
+              className={`relative flex min-w-[52px] flex-col items-center rounded-lg px-2 pt-2 pb-1.5 text-xs transition-colors ${
+                active ? "bg-accent font-semibold text-accent-ink" : "text-muted hover:bg-surface-2 hover:text-ink"
+              }`}
+            >
+              {drought && (
+                <span className={`absolute inset-x-2 top-0.5 h-0.5 rounded-full ${active ? "bg-accent-ink/70" : "bg-drought"}`} />
+              )}
+              <span className="tabular">{y}</span>
+              <span
+                className={`mt-1 h-1.5 w-1.5 rounded-full ${
+                  hasYield ? (active ? "bg-accent-ink" : "bg-accent") : "bg-transparent"
+                }`}
+              />
+            </button>
+          );
+        })}
+      </div>
+      <button
+        onClick={() => step(1)}
+        disabled={season >= LAST_SEASON}
+        className="rounded-lg border border-line p-2 text-muted hover:bg-surface-2 hover:text-ink disabled:opacity-40"
+        aria-label="Next season"
+      >
+        <ChevronRight size={16} />
+      </button>
+    </div>
+  );
+}
 
 export default function Explorer() {
   const router = useRouter();
@@ -42,68 +101,81 @@ export default function Explorer() {
     router.replace(`${pathname}?${q}`, { scroll: false });
   }
 
-  return (
-    <div className="grid gap-6 lg:grid-cols-[240px_1fr]">
-      <div className="space-y-4">
-        <label className="block text-xs font-medium text-muted">
-          District
-          <select className={selectClass} value={district} onChange={(e) => select({ district: e.target.value })}>
-            {DISTRICTS.map((d) => (
-              <option key={d}>{d}</option>
-            ))}
-          </select>
-        </label>
-        <label className="block text-xs font-medium text-muted">
-          Season A
-          <select
-            className={selectClass}
-            value={season}
-            onChange={(e) => select({ season: Number(e.target.value) })}
-          >
-            {[...SEASONS].reverse().map((y) => (
-              <option key={y} value={y}>
-                {y}
-                {YIELD_SEASONS.includes(y) ? " · yield data" : ""}
-                {isDroughtSeason(y) ? " · drought year" : ""}
-              </option>
-            ))}
-          </select>
-        </label>
-        <p className="text-xs leading-5 text-muted">
-          Season A is named by its harvest year; its critical rains fall in October to December of
-          the year before. Seasons marked &ldquo;yield data&rdquo; can be checked against actual
-          harvests. Other seasons from 2001 to {LAST_SEASON} use satellite data only.
-        </p>
-      </div>
+  // Left and right arrow keys step through seasons.
+  const onKey = useEffectEvent((e: KeyboardEvent) => {
+    const tag = (e.target as HTMLElement).tagName;
+    if (tag === "INPUT" || tag === "SELECT" || tag === "TEXTAREA") return;
+    if (e.key === "ArrowLeft" && season > FIRST_SEASON) select({ season: season - 1 });
+    if (e.key === "ArrowRight" && season < LAST_SEASON) select({ season: season + 1 });
+  });
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => onKey(e);
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
 
-      <div>
-        {model.error || sim.error ? (
-          <ErrorNote message={model.error ?? sim.error ?? ""} />
-        ) : !available ? (
-          <div className="rounded-lg border border-line bg-surface p-5 text-sm leading-6 text-muted">
-            <div className="font-semibold text-ink">
-              {district}, Season A {season}
-            </div>
-            Results for seasons without yield data are calculated by the backend, which applies the
-            saved model scaler. Start the backend and set NEXT_PUBLIC_USE_MOCK=false to see this
-            season. Until then, choose 2022, 2023 or 2025.
+  return (
+    <div className="space-y-6">
+      <section className="card space-y-5 p-5 sm:p-6">
+        <div>
+          <div className="mb-2 text-xs font-medium text-muted">District</div>
+          <div className="flex flex-wrap gap-2">
+            {DISTRICTS.map((d) => (
+              <button
+                key={d}
+                onClick={() => select({ district: d })}
+                aria-pressed={d === district}
+                className={`rounded-full border px-3.5 py-1.5 text-sm transition-colors ${
+                  d === district
+                    ? "border-accent bg-accent text-accent-ink"
+                    : "border-line text-ink/85 hover:border-ink/30 hover:bg-surface-2"
+                }`}
+              >
+                {d}
+              </button>
+            ))}
           </div>
-        ) : model.data && sim.data ? (
-          <>
-            <h2 className="mb-4 text-lg font-semibold">
-              {sim.data.district}, Season A {sim.data.season}
-              {isDroughtSeason(sim.data.season) && (
-                <span className="ml-2 rounded bg-drought-soft px-2 py-0.5 align-middle text-xs font-medium text-drought">
-                  Documented drought ({windowYearOf(sim.data.season)} rains)
-                </span>
-              )}
-            </h2>
-            <PayoutPanel sim={sim.data} model={model.data} />
-          </>
-        ) : (
-          <Loading />
+        </div>
+        <div>
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <span className="text-xs font-medium text-muted">Season A (harvest year)</span>
+            <span className="flex items-center gap-4 text-[11px] text-muted">
+              <span className="flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-accent" /> Yield data
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="h-0.5 w-3 rounded-full bg-drought" /> Documented drought
+              </span>
+              <span className="hidden sm:inline">Use ← → to step</span>
+            </span>
+          </div>
+          <SeasonTimeline season={season} onSelect={(s) => select({ season: s })} />
+        </div>
+      </section>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <h2 className="text-xl font-semibold tracking-tight">
+          {district}, Season A {season}
+        </h2>
+        {YIELD_SEASONS.includes(season) && <Badge tone="accent">Yield data</Badge>}
+        {isDroughtSeason(season) && (
+          <Badge tone="drought">Documented drought ({windowYearOf(season)} rains)</Badge>
         )}
       </div>
+
+      {model.error || sim.error ? (
+        <ErrorNote message={model.error ?? sim.error ?? ""} />
+      ) : !available ? (
+        <div className="card p-6 text-sm leading-6 text-muted">
+          Results for seasons without yield data are calculated by the backend, which applies the
+          saved model scaler. Start the backend and set NEXT_PUBLIC_USE_MOCK=false to see this
+          season. Until then, choose 2022, 2023 or 2025.
+        </div>
+      ) : model.data && sim.data ? (
+        <PayoutPanel sim={sim.data} model={model.data} />
+      ) : (
+        <Loading rows={2} />
+      )}
     </div>
   );
 }
