@@ -1,26 +1,34 @@
+import { CloudRain, Leaf } from "lucide-react";
+
 // FR8: which input moves the index most. Inputs are standardised, so the
 // coefficient sizes are directly comparable.
 export default function InfluenceChart({ rain, ndvi }: { rain: number; ndvi: number }) {
   const total = Math.abs(rain) + Math.abs(ndvi);
   const rows = [
-    { label: "Rainfall", coef: rain },
-    { label: "Vegetation (NDVI)", coef: ndvi },
+    { label: "Rainfall", coef: rain, icon: CloudRain },
+    { label: "Vegetation (NDVI)", coef: ndvi, icon: Leaf },
   ];
   return (
-    <div className="space-y-3">
-      {rows.map((r) => {
-        const share = total ? Math.abs(r.coef) / total : 0;
+    <div className="space-y-5">
+      {rows.map(({ label, coef, icon: Icon }) => {
+        const share = total ? Math.abs(coef) / total : 0;
         return (
-          <div key={r.label}>
-            <div className="flex justify-between text-sm">
-              <span>{r.label}</span>
-              <span className="tabular text-muted">
-                {r.coef > 0 ? "+" : ""}
-                {r.coef.toFixed(2)} · {(share * 100).toFixed(0)}%
+          <div key={label}>
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="flex items-center gap-2 text-sm">
+                <Icon size={15} className="text-muted" />
+                {label}
+              </span>
+              <span className="tabular text-2xl font-semibold tracking-tight">
+                {(share * 100).toFixed(0)}%
               </span>
             </div>
-            <div className="mt-1 h-2.5 rounded-full bg-canvas">
+            <div className="mt-2 h-2 rounded-full bg-surface-2">
               <div className="h-full rounded-full bg-accent" style={{ width: `${share * 100}%` }} />
+            </div>
+            <div className="tabular mt-1 text-xs text-faint">
+              Coefficient {coef > 0 ? "+" : ""}
+              {coef.toFixed(2)}
             </div>
           </div>
         );
