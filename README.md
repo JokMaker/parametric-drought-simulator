@@ -24,6 +24,20 @@ Kirehe, Ngoma, Nyagatare, Rwamagana), backtested from 2001 to 2025.
 | **Drought History** | The index and payout for every year since 2000, with documented drought years (2003–2006, 2013–2017) highlighted: payouts in 67% of drought-year seasons against 35% of other years | FR9 |
 | **Basis Risk** | Basis risk per district (Kirehe 38% highest, Rwamagana 3% lowest) and a season-by-season table filterable by outcome (missed, false payout, paid correctly) | FR10 |
 
+## Machine learning model
+
+The model is built in [notebook/drought_index.ipynb](notebook/drought_index.ipynb) (Google Colab).
+
+| Item | Summary |
+|---|---|
+| **Data engineering** | CHIRPS rainfall and MODIS NDVI clipped to the 7 districts, masked to cropland, aggregated over the October–December window and turned into z-scores against each district's history; NISR survey plots filtered to smallholder maize and aggregated into survey-weighted district yields. Result: 21 district-seasons for training, 175 for the backtest. |
+| **Visualizations** | Distributions, scatter plots, correlation matrix, yields by district, seasonal NDVI and cloud-cover profiles, peak-NDVI sensitivity, predicted vs actual, residuals, confusion matrix, trigger selection, drought-year backtest |
+| **Architecture** | 2 inputs (rainfall and vegetation anomalies) → `StandardScaler` → Ridge regression (L2 penalty, α = 1.53 tuned by nested leave-one-out) → predicted yield change → payout rule (−7% trigger, −27% exit). Compared against Lasso, quadratic OLS and a mean-only baseline. |
+| **Regression metrics** (leave-one-out) | RMSE 15.19, MAE 11.64, predictive R² 0.54 (baseline: RMSE 23.59, R² −0.10) |
+| **Payout-decision metrics** | Accuracy 76%, precision 60%, recall (hit rate) 86%, F1 71%, false payout rate 29% |
+| **Backtest** | Payouts in 67% of documented drought-year seasons against 35% of other years |
+| **Deployment** | Exported to `backend/data/` and served by the FastAPI backend (Swagger UI at `/docs`) and the Next.js dashboard |
+
 ## Tech stack
 
 | Layer | Tools |
