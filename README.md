@@ -143,7 +143,7 @@ Browser ──► Next.js dashboard (port 3000)
 ```
 
 The calibration (Ridge regression, leave-one-out validation, trigger and exit) runs once in the
-notebook and is exported, so the API only serves precomputed results and applies the saved
+notebook ([notebook/drought_index.ipynb](notebook/drought_index.ipynb)) and is exported, so the API only serves precomputed results and applies the saved
 formula. This keeps every request fast (NFR1) and the thresholds reproducible (NFR5).
 
 ### API endpoints
@@ -219,6 +219,8 @@ parametric-drought-simulator/
 │   ├── components/     Sidebar, payout panel, charts, shared UI
 │   ├── lib/            API client, types, payout logic, constants
 │   └── Dockerfile
+├── notebook/           Calibration notebook (Google Colab): data extraction, EDA, model
+│                       comparison, trigger and exit, drought-year check, export
 ├── docs/screenshots/   Interface screenshots used above
 └── docker-compose.yml
 ```
