@@ -19,8 +19,15 @@ import { useApi } from "@/lib/useApi";
 
 function SeasonTimeline({ season, onSelect }: { season: number; onSelect: (s: number) => void }) {
   const selected = useRef<HTMLButtonElement>(null);
+  const mounted = useRef(false);
   useEffect(() => {
-    selected.current?.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
+    // Jump straight to the season on first load; animate later changes.
+    selected.current?.scrollIntoView({
+      inline: "center",
+      block: "nearest",
+      behavior: mounted.current ? "smooth" : "instant",
+    });
+    mounted.current = true;
   }, [season]);
 
   const step = (d: number) => onSelect(Math.min(LAST_SEASON, Math.max(FIRST_SEASON, season + d)));
