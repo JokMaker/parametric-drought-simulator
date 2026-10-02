@@ -13,7 +13,7 @@ Kirehe, Ngoma, Nyagatare, Rwamagana), backtested from 2001 to 2025.
 ## Links
 
 - **GitHub repository:** https://github.com/JokMaker/parametric-drought-simulator
-- **Video demo:** [Google Drive folder](https://drive.google.com/drive/folders/1JapZ7DmX66B_u9T2FLEXRqJZKYc-LBBm?usp=drive_link)
+- **Video demo:** [Watch the demo video](https://drive.google.com/drive/folders/1JapZ7DmX66B_u9T2FLEXRqJZKYc-LBBm?usp=drive_link)
 
 ## Features
 
