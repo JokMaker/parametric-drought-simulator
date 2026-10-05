@@ -14,6 +14,7 @@ Kirehe, Ngoma, Nyagatare, Rwamagana), backtested from 2001 to 2025.
 
 - **GitHub repository:** https://github.com/JokMaker/parametric-drought-simulator
 - **Video demo:** [Watch the demo video](https://drive.google.com/drive/folders/1JapZ7DmX66B_u9T2FLEXRqJZKYc-LBBm?usp=drive_link)
+- **Figma designs:** [Open the Figma file](https://www.figma.com/design/b7m0ZzV4ZXdzikU7GOhHUG/Drought-Index-Simulator-%E2%80%93-Designs?node-id=0-1)
 
 ## Features
 
@@ -104,6 +105,10 @@ the leave-one-out results, the hit and false payout rates, the drought-year tota
 39/112) and basis risk for every district.
 
 ## Designs
+
+**Figma file:** [Drought Index Simulator – Designs](https://www.figma.com/design/b7m0ZzV4ZXdzikU7GOhHUG/Drought-Index-Simulator-%E2%80%93-Designs?node-id=0-1). It holds editable designs of every
+page (Overview, District Explorer for Rwamagana 2023 and Kirehe 2022, Drought History, Basis Risk),
+plus mobile and dark-mode versions, with the app's colour and text styles saved as Figma styles.
 
 The interface is built for an analyst or programme officer (proposal NFR3), so every number is
 paired with a plain-language label and every payout with the reason for it.
