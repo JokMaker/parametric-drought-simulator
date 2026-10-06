@@ -67,7 +67,7 @@ export default function BasisRiskPage() {
 
         <Card
           title="Basis risk by district"
-          description={`For each season, the gap between the index payout and the payout the actual yield implies (same ${m.trigger}% trigger and ${m.exit}% exit), averaged over 2022, 2023 and 2025. 0% means the index paid exactly what the harvest called for.`}
+          description={`For each season, the gap between the index payout and the payout the actual yield implies (same ${m.trigger}% trigger and ${m.exit}% exit), averaged over the four seasons with yield data (2022–2025). 0% means the index paid exactly what the harvest called for.`}
         >
           <BasisRiskChart data={risk.data} />
         </Card>

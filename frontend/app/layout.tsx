@@ -39,8 +39,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <div className="flex min-h-screen min-w-0 flex-1 flex-col">
           {USE_MOCK && (
             <div className="border-b border-line bg-pay-soft px-4 py-2 text-center text-xs text-ink">
-              Showing saved notebook results. Seasons without yield data and per-district history
-              need the backend.
+              Showing saved results: the backend is not connected, so the dashboard uses the last
+              exported model output.
             </div>
           )}
           <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-8 lg:py-10">{children}</main>

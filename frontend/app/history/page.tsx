@@ -5,7 +5,7 @@ import { useState } from "react";
 import { IndexChart, PayoutChart, type YearBar } from "@/components/charts/HistoryChart";
 import StatCard from "@/components/StatCard";
 import { Card, ErrorNote, LegendDot, Loading, PageHeader } from "@/components/ui";
-import { getHistory, getModel, HAS_DISTRICT_HISTORY } from "@/lib/api";
+import { getHistory, getModel } from "@/lib/api";
 import { DISTRICTS } from "@/lib/constants";
 import { pct } from "@/lib/payout";
 import type { HistoryPoint } from "@/lib/types";
@@ -83,20 +83,16 @@ export default function HistoryPage() {
           title="Index and payout by year"
           description="Years are the October–December rains; the Season A harvest follows early the next year. Hover a year for details."
           action={
-            HAS_DISTRICT_HISTORY ? (
-              <select
-                value={district}
-                onChange={(e) => setDistrict(e.target.value)}
-                className="rounded-lg border border-line bg-surface px-3 py-1.5 text-sm"
-                aria-label="District"
-              >
-                {[ALL, ...DISTRICTS].map((d) => (
-                  <option key={d}>{d}</option>
-                ))}
-              </select>
-            ) : (
-              <span className="text-xs text-muted">District filter needs the backend</span>
-            )
+            <select
+              value={district}
+              onChange={(e) => setDistrict(e.target.value)}
+              className="rounded-lg border border-line bg-surface px-3 py-1.5 text-sm"
+              aria-label="District"
+            >
+              {[ALL, ...DISTRICTS].map((d) => (
+                <option key={d}>{d}</option>
+              ))}
+            </select>
           }
         >
           <div className="mb-3 flex flex-wrap gap-4">
