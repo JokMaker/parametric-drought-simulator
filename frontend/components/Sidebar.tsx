@@ -26,8 +26,8 @@ const NAV: { href: string; label: string; hint: string; icon: LucideIcon }[] = [
 
 const DEMOS = [
   { label: "Good catch", detail: "Rwamagana 2023", district: "Rwamagana", season: 2023, tone: "bg-good" },
-  { label: "Big miss", detail: "Kirehe 2022", district: "Kirehe", season: 2022, tone: "bg-drought" },
-  { label: "Drought year", detail: "Kirehe 2015", district: "Kirehe", season: 2015, tone: "bg-pay" },
+  { label: "Missed season", detail: "Gatsibo 2022", district: "Gatsibo", season: 2022, tone: "bg-drought" },
+  { label: "Drought year", detail: "Kirehe 2017", district: "Kirehe", season: 2017, tone: "bg-pay" },
 ];
 
 function DataStatus() {

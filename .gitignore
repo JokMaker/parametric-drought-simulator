@@ -224,3 +224,6 @@ data/nisr/
 
 # macOS
 .DS_Store
+
+# The Python template above ignores lib/; the frontend keeps its source there
+!frontend/lib/

@@ -5,7 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useEffectEvent, useRef } from "react";
 import PayoutPanel from "@/components/PayoutPanel";
 import { Badge, ErrorNote, Loading } from "@/components/ui";
-import { canSimulate, getModel, getSimulation } from "@/lib/api";
+import { getModel, getSimulation } from "@/lib/api";
 import {
   DISTRICTS,
   FIRST_SEASON,
@@ -95,10 +95,7 @@ export default function Explorer() {
   const season = SEASONS.includes(seasonParam) ? seasonParam : 2023;
 
   const model = useApi("model", getModel);
-  const available = canSimulate(season);
-  const sim = useApi(`${district}:${season}`, () =>
-    available ? getSimulation(district, season) : Promise.resolve(null),
-  );
+  const sim = useApi(`${district}:${season}`, () => getSimulation(district, season));
 
   function select(next: { district?: string; season?: number }) {
     const q = new URLSearchParams({
@@ -172,12 +169,6 @@ export default function Explorer() {
 
       {model.error || sim.error ? (
         <ErrorNote message={model.error ?? sim.error ?? ""} />
-      ) : !available ? (
-        <div className="card p-6 text-sm leading-6 text-muted">
-          Results for seasons without yield data are calculated by the backend, which applies the
-          saved model scaler. Start the backend and set NEXT_PUBLIC_USE_MOCK=false to see this
-          season. Until then, choose 2022, 2023 or 2025.
-        </div>
       ) : model.data && sim.data ? (
         <PayoutPanel sim={sim.data} model={model.data} />
       ) : (

@@ -20,23 +20,23 @@ Kirehe, Ngoma, Nyagatare, Rwamagana), backtested from 2001 to 2025.
 
 | Page | What it does | Requirements |
 |---|---|---|
-| **Overview** | Selected model, trigger (−7%) and exit (−27%), hit rate (86%) and false payout rate (29%), validation results (leave-one-out and leave-one-season-out), and which input drives the index | FR7, FR8 |
-| **District Explorer** | Pick a district and season; see rainfall and vegetation anomalies, the predicted yield change, the payout and the reason for it. For 2022, 2023 and 2025 the payout is compared with the actual harvest | FR1, FR3, FR5, FR6, FR7, FR9 |
-| **Drought History** | The index and payout for every year since 2000, with documented drought years (2003–2006, 2013–2017) highlighted: payouts in 67% of drought-year seasons against 35% of other years | FR9 |
-| **Basis Risk** | Basis risk per district (Kirehe 38% highest, Rwamagana 3% lowest) and a season-by-season table filterable by outcome (missed, false payout, paid correctly) | FR10 |
+| **Overview** | Selected model, trigger (−4%) and exit (−24%), hit rate (91%) and false payout rate (18%), validation results (leave-one-out and leave-one-season-out), and which input drives the index | FR7, FR8 |
+| **District Explorer** | Pick a district and season; see rainfall and vegetation anomalies, the predicted yield change, the payout and the reason for it. For 2022–2025 the payout is compared with the actual harvest | FR1, FR3, FR5, FR6, FR7, FR9 |
+| **Drought History** | The index and payout for every year since 2000, with documented drought years (2003–2006, 2013–2017) highlighted: payouts in 68% of drought-year seasons against 38% of other years | FR9 |
+| **Basis Risk** | Basis risk per district (Bugesera 31% highest, Rwamagana 0% lowest) and a season-by-season table filterable by outcome (missed, false payout, paid correctly) | FR10 |
 
 ## Machine learning model
 
-The model is built in [notebook/drought_index.ipynb](notebook/drought_index.ipynb) (Google Colab).
+The model is built in [notebook/drought_index.ipynb](notebook/drought_index.ipynb), which runs locally (see [Run the notebook](#run-the-notebook)).
 
 | Item | Summary |
 |---|---|
-| **Data engineering** | CHIRPS rainfall and MODIS NDVI clipped to the 7 districts, masked to cropland, aggregated over the October–December window and turned into z-scores against each district's history; NISR survey plots filtered to smallholder maize and aggregated into survey-weighted district yields. Result: 21 district-seasons for training, 175 for the backtest. |
+| **Data engineering** | CHIRPS rainfall and MODIS NDVI clipped to the 7 districts, masked to cropland, aggregated over the October–December window and turned into z-scores against each district's history; NISR survey plots filtered to smallholder maize and aggregated into survey-weighted district yields (2024 rebuilt by joining the raw Production and Screening files). Result: 28 district-seasons (2022–2025) for training, 175 for the backtest. |
 | **Visualizations** | Distributions, scatter plots, correlation matrix, yields by district, seasonal NDVI and cloud-cover profiles, peak-NDVI sensitivity, predicted vs actual, residuals, confusion matrix, trigger selection, drought-year backtest |
-| **Architecture** | 2 inputs (rainfall and vegetation anomalies) → `StandardScaler` → Ridge regression (L2 penalty, α = 1.53 tuned by nested leave-one-out) → predicted yield change → payout rule (−7% trigger, −27% exit). Compared against Lasso, quadratic OLS and a mean-only baseline. |
-| **Regression metrics** (leave-one-out) | RMSE 15.19, MAE 11.64, predictive R² 0.54 (baseline: RMSE 23.59, R² −0.10) |
-| **Payout-decision metrics** | Accuracy 76%, precision 60%, recall (hit rate) 86%, F1 71%, false payout rate 29% |
-| **Backtest** | Payouts in 67% of documented drought-year seasons against 35% of other years |
+| **Architecture** | 2 inputs (rainfall and vegetation anomalies) → `StandardScaler` → Ridge regression (L2 penalty, α = 2.02 tuned by nested leave-one-out) → predicted yield change → payout rule (−4% trigger, −24% exit). Compared against Lasso, quadratic OLS and a mean-only baseline; Ridge ties Lasso under leave-one-out and is clearly better on unseen years (leave-one-season-out R² 0.13 against 0.01). |
+| **Regression metrics** (leave-one-out) | RMSE 14.95, MAE 11.38, predictive R² 0.51 (baseline: RMSE 22.16, R² −0.08) |
+| **Payout-decision metrics** | Accuracy 86%, precision 77%, recall (hit rate) 91%, F1 83%, false payout rate 18% |
+| **Backtest** | Payouts in 68% of documented drought-year seasons against 38% of other years |
 | **Deployment** | Exported to `backend/data/` and served by the FastAPI backend (Swagger UI at `/docs`) and the Next.js dashboard |
 
 ## Tech stack
@@ -101,13 +101,28 @@ python -m pytest
 ```
 
 The 11 tests check the API against the notebook: the index formula on all 175 district-seasons,
-the leave-one-out results, the hit and false payout rates, the drought-year totals (42/63 against
-39/112) and basis risk for every district.
+the leave-one-out results, the hit and false payout rates, the drought-year totals (43/63 against
+43/112) and basis risk for every district.
+
+### Run the notebook
+
+The notebook rebuilds the model from raw data and writes its results into `backend/data/`.
+
+1. Put the NISR files in `data/nisr/` (they are git-ignored and never committed):
+   `season_a_2022.sav`, `season_a_2023.csv`, `season_a_2025.csv`, and
+   `2024_extra/Rwa_raw_SeasonA2024_Production.csv` and `..._Screening.csv`.
+2. Install and open:
+   ```bash
+   pip install -r notebook/requirements.txt
+   ```
+   then open `notebook/drought_index.ipynb` in VS Code or Jupyter and run all cells. The first run
+   asks you to sign in to Google Earth Engine; satellite extracts are cached in `data/`.
+3. Refresh the dashboard's offline data: `cd backend && .venv/bin/python scripts/export_mock.py`.
 
 ## Designs
 
 **Figma file:** [Drought Index Simulator – Designs](https://www.figma.com/design/b7m0ZzV4ZXdzikU7GOhHUG/Drought-Index-Simulator-%E2%80%93-Designs?node-id=0-1). It holds editable designs of every
-page (Overview, District Explorer for Rwamagana 2023 and Kirehe 2022, Drought History, Basis Risk),
+page (Overview, District Explorer for Rwamagana 2023 and Gatsibo 2022, Drought History, Basis Risk),
 plus mobile and dark-mode versions, with the app's colour and text styles saved as Figma styles.
 
 The interface is built for an analyst or programme officer (proposal NFR3), so every number is
@@ -132,8 +147,8 @@ paired with a plain-language label and every payout with the reason for it.
 ### District Explorer: a good catch (Rwamagana 2023)
 ![District Explorer, Rwamagana 2023](docs/screenshots/explorer-rwamagana-2023.png)
 
-### District Explorer: the big miss (Kirehe 2022)
-![District Explorer, Kirehe 2022](docs/screenshots/explorer-kirehe-2022.png)
+### District Explorer: a missed season (Gatsibo 2022)
+![District Explorer, Gatsibo 2022](docs/screenshots/explorer-gatsibo-2022.png)
 
 ### Drought History
 ![Drought History](docs/screenshots/drought-history.png)
@@ -170,10 +185,10 @@ formula. This keeps every request fast (NFR1) and the thresholds reproducible (N
 | Endpoint | Returns |
 |---|---|
 | `GET /api/model` | Model, coefficients, trigger, exit, low-yield threshold, hit and false payout rates, validation |
-| `GET /api/simulate?district=Kirehe&season=2022` | Anomalies, predicted yield change, payout, and (for 2022, 2023, 2025) the actual yield and the payout it implies |
+| `GET /api/simulate?district=Gatsibo&season=2022` | Anomalies, predicted yield change, payout, and (for 2022–2025) the actual yield and the payout it implies |
 | `GET /api/history` | Index and payout for every district and year since 2000 |
 | `GET /api/basis-risk` | Basis risk per district |
-| `GET /api/seasons` | The 21 calibration district-seasons |
+| `GET /api/seasons` | The 28 calibration district-seasons |
 | `GET /api/health` | Service status |
 
 ### Index formula
@@ -183,10 +198,10 @@ For seasons without yield data the backend computes the index from the saved mod
 
 ```
 index  = intercept + Σ coefficient_i × (z_i − scaler_mean_i) / scaler_scale_i     z = (rain_z, ndvi_z)
-payout = 0 above the −7% trigger, 1 at or below the −27% exit, linear in between
+payout = 0 above the −4% trigger, 1 at or below the −24% exit, linear in between
 ```
 
-For 2022, 2023 and 2025 it uses the leave-one-out prediction, so the comparison with the actual
+For 2022–2025 it uses the leave-one-out prediction, so the comparison with the actual
 harvest is honest (the model never saw that season).
 
 ## Data model
@@ -197,7 +212,7 @@ records are stored or processed (proposal §1.7).
 | File | Contents |
 |---|---|
 | `model.json` | Scaler, Ridge coefficients and intercept, trigger, exit, low-yield threshold, hit and false payout rates, validation results |
-| `calibration.csv` | `district, season, yield_kg_ha, yield_anom, rain_z, ndvi_z, index_loo, payout, payout_if_actual, basis_risk` (21 rows) |
+| `calibration.csv` | `district, season, yield_kg_ha, yield_anom, rain_z, ndvi_z, index_loo, payout, payout_if_actual, basis_risk` (28 rows) |
 | `seasons.csv` | `district, season, window_year, rain_mm, ndvi, rain_z, ndvi_z, index, payout, drought_year` (one row per district-season) |
 
 The PostgreSQL schema planned in the proposal (§3.5, Figure 6) maps these files onto four tables:
@@ -210,7 +225,7 @@ payout_simulation   (simulation_id PK, district_id FK, season, index_value, payo
                      payout_if_actual, trigger, exit)
 ```
 
-With 21 calibration rows and 175 history rows, in-memory files meet the performance and
+With 28 calibration rows and 175 history rows, in-memory files meet the performance and
 reproducibility requirements for the prototype; the database is introduced in the deployment
 phase below.
 
@@ -222,7 +237,7 @@ phase below.
 | **Backend hosting** | Deploy `backend/Dockerfile` to a container host with a free tier (Render or Railway). Set `CORS_ORIGINS` to the dashboard's URL. |
 | **Frontend hosting** | Deploy `frontend/` to Vercel. Set `NEXT_PUBLIC_API_URL` to the backend URL and `NEXT_PUBLIC_USE_MOCK=false` at build time. |
 | **Database** | Add a managed PostgreSQL instance (Render, Railway or Supabase free tier) with the schema above, loaded from the notebook export by a one-off script. |
-| **Updates** | When the notebook is re-run, replace the three files in `backend/data/` (or reload the database) and redeploy; the tests confirm the API still matches the notebook. |
+| **Updates** | Re-running the notebook writes the three files into `backend/data/`; then run `python backend/scripts/export_mock.py` to refresh the dashboard's offline data, update the tests' expected values, and redeploy. |
 
 ## Project structure
 
@@ -238,8 +253,10 @@ parametric-drought-simulator/
 │   ├── components/     Sidebar, payout panel, charts, shared UI
 │   ├── lib/            API client, types, payout logic, constants
 │   └── Dockerfile
-├── notebook/           Calibration notebook (Google Colab): data extraction, EDA, model
-│                       comparison, trigger and exit, drought-year check, export
+├── notebook/           Calibration notebook: data extraction, the 2024 reconstruction, EDA,
+│                       model comparison, trigger and exit, drought-year check, export
+├── data/               Cached satellite extracts and district yields (raw NISR files in
+│                       data/nisr/ are git-ignored)
 ├── docs/screenshots/   Interface screenshots used above
 └── docker-compose.yml
 ```

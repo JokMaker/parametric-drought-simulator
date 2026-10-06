@@ -34,7 +34,7 @@ export default function InfluenceChart({ rain, ndvi }: { rain: number; ndvi: num
         );
       })}
       <p className="text-xs leading-5 text-muted">
-        Rainfall one standard deviation lower (measured across the 21 calibration seasons) lowers
+        Rainfall one standard deviation lower (measured across the 28 calibration district-seasons) lowers
         the predicted yield by {Math.abs(rain).toFixed(1)} percentage points. The same change in
         vegetation moves it by {Math.abs(ndvi).toFixed(1)}.
       </p>

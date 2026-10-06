@@ -38,19 +38,19 @@ const DEMOS = [
   {
     href: "/explorer?district=Rwamagana&season=2023",
     title: "A good catch",
-    detail: "Rwamagana 2023: dry season, 84% payout, harvest fell 22%.",
+    detail: "Rwamagana 2023: a dry season, the index pays 100% and the harvest fell 26%.",
     dot: "bg-good",
   },
   {
-    href: "/explorer?district=Kirehe&season=2022",
-    title: "The big miss",
-    detail: "Kirehe 2022: rainfall looked normal, harvest fell 41%, no payout.",
+    href: "/explorer?district=Gatsibo&season=2022",
+    title: "A missed season",
+    detail: "Gatsibo 2022: the harvest fell 16%, but rainfall looked normal and the index paid nothing.",
     dot: "bg-drought",
   },
   {
     href: "/history",
     title: "The drought-year check",
-    detail: "Payouts in 67% of documented drought seasons against 35% of other years.",
+    detail: "Payouts in 68% of documented drought seasons against 38% of other years.",
     dot: "bg-other",
   },
 ];
@@ -97,7 +97,7 @@ export default function Overview() {
               district, compared with its own long-term average.
             </Step>
             <Step n={2} icon={TrendingDown} title="Predict the yield change">
-              {`A ${m.model} model trained on 21 district-seasons turns the two anomalies into a predicted change in maize yield.`}
+              {`A ${m.model} model trained on 28 district-seasons (2022–2025) turns the two anomalies into a predicted change in maize yield.`}
             </Step>
             <Step n={3} icon={Banknote} title="Set the payout">
               {`Below the ${m.trigger}% trigger a payout starts, rising in a straight line to the full payout at ${m.exit}%.`}
@@ -105,7 +105,7 @@ export default function Overview() {
           </section>
 
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
-            <StatCard label="Selected model" value={m.model} hint="Lowest leave-one-out error" icon={Sigma} />
+            <StatCard label="Selected model" value={m.model} hint="Best on unseen years" icon={Sigma} />
             <StatCard label="Trigger" value={`${m.trigger}%`} hint="Payout starts below this" icon={TrendingDown} />
             <StatCard label="Exit" value={`${m.exit}%`} hint="Full payout at or below this" icon={Banknote} />
             <StatCard
@@ -129,11 +129,12 @@ export default function Overview() {
             >
               <ValidationTable rows={m.validation} selected={m.model} />
               <p className="mt-5 rounded-lg bg-surface-2 p-3 text-xs leading-5 text-muted">
-                Leave-one-out holds back one district-season at a time; there Ridge explains about
-                half the variation in yield. Leave-one-season-out holds back a whole year, closer to
-                predicting a season the model has never seen. There every model has a negative R²,
-                although Ridge still beats the baseline. With only three years of yield data, the
-                index is not yet reliable for a year unlike those it was calibrated on.
+                Leave-one-out holds back one district-season at a time; there Ridge and Lasso are
+                tied, each explaining about half the variation in yield. Leave-one-season-out holds
+                back a whole year, closer to predicting a season the model has never seen. There
+                Ridge is the only model that clearly beats the baseline, which is why it is
+                selected. With four years of yield data, predictions for an unseen year are still
+                much weaker than for an unseen district-season.
               </p>
             </Card>
             <div className="space-y-6">
