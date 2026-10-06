@@ -1,0 +1,9 @@
+Validation,Model,RMSE,MAE,Predictive R2
+Leave-one-out,Baseline (mean),22.16,19.22,-0.08
+Leave-one-out,Ridge,15.77,11.52,0.46
+Leave-one-out,Lasso,15.8,11.29,0.45
+Leave-one-out,Quadratic OLS,15.79,11.77,0.45
+Leave-one-season-out,Baseline (mean),26.78,24.39,-0.57
+Leave-one-season-out,Ridge,20.6,16.5,0.07
+Leave-one-season-out,Lasso,21.78,17.72,-0.04
+Leave-one-season-out,Quadratic OLS,36.67,26.61,-1.94

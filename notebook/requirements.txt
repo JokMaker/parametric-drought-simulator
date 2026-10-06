@@ -1,0 +1,8 @@
+earthengine-api
+pandas
+numpy
+scipy
+scikit-learn
+matplotlib
+pyreadstat
+ipykernel
