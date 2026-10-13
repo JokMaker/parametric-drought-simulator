@@ -34,6 +34,8 @@ export type Simulation = {
 export type HistoryPoint = {
   windowYear: number; // year of the Oct–Dec rains; the Season A harvest is windowYear + 1
   district: string;
+  rainZ: number;
+  ndviZ: number;
   index: number;
   payout: number; // 0 to 1
   pays: boolean;
@@ -41,3 +43,9 @@ export type HistoryPoint = {
 };
 
 export type BasisRisk = { district: string; basisRisk: number };
+
+/** District boundaries (GeoJSON FeatureCollection, property `district`). */
+export type DistrictShapes = GeoJSON.FeatureCollection<
+  GeoJSON.Polygon | GeoJSON.MultiPolygon,
+  { district: string }
+>;

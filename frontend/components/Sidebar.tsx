@@ -3,6 +3,7 @@
 import {
   CloudRain,
   LayoutDashboard,
+  Map as MapIcon,
   MapPin,
   Menu,
   Scale,
@@ -19,6 +20,7 @@ import ThemeToggle from "./ThemeToggle";
 
 const NAV: { href: string; label: string; hint: string; icon: LucideIcon }[] = [
   { href: "/", label: "Overview", hint: "Model and validation", icon: LayoutDashboard },
+  { href: "/map", label: "Drought Map", hint: "Districts on the map by season", icon: MapIcon },
   { href: "/explorer", label: "District Explorer", hint: "Payout by district and season", icon: MapPin },
   { href: "/history", label: "Drought History", hint: "Backtest since 2000", icon: CloudRain },
   { href: "/basis-risk", label: "Basis Risk", hint: "Index against actual losses", icon: Scale },

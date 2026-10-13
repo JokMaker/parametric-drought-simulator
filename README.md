@@ -20,9 +20,10 @@ Kirehe, Ngoma, Nyagatare, Rwamagana), backtested from 2001 to 2025.
 
 | Page | What it does | Requirements |
 |---|---|---|
-| **Overview** | Selected model, trigger (−4%) and exit (−24%), hit rate (91%) and false payout rate (18%), validation results (leave-one-out and leave-one-season-out), and which input drives the index | FR7, FR8 |
-| **District Explorer** | Pick a district and season; see rainfall and vegetation anomalies, the predicted yield change, the payout and the reason for it. For 2022–2025 the payout is compared with the actual harvest | FR1, FR3, FR5, FR6, FR7, FR9 |
-| **Drought History** | The index and payout for every year since 2000, with documented drought years (2003–2006, 2013–2017) highlighted: payouts in 68% of drought-year seasons against 38% of other years | FR9 |
+| **Overview** | Opens with a small drought map and a scatter plot of the index against the actual harvest for all 28 district-seasons; then the selected model, trigger (−4%) and exit (−24%), hit rate (91%) and false payout rate (18%), validation results (leave-one-out and leave-one-season-out), and which input drives the index | FR7, FR8, FR9 |
+| **Drought Map** | The seven districts on a map, coloured by the predicted yield change, the payout or the basis risk for any season since 2001. Hover a district for its rainfall and greenness anomalies, index and payout; click it to open it in the Explorer | FR1, FR3, FR5, FR10 |
+| **District Explorer** | Pick a district and season; see rainfall and vegetation anomalies, a payout gauge, where the index sits between trigger and exit, and the reason for the payout. For 2022–2025 the index and payout are shown side by side with the actual harvest | FR1, FR3, FR5, FR6, FR7, FR9 |
+| **Drought History** | The index and payout for every year since 2000, with documented drought years (2003–2006, 2013–2017) shaded, and a district-by-year heatmap: payouts in 68% of drought-year seasons against 38% of other years | FR9 |
 | **Basis Risk** | Basis risk per district (Bugesera 31% highest, Rwamagana 0% lowest) and a season-by-season table filterable by outcome (missed, false payout, paid correctly) | FR10 |
 
 ## Machine learning model
@@ -43,7 +44,7 @@ The model is built in [notebook/drought_index.ipynb](notebook/drought_index.ipyn
 
 | Layer | Tools |
 |---|---|
-| Frontend | Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4, Recharts, lucide-react |
+| Frontend | Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4, Recharts, d3-geo (map), lucide-react |
 | Backend | Python 3.12, FastAPI, Pydantic, Uvicorn, pytest |
 | Model and data | scikit-learn Ridge regression (trained in the project notebook), Google Earth Engine (CHIRPS, MODIS), NISR Seasonal Agricultural Survey |
 | Deployment | Docker, Docker Compose |
@@ -100,7 +101,7 @@ source .venv/bin/activate
 python -m pytest
 ```
 
-The 11 tests check the API against the notebook: the index formula on all 175 district-seasons,
+The 13 tests check the API against the notebook: the index formula on all 175 district-seasons,
 the leave-one-out results, the hit and false payout rates, the drought-year totals (43/63 against
 43/112) and basis risk for every district.
 
@@ -135,14 +136,19 @@ paired with a plain-language label and every payout with the reason for it.
 - **Explorer controls:** district chips and a season timeline replace dropdowns, so every option
   is visible. Seasons with yield data and documented drought years are marked on the timeline, and
   the arrow keys step through years. The selection is kept in the URL, so any view can be shared.
-- **Colour:** red for documented drought years and blue for other years, checked for colour-blind
-  separation and contrast in both light and dark mode. Status colours always come with a text
-  label, never colour alone.
+- **One colour meaning everywhere:** red = drought or payout, green = normal, on one shared scale
+  used by the map, the bars and the heatmap (basis risk uses orange). The deep green was chosen
+  because brighter greens fail the colour-blind check against red; every chart therefore also has a
+  legend, labels and tooltips, so no value depends on colour alone. Checked in light and dark mode.
+- **Every chart has a title, a one-line plain-language explanation and a legend** (NFR3).
 - **Light and dark mode** follow the system setting, with a manual toggle.
 - **Responsive layout** from phone to desktop.
 
 ### Overview
 ![Overview](docs/screenshots/overview.png)
+
+### Drought Map
+![Drought Map, Season A 2023](docs/screenshots/drought-map.png)
 
 ### District Explorer: a good catch (Rwamagana 2023)
 ![District Explorer, Rwamagana 2023](docs/screenshots/explorer-rwamagana-2023.png)
@@ -189,6 +195,7 @@ formula. This keeps every request fast (NFR1) and the thresholds reproducible (N
 | `GET /api/history` | Index and payout for every district and year since 2000 |
 | `GET /api/basis-risk` | Basis risk per district |
 | `GET /api/seasons` | The 28 calibration district-seasons |
+| `GET /api/geo/districts` | District boundaries (FAO GAUL 2025, simplified GeoJSON) for the map |
 | `GET /api/health` | Service status |
 
 ### Index formula
@@ -213,6 +220,7 @@ records are stored or processed (proposal §1.7).
 |---|---|
 | `model.json` | Scaler, Ridge coefficients and intercept, trigger, exit, low-yield threshold, hit and false payout rates, validation results |
 | `calibration.csv` | `district, season, yield_kg_ha, yield_anom, rain_z, ndvi_z, index_loo, payout, payout_if_actual, basis_risk` (28 rows) |
+| `eastern_districts.geojson` | The seven district boundaries (FAO GAUL 2025, simplified to about 200 m), exported by the notebook for the map |
 | `seasons.csv` | `district, season, window_year, rain_mm, ndvi, rain_z, ndvi_z, index, payout, drought_year` (one row per district-season) |
 
 The PostgreSQL schema planned in the proposal (§3.5, Figure 6) maps these files onto four tables:

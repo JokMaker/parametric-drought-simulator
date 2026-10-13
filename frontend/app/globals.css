@@ -19,8 +19,10 @@
   /* Chart series (validated for colour-blind separation in both modes). */
   --drought: #e34948;
   --drought-soft: #fdecec;
-  --other: #2a78d6;
-  --other-soft: #e7f0fb;
+  /* Green = normal (validated against --drought for colour-blind separation; use with labels). */
+  --other: #008300;
+  --other-soft: #e3f3e3;
+  --div-mid: #ecebe7; /* neutral midpoint of the drought scale (no anomaly) */
   --pay: #eb6834;
   --pay-soft: #fdeee6;
   --good: #0ca30c;
@@ -43,8 +45,9 @@
     --accent-soft: #15302a;
     --drought: #e66767;
     --drought-soft: #3a1f1f;
-    --other: #3987e5;
-    --other-soft: #172a42;
+    --other: #1e9a3a;
+    --other-soft: #15301a;
+    --div-mid: #3a3a37;
     --pay: #d95926;
     --pay-soft: #3a2418;
     --good: #0ca30c;
@@ -67,8 +70,9 @@
   --accent-soft: #15302a;
   --drought: #e66767;
   --drought-soft: #3a1f1f;
-  --other: #3987e5;
-  --other-soft: #172a42;
+  --other: #1e9a3a;
+  --other-soft: #15301a;
+  --div-mid: #3a3a37;
   --pay: #d95926;
   --pay-soft: #3a2418;
   --good: #0ca30c;
@@ -90,6 +94,7 @@
   --color-drought-soft: var(--drought-soft);
   --color-other: var(--other);
   --color-other-soft: var(--other-soft);
+  --color-div-mid: var(--div-mid);
   --color-pay: var(--pay);
   --color-pay-soft: var(--pay-soft);
   --color-good: var(--good);

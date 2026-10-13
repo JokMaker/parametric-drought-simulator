@@ -4,7 +4,8 @@ Next.js dashboard for the parametric drought-index simulator (Season A maize, Ea
 
 | Page | Route | Requirements |
 |---|---|---|
-| Overview | `/` | FR7, FR8, validation table |
+| Overview | `/` | FR7, FR8, FR9, validation table |
+| Drought Map | `/map?metric=index&season=2023` | FR1, FR3, FR5, FR10 |
 | District Explorer | `/explorer?district=Gatsibo&season=2022` | FR1, FR3, FR5, FR6, FR7, FR9 |
 | Drought History | `/history` | FR9 |
 | Basis Risk | `/basis-risk` | FR10 |
@@ -28,6 +29,7 @@ Shapes are in `lib/types.ts`. Endpoints (all GET):
 - `/api/history` → `HistoryPoint[]`
 - `/api/basis-risk` → `BasisRisk[]`
 - `/api/seasons` → `Simulation[]` (the 28 district-seasons with yield data)
+- `/api/geo/districts` → GeoJSON district boundaries for the map
 
 Requests come from the browser, so the backend must allow CORS from the dashboard's origin.
 

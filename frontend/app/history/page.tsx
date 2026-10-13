@@ -2,12 +2,15 @@
 
 import { CloudRain, Sun } from "lucide-react";
 import { useState } from "react";
+import ColorLegend from "@/components/charts/ColorLegend";
 import { IndexChart, PayoutChart, type YearBar } from "@/components/charts/HistoryChart";
+import HistoryHeatmap from "@/components/charts/HistoryHeatmap";
 import StatCard from "@/components/StatCard";
-import { Card, ErrorNote, LegendDot, Loading, PageHeader } from "@/components/ui";
+import { Card, ErrorNote, Loading, PageHeader } from "@/components/ui";
 import { getHistory, getModel } from "@/lib/api";
 import { DISTRICTS } from "@/lib/constants";
 import { pct } from "@/lib/payout";
+import { INDEX_GRADIENT, INDEX_RANGE } from "@/lib/scales";
 import type { HistoryPoint } from "@/lib/types";
 import { useApi } from "@/lib/useApi";
 
@@ -70,7 +73,7 @@ export default function HistoryPage() {
             hint={`${other.filter((p) => p.pays).length} of ${other.length} ${scope}`}
             icon={CloudRain}
           >
-            <ShareBar value={payoutShare(other)} colour="bg-other" />
+            <ShareBar value={payoutShare(other)} colour="bg-drought" />
           </StatCard>
           <StatCard
             label="Drought years pay out"
@@ -96,8 +99,14 @@ export default function HistoryPage() {
           }
         >
           <div className="mb-3 flex flex-wrap gap-4">
-            <LegendDot color="bg-drought">Documented drought year</LegendDot>
-            <LegendDot color="bg-other">Other year</LegendDot>
+            <span className="flex items-center gap-1.5 text-xs text-muted">
+              <span className="h-2.5 w-4 rounded-sm" style={{ background: INDEX_GRADIENT }} />
+              Bar colour: red = predicted loss or payout, green = predicted gain
+            </span>
+            <span className="flex items-center gap-1.5 text-xs text-muted">
+              <span className="h-2.5 w-4 rounded-sm bg-drought/15" />
+              Shaded years: documented droughts
+            </span>
           </div>
           <h3 className="text-xs font-medium text-muted">
             Predicted yield change{district === ALL ? " (average of seven districts)" : ""}
@@ -112,6 +121,32 @@ export default function HistoryPage() {
             the exit.
           </p>
         </Card>
+
+        <Card
+          title="Every district, every year"
+          description="Each square is one district in one season, coloured by the predicted yield change. Red columns above the years mark documented droughts; a dot means the index paid out."
+        >
+          <HistoryHeatmap points={history.data} trigger={model.data.trigger} />
+          <div className="mt-4 flex flex-wrap items-end gap-x-8 gap-y-3">
+            <ColorLegend
+              title="Predicted yield change"
+              gradient={INDEX_GRADIENT}
+              ticks={[
+                { at: 0, label: `≤ −${INDEX_RANGE}%` },
+                { at: 0.5, label: "0" },
+                { at: 1, label: `≥ +${INDEX_RANGE}%` },
+              ]}
+            />
+            <div className="flex flex-wrap gap-4 pb-5 text-xs text-muted">
+              <span className="flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-ink/80" /> Payout
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="h-0.5 w-4 bg-drought" /> Documented drought year
+              </span>
+            </div>
+          </div>
+        </Card>
       </div>
     );
   }
@@ -119,8 +154,8 @@ export default function HistoryPage() {
   return (
     <>
       <PageHeader eyebrow="Backtest" title="Drought History">
-        The index run on satellite data for every season since 2000. Red marks 2003–2006 and
-        2013–2017, the years Niyonsenga et al. (2024) identify as Rwanda&apos;s most severe
+        The index run on satellite data for every season since 2000. Shaded bands mark 2003–2006
+        and 2013–2017, the years Niyonsenga et al. (2024) identify as Rwanda&apos;s most severe
         droughts, especially in Eastern Province.
       </PageHeader>
       {body}
