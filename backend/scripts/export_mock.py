@@ -30,6 +30,7 @@ payload = {
     "basisRisk": client.get("/api/basis-risk").json(),
     "history": client.get("/api/history").json(),
     "simulations": simulations,
+    "geo": client.get("/api/geo/districts").json(),
 }
 OUT.write_text(json.dumps(payload, separators=(",", ":")) + "\n")
 print(f"wrote {OUT.relative_to(OUT.parents[2])}: {len(simulations)} simulations, "

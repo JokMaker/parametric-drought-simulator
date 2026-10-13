@@ -46,6 +46,8 @@ class Simulation(CamelModel):
 class HistoryPoint(CamelModel):
     window_year: int
     district: str
+    rain_z: float
+    ndvi_z: float
     index: float
     payout: float
     pays: bool

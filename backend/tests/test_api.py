@@ -96,6 +96,20 @@ def test_seasons_hit_and_false_payout_rates():
     assert (sum(r["index"] <= -4 for r in other), len(other)) == (3, 17)
 
 
+def test_district_shapes():
+    r = client.get("/api/geo/districts")
+    assert r.status_code == 200
+    geo = r.json()
+    assert geo["type"] == "FeatureCollection"
+    names = sorted(f["properties"]["district"] for f in geo["features"])
+    assert names == ["Bugesera", "Gatsibo", "Kayonza", "Kirehe", "Ngoma", "Nyagatare", "Rwamagana"]
+
+
+def test_history_has_anomalies_for_tooltips():
+    p = client.get("/api/history").json()[0]
+    assert {"rainZ", "ndviZ", "index", "payout"} <= p.keys()
+
+
 def test_cors_allows_frontend():
     r = client.get("/api/model", headers={"Origin": "http://localhost:3000"})
     assert r.headers["access-control-allow-origin"] == "http://localhost:3000"

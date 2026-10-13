@@ -3,7 +3,7 @@ from collections import defaultdict
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse
+from fastapi.responses import FileResponse, RedirectResponse
 
 from . import data
 from .schemas import BasisRisk, Coefficients, HistoryPoint, ModelSummary, Simulation, ValidationRow
@@ -110,6 +110,8 @@ def history() -> list[HistoryPoint]:
             HistoryPoint(
                 window_year=row.window_year,
                 district=row.district,
+                rain_z=row.rain_z,
+                ndvi_z=row.ndvi_z,
                 index=index,
                 payout=ds.model.payout(index),
                 pays=index <= ds.model.trigger,
@@ -126,6 +128,15 @@ def basis_risk() -> list[BasisRisk]:
     for row in ds.calibration.values():
         gaps[row.district].append(row.basis_risk)
     return [BasisRisk(district=d, basis_risk=sum(g) / len(g)) for d, g in sorted(gaps.items())]
+
+
+@app.get("/api/geo/districts")
+def district_shapes() -> FileResponse:
+    """District boundaries (FAO GAUL 2025, simplified) for the dashboard map."""
+    path = data.DATA_DIR / "eastern_districts.geojson"
+    if not path.exists():
+        raise HTTPException(404, "District shapes not exported; run the notebook's Section 3")
+    return FileResponse(path, media_type="application/geo+json")
 
 
 @app.get("/api/seasons", response_model=list[Simulation])
