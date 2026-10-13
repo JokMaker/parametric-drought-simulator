@@ -1,5 +1,6 @@
 import { CheckCircle2, CircleAlert, CloudRain, Leaf, TrendingDown } from "lucide-react";
 import { anomalyLabel, classify, OUTCOME_LABEL, pct, reason, signedPct } from "@/lib/payout";
+import { indexColor, payoutColor } from "@/lib/scales";
 import type { ModelSummary, Simulation } from "@/lib/types";
 
 // Yield-change range drawn on the payout scale: better on the left, worse on the right.
@@ -110,6 +111,54 @@ function PayoutScale({ index, actual, trigger, exit }: { index: number; actual: 
   );
 }
 
+/** Two values side by side on one scale, centred on zero when the scale has a negative side. */
+function CompareBars({
+  title,
+  rows,
+  min,
+  max,
+  color,
+  format,
+}: {
+  title: string;
+  rows: { label: string; value: number }[];
+  min: number;
+  max: number;
+  color: (v: number) => string;
+  format: (v: number) => string;
+}) {
+  const span = max - min;
+  const zero = ((0 - min) / span) * 100;
+  return (
+    <div>
+      <div className="mb-2 text-xs font-medium text-muted">{title}</div>
+      <div className="space-y-2">
+        {rows.map((r) => {
+          const v = Math.min(max, Math.max(min, r.value));
+          const at = ((v - min) / span) * 100;
+          return (
+            <div key={r.label} className="grid grid-cols-[120px_1fr_64px] items-center gap-3 text-sm">
+              <span className="text-muted">{r.label}</span>
+              <div className="relative h-3.5 rounded bg-surface-2">
+                {min < 0 && <div className="absolute inset-y-[-3px] w-px bg-line" style={{ left: `${zero}%` }} />}
+                <div
+                  className="absolute inset-y-0 rounded"
+                  style={{
+                    left: `${Math.min(zero, at)}%`,
+                    width: `${Math.abs(at - zero)}%`,
+                    background: color(r.value),
+                  }}
+                />
+              </div>
+              <span className="tabular text-right font-medium">{format(r.value)}</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function PayoutPanel({ sim, model }: { sim: Simulation; model: ModelSummary }) {
   const { trigger, exit } = model;
   const outcome = classify(sim, model);
@@ -160,6 +209,30 @@ export default function PayoutPanel({ sim, model }: { sim: Simulation; model: Mo
             )}
             <div className="text-sm font-semibold">Check against the actual harvest</div>
             <span className="text-sm text-muted">· {OUTCOME_LABEL[outcome]}</span>
+          </div>
+          <div className="mt-5 grid gap-6 md:grid-cols-2">
+            <CompareBars
+              title="Yield change: index against the harvest"
+              rows={[
+                { label: "Predicted (index)", value: sim.index },
+                { label: "Actual harvest", value: sim.actualYieldAnom },
+              ]}
+              min={-50}
+              max={50}
+              color={indexColor}
+              format={signedPct}
+            />
+            <CompareBars
+              title="Payout: what the index paid against what the harvest called for"
+              rows={[
+                { label: "Index paid", value: sim.payout },
+                { label: "Harvest called for", value: sim.payoutIfActual },
+              ]}
+              min={0}
+              max={1}
+              color={payoutColor}
+              format={(v) => pct(v)}
+            />
           </div>
           <div className="tabular mt-5 grid gap-4 sm:grid-cols-3">
             {[

@@ -6,9 +6,10 @@ import {
   mockHistory,
   mockModel,
   mockSeasons,
+  mockShapes,
   mockSimulation,
 } from "./mock";
-import type { BasisRisk, HistoryPoint, ModelSummary, Simulation } from "./types";
+import type { BasisRisk, DistrictShapes, HistoryPoint, ModelSummary, Simulation } from "./types";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 export const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK !== "false";
@@ -54,4 +55,10 @@ export async function getBasisRisk(): Promise<BasisRisk[]> {
 export async function getSeasons(): Promise<Simulation[]> {
   if (USE_MOCK) return mockSeasons;
   return get("/api/seasons", "season comparison");
+}
+
+/** The seven district boundaries for the map. */
+export async function getShapes(): Promise<DistrictShapes> {
+  if (USE_MOCK) return mockShapes;
+  return get("/api/geo/districts", "district map");
 }

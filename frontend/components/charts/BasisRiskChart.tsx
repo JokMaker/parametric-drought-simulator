@@ -1,6 +1,7 @@
 "use client";
 
-import { Bar, BarChart, CartesianGrid, LabelList, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, Cell, LabelList, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { riskColor } from "@/lib/scales";
 import type { BasisRisk } from "@/lib/types";
 
 export default function BasisRiskChart({ data }: { data: BasisRisk[] }) {
@@ -40,7 +41,10 @@ export default function BasisRiskChart({ data }: { data: BasisRisk[] }) {
             );
           }}
         />
-        <Bar dataKey="basisRisk" fill="var(--pay)" radius={[0, 4, 4, 0]} maxBarSize={22} isAnimationActive={false}>
+        <Bar dataKey="basisRisk" radius={[0, 4, 4, 0]} maxBarSize={22} isAnimationActive={false}>
+          {sorted.map((d) => (
+            <Cell key={d.district} style={{ fill: riskColor(d.basisRisk) }} />
+          ))}
           <LabelList
             dataKey="basisRisk"
             position="right"

@@ -3,12 +3,13 @@
 // with or without the backend. Re-run that script after re-running the notebook.
 
 import data from "./mock-data.json";
-import type { BasisRisk, HistoryPoint, ModelSummary, Simulation } from "./types";
+import type { BasisRisk, DistrictShapes, HistoryPoint, ModelSummary, Simulation } from "./types";
 
 export const mockModel = data.model as ModelSummary;
 export const mockSeasons = data.seasons as Simulation[];
 export const mockBasisRisk = data.basisRisk as BasisRisk[];
 export const mockHistory = data.history as HistoryPoint[];
+export const mockShapes = data.geo as unknown as DistrictShapes;
 
 const simulations = data.simulations as Simulation[];
 

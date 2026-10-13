@@ -11,11 +11,13 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
+import IndexVsActualChart from "@/components/charts/IndexVsActualChart";
 import InfluenceChart from "@/components/charts/InfluenceChart";
+import MiniDroughtMap from "@/components/MiniDroughtMap";
 import StatCard from "@/components/StatCard";
 import { Card, ErrorNote, Loading, PageHeader } from "@/components/ui";
 import ValidationTable from "@/components/ValidationTable";
-import { getModel } from "@/lib/api";
+import { getModel, getSeasons } from "@/lib/api";
 import { pct } from "@/lib/payout";
 import { useApi } from "@/lib/useApi";
 
@@ -57,6 +59,7 @@ const DEMOS = [
 
 export default function Overview() {
   const { data: m, error } = useApi("model", getModel);
+  const seasons = useApi("seasons", getSeasons);
 
   return (
     <>
@@ -91,6 +94,16 @@ export default function Overview() {
         <Loading />
       ) : (
         <div className="space-y-6">
+          <div className="grid gap-6 lg:grid-cols-[1fr_1.25fr]">
+            <MiniDroughtMap />
+            <Card
+              title="How well the index tracks real harvests"
+              description={`Each dot is one district-season with harvest data (${seasons.data?.length ?? 28} in all). Dots below the dashed line triggered a payout; dots left of the red line had a poor harvest.`}
+            >
+              {seasons.data ? <IndexVsActualChart seasons={seasons.data} model={m} /> : <Loading rows={1} />}
+            </Card>
+          </div>
+
           <section className="card grid gap-6 p-6 md:grid-cols-3">
             <Step n={1} icon={CloudRain} title="Read the satellites">
               October–December rainfall (CHIRPS) and vegetation greenness (MODIS NDVI) for each

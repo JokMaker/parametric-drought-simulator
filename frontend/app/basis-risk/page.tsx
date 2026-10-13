@@ -4,10 +4,12 @@ import { ArrowDownRight, ArrowUpRight, CircleAlert, CircleOff } from "lucide-rea
 import Link from "next/link";
 import { useState } from "react";
 import BasisRiskChart from "@/components/charts/BasisRiskChart";
+import ColorLegend from "@/components/charts/ColorLegend";
 import StatCard from "@/components/StatCard";
 import { Badge, Card, ErrorNote, Loading, PageHeader, type Tone } from "@/components/ui";
 import { getBasisRisk, getModel, getSeasons } from "@/lib/api";
 import { classify, OUTCOME_LABEL, pct, signedPct, type Outcome } from "@/lib/payout";
+import { RISK_GRADIENT, RISK_RANGE } from "@/lib/scales";
 import { useApi } from "@/lib/useApi";
 
 const OUTCOME_TONE: Record<Outcome, Tone> = {
@@ -70,6 +72,19 @@ export default function BasisRiskPage() {
           description={`For each season, the gap between the index payout and the payout the actual yield implies (same ${m.trigger}% trigger and ${m.exit}% exit), averaged over the four seasons with yield data (2022–2025). 0% means the index paid exactly what the harvest called for.`}
         >
           <BasisRiskChart data={risk.data} />
+          <div className="mt-4 flex flex-wrap items-end justify-between gap-3">
+            <ColorLegend
+              title="Basis risk (same colours as the Drought Map)"
+              gradient={RISK_GRADIENT}
+              ticks={[
+                { at: 0, label: "0% (index matched the harvest)" },
+                { at: 1, label: `≥ ${pct(RISK_RANGE)}` },
+              ]}
+            />
+            <Link href="/map?metric=risk" className="pb-5 text-sm text-accent hover:underline">
+              See it on the map
+            </Link>
+          </div>
         </Card>
 
         <Card
