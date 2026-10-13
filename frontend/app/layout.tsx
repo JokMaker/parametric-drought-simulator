@@ -31,7 +31,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full font-sans lg:flex">
+      {/* Browser extensions (e.g. Grammarly) add attributes to <body> before React loads. */}
+      <body className="min-h-full font-sans lg:flex" suppressHydrationWarning>
         <Script id="theme" strategy="beforeInteractive">
           {THEME_SCRIPT}
         </Script>
