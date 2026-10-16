@@ -3,7 +3,7 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useEffectEvent } from "react";
 import SeasonContextChart, { type SeasonValue } from "@/components/charts/SeasonContextChart";
-import { HarvestCard, PayoutCard, SatelliteCard } from "@/components/PayoutPanel";
+import { HarvestCard, type InputSeason, PayoutCard, SatelliteCard } from "@/components/PayoutPanel";
 import SeasonTimeline from "@/components/SeasonTimeline";
 import { Card, ErrorNote, Loading } from "@/components/ui";
 import { getHistory, getModel, getSeasons, getSimulation } from "@/lib/api";
@@ -74,6 +74,7 @@ export default function Explorer() {
   // This district's index for every season; seasons with harvest data use the
   // leave-one-out value, so the chart matches the payout card exactly.
   const series: SeasonValue[] = [];
+  const inputs: InputSeason[] = [];
   if (history.data && calibration.data) {
     const loo = new Map(
       calibration.data.filter((s) => s.district === district).map((s) => [s.season, s]),
@@ -83,6 +84,7 @@ export default function Explorer() {
       const s = p.windowYear + 1;
       const c = loo.get(s);
       series.push({ season: s, index: c?.index ?? p.index, payout: c?.payout ?? p.payout });
+      inputs.push({ season: s, rainZ: p.rainZ, ndviZ: p.ndviZ });
     }
     series.sort((a, b) => a.season - b.season);
   }
@@ -127,8 +129,13 @@ export default function Explorer() {
         <div>
           <div className="mb-1.5 flex flex-wrap items-center justify-between gap-2 text-[13px] text-muted">
             <span>Season A (harvest year)</span>
-            <span className="text-xs">
-              Dot: harvest data · red line: documented drought · ← → to step
+            <span className="flex items-center gap-4 text-xs">
+              <span className="flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-ink/70" /> Harvest data
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="h-0.5 w-3.5 rounded-full bg-drought" /> Documented drought
+              </span>
             </span>
           </div>
           <SeasonTimeline season={season} onSelect={(s) => select({ season: s })} />
@@ -140,14 +147,14 @@ export default function Explorer() {
       ) : model.data && sim.data ? (
         <>
           <PayoutCard sim={sim.data} model={model.data} />
-          <SatelliteCard sim={sim.data} />
+          <SatelliteCard sim={sim.data} series={inputs} />
           <HarvestCard sim={sim.data} model={model.data} />
           {series.length > 0 && (
             <Card
-              label={`This season in context · ${district}, ${FIRST_SEASON}–${LAST_SEASON}`}
+              label={`Every season · ${district}, ${FIRST_SEASON}–${LAST_SEASON} · trigger reached in ${paidSeasons} of ${series.length}`}
               title={contextHeadline(series, season, district)}
-              source={`${district} reached the trigger in ${paidSeasons} of ${series.length} seasons. Shaded: documented droughts${
-                isDroughtSeason(season) ? ` (this season's ${windowYearOf(season)} rains included)` : ""
+              source={`Predicted yield change for every Season A. Seasons with harvest data use the leave-one-out index. Shaded: documented droughts (Niyonsenga et al., 2024)${
+                isDroughtSeason(season) ? `, including this season's ${windowYearOf(season)} rains` : ""
               }. Click a bar to open that season.`}
             >
               <SeasonContextChart

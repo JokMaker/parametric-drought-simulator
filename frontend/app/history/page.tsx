@@ -1,14 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import ClassLegend from "@/components/charts/ClassLegend";
+import ClassLegend, { IndexLegend } from "@/components/charts/ClassLegend";
 import { IndexChart, PayoutChart, type YearBar } from "@/components/charts/HistoryChart";
 import HistoryHeatmap from "@/components/charts/HistoryHeatmap";
-import { Card, ErrorNote, Loading, PageHeader, StatStrip } from "@/components/ui";
+import { Card, ErrorNote, Loading, PageHeader, ShareBars, StatStrip } from "@/components/ui";
 import { getHistory, getModel } from "@/lib/api";
 import { DISTRICTS } from "@/lib/constants";
 import { pct } from "@/lib/payout";
-import { indexClasses, PAYOUT_CLASSES } from "@/lib/scales";
+import { PAYOUT_CLASSES } from "@/lib/scales";
 import type { HistoryPoint } from "@/lib/types";
 import { useApi } from "@/lib/useApi";
 
@@ -73,7 +73,18 @@ export default function HistoryPage() {
           items={[
             { value: pct(share(drought)), label: "Seasons paid in documented droughts", note: `${drought.filter((p) => p.pays).length} of ${drought.length} ${unit}` },
             { value: pct(share(other)), label: "Seasons paid in other years", note: `${other.filter((p) => p.pays).length} of ${other.length} ${unit}` },
-            { value: `${(share(drought) / share(other)).toFixed(1)}×`, label: "More often in documented droughts", note: "a credible index should pay far more often" },
+            {
+              value: `${(share(drought) / share(other)).toFixed(1)}×`,
+              label: "More often in documented droughts",
+              viz: (
+                <ShareBars
+                  rows={[
+                    { label: "Drought", share: share(drought), color: "var(--drought)" },
+                    { label: "Other", share: share(other), color: "var(--faint)" },
+                  ]}
+                />
+              ),
+            },
           ]}
         />
 
@@ -81,11 +92,11 @@ export default function HistoryPage() {
           label={`Predicted yield change · ${district === ALL ? "average of seven districts" : district}, 2000–2024 rains`}
           title={`Payouts cluster in documented droughts${where}: ${pct(share(drought))} of drought seasons against ${pct(share(other))} of others`}
           action={filter}
-          source="Shaded: documented droughts, 2003–2006 and 2013–2017 (Niyonsenga et al., 2024). Years are the October–December rains; Season A is harvested the following year."
+          source="The index run on satellite data for every season since 2000. Documented droughts: 2003–2006 and 2013–2017 (Niyonsenga et al., 2024). Years are the October–December rains; Season A is harvested the following year."
         >
           <IndexChart data={bars} trigger={trigger} exit={exit} />
           <div className="mt-3 border-t border-line pt-3">
-            <ClassLegend title="Predicted yield change" classes={indexClasses(trigger, exit)} />
+            <IndexLegend trigger={trigger} exit={exit} />
           </div>
         </Card>
 
@@ -97,7 +108,7 @@ export default function HistoryPage() {
         >
           <PayoutChart data={bars} />
           <div className="mt-3 border-t border-line pt-3">
-            <ClassLegend title="Payout" classes={PAYOUT_CLASSES} />
+            <ClassLegend classes={PAYOUT_CLASSES} />
           </div>
         </Card>
 
@@ -112,7 +123,7 @@ export default function HistoryPage() {
         >
           <HistoryHeatmap points={history.data} trigger={trigger} exit={exit} />
           <div className="mt-3 border-t border-line pt-3">
-            <ClassLegend title="Predicted yield change" classes={indexClasses(trigger, exit)} />
+            <IndexLegend trigger={trigger} exit={exit} />
           </div>
         </Card>
       </div>
@@ -121,10 +132,7 @@ export default function HistoryPage() {
 
   return (
     <>
-      <PageHeader title="Drought History">
-        The index run on satellite data for every season since 2000, checked against Rwanda&apos;s
-        documented droughts.
-      </PageHeader>
+      <PageHeader title="Drought History" />
       {body}
     </>
   );

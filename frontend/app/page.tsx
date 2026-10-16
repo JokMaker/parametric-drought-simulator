@@ -3,7 +3,8 @@
 import IndexVsActualChart from "@/components/charts/IndexVsActualChart";
 import InfluenceChart from "@/components/charts/InfluenceChart";
 import MiniDroughtMap from "@/components/MiniDroughtMap";
-import { Card, ErrorNote, Loading, PageHeader, StatStrip } from "@/components/ui";
+import HowItWorks from "@/components/HowItWorks";
+import { Card, DotCount, ErrorNote, Loading, PageHeader, ShareBars, StatStrip } from "@/components/ui";
 import ValidationTable from "@/components/ValidationTable";
 import { getHistory, getModel, getSeasons } from "@/lib/api";
 import { classify, pct } from "@/lib/payout";
@@ -40,10 +41,36 @@ export default function Overview() {
       <div className="space-y-5">
         <StatStrip
           items={[
-            { value: pct(right / outcomes.length), label: "Pay / no-pay decisions correct", note: `${right} of ${outcomes.length} district-seasons` },
-            { value: pct(hits / poor), label: "Poor harvests that were paid", note: `${hits} of ${poor}` },
-            { value: pct(falsePay / normal), label: "False payouts in normal seasons", note: `${falsePay} of ${normal}` },
-            { value: `${ratio.toFixed(1)}×`, label: "More payouts in documented droughts", note: `${pct(share(drought))} against ${pct(share(other))}` },
+            {
+              value: pct(right / outcomes.length),
+              label: "Right pay / no-pay decisions",
+              viz: <DotCount filled={right} total={outcomes.length} />,
+              note: `${right} of ${outcomes.length} district-seasons`,
+            },
+            {
+              value: pct(hits / poor),
+              label: "Poor harvests paid",
+              viz: <DotCount filled={hits} total={poor} color="var(--sev-extreme)" />,
+              note: `${hits} of ${poor}`,
+            },
+            {
+              value: pct(falsePay / normal),
+              label: "False payouts",
+              viz: <DotCount filled={falsePay} total={normal} color="var(--risk-4)" />,
+              note: `${falsePay} of ${normal} normal seasons`,
+            },
+            {
+              value: `${ratio.toFixed(1)}×`,
+              label: "Payouts in droughts vs other years",
+              viz: (
+                <ShareBars
+                  rows={[
+                    { label: "Drought", share: share(drought), color: "var(--drought)" },
+                    { label: "Other", share: share(other), color: "var(--faint)" },
+                  ]}
+                />
+              ),
+            },
           ]}
         />
 
@@ -52,7 +79,7 @@ export default function Overview() {
         <Card
           label="Index against real harvests · 2022–2025"
           title={`The pay or no-pay decision matched the harvest in ${right} of ${outcomes.length} district-seasons`}
-          source="Each dot is one district-season: NISR harvest survey against the leave-one-out index. Dots in the shaded band triggered a payout."
+          source="NISR Seasonal Agricultural Survey yields against the leave-one-out index (each district-season predicted by a model that never saw it). The shaded band is the payout zone."
         >
           <IndexVsActualChart seasons={seasons.data} model={m} />
         </Card>
@@ -78,10 +105,12 @@ export default function Overview() {
 
   return (
     <>
-      <PageHeader title="Drought index insurance for Eastern Rwanda">
-        Satellite rainfall and crop greenness predict each district&apos;s maize harvest.
-        {m && ` A payout starts at a ${m.trigger}% predicted yield change and is full at ${m.exit}%.`}
-      </PageHeader>
+      <PageHeader title="Drought index insurance for Eastern Rwanda" />
+      {m && (
+        <div className="mb-5">
+          <HowItWorks trigger={m.trigger} exit={m.exit} />
+        </div>
+      )}
       {body}
     </>
   );

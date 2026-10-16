@@ -5,9 +5,7 @@ import Explorer from "./Explorer";
 export default function ExplorerPage() {
   return (
     <>
-      <PageHeader title="District Explorer">
-        One district, one season: what the satellites recorded and what the index would pay.
-      </PageHeader>
+      <PageHeader title="District Explorer" />
       <Suspense fallback={<Loading />}>
         <Explorer />
       </Suspense>

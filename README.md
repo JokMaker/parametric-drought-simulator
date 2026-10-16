@@ -150,6 +150,13 @@ cards that stack vertically, each on its own, and charts that each tell a story.
   severe as thirds between the -4% trigger and the -24% exit, and extreme (full payout). Payouts and
   basis risk have their own labelled class scales (basis risk in purple). Every coloured chart has a
   class legend with the range of each class, so no value depends on colour alone.
+- **The charts explain themselves, not the text:** following practitioner research on annotation
+  ([Rahman et al., 2026](https://arxiv.org/html/2604.07691)), labels sit on the chart next to what
+  they name. The scatter names its four outcomes in their corners, the payout bar names its three
+  zones and pins the index and the real harvest, drought periods are labelled on the time charts,
+  and counts are drawn as dots. The Overview opens with a four-step picture of how the index works.
+  Method notes are folded under "Source & method" on each card, so they are there for a reviewer
+  without crowding the view.
 - **Explorer controls:** district buttons and a season timeline replace dropdowns, so every option
   is visible. Seasons with yield data and documented drought years are marked on the timeline, and
   the arrow keys step through years. The selection is kept in the URL, so any view can be shared.
