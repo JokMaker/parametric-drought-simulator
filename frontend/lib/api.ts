@@ -51,7 +51,7 @@ export async function getBasisRisk(): Promise<BasisRisk[]> {
   return get("/api/basis-risk", "basis risk");
 }
 
-/** The calibration district-seasons with actual yields (2022–2025). */
+/** The calibration district-seasons with actual yields (2018–2025). */
 export async function getSeasons(): Promise<Simulation[]> {
   if (USE_MOCK) return mockSeasons;
   return get("/api/seasons", "season comparison");

@@ -127,7 +127,7 @@ export default function StoryTour() {
           Full map <ArrowRight size={14} />
         </Link>
       }
-      source="Stops are picked from the data: the latest season with no payout, the season with the lowest average index, and the clearest correct payout, missed season and false payout among the 28 district-seasons with harvest data."
+      source={`Stops are picked from the data: the latest season with no payout, the season with the lowest average index, and the clearest correct payout, missed season and false payout among the ${seasons.data.length} district-seasons with harvest data.`}
     >
       <ol className="mb-4 grid grid-cols-5 gap-1" aria-label="Tour stops">
         {stops.map((s, i) => (

@@ -27,7 +27,7 @@ export type Simulation = {
   ndviZ: number;
   index: number; // predicted yield change (%)
   payout: number; // 0 to 1
-  actualYieldAnom: number | null; // only for seasons with yield data (2022–2025)
+  actualYieldAnom: number | null; // only for seasons with yield data (2018–2025)
   payoutIfActual: number | null;
 };
 

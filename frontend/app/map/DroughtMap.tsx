@@ -8,7 +8,7 @@ import DistrictMap from "@/components/charts/DistrictMap";
 import SeasonTimeline from "@/components/SeasonTimeline";
 import { Card, ErrorNote, Loading, Tabs } from "@/components/ui";
 import { getBasisRisk, getHistory, getModel, getSeasons, getShapes } from "@/lib/api";
-import { FIRST_SEASON, isDroughtSeason, LAST_SEASON, SEASONS, windowYearOf, YIELD_SEASONS } from "@/lib/constants";
+import { FIRST_SEASON, isDroughtSeason, LAST_SEASON, SEASONS, windowYearOf, YIELD_RANGE, YIELD_SEASONS } from "@/lib/constants";
 import { districtsInSeason } from "@/lib/districtSeason";
 import { anomalyLabel, pct, signedPct } from "@/lib/payout";
 import { indexClass, PAYOUT_CLASSES, payoutClass, RISK_CLASSES, riskClass } from "@/lib/scales";
@@ -117,7 +117,7 @@ export default function DroughtMap() {
 
   const label =
     metric === "risk"
-      ? "Basis risk · 2022–2025"
+      ? `Basis risk · ${YIELD_RANGE}`
       : `${METRICS.find((m) => m.key === metric)!.label} · Season A ${season}${
           isDroughtSeason(season) ? ` · documented drought (${windowYearOf(season)} rains)` : ""
         }`;
@@ -154,7 +154,7 @@ export default function DroughtMap() {
         title={headline}
         source={
           metric === "risk"
-            ? "Average over the four seasons with NISR harvest data. Click a district to open its worst-matched season."
+            ? `Average over the ${YIELD_SEASONS.length} seasons with NISR harvest data. Click a district to open its worst-matched season.`
             : `${YIELD_SEASONS.includes(season) ? "Leave-one-out index (season with harvest data)" : "Satellite-only backtest"}. Click a district to open it in the Explorer.`
         }
       >

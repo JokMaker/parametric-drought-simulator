@@ -4,10 +4,11 @@ import { RotateCcw } from "lucide-react";
 import { useState } from "react";
 import IndexVsActualChart from "@/components/charts/IndexVsActualChart";
 import { Card, DotCount } from "@/components/ui";
+import { POOR_RULE } from "@/lib/constants";
 import { classify, payoutFromIndex, pct } from "@/lib/payout";
 import type { ModelSummary, Simulation } from "@/lib/types";
 
-/** Outcomes of the 28 district-seasons under a given trigger and exit. */
+/** Outcomes of the district-seasons with harvest data under a given trigger and exit. */
 function score(seasons: Simulation[], m: ModelSummary, trigger: number, exit: number) {
   const known = seasons.filter((s) => s.actualYieldAnom !== null);
   const o = known.map((s) => classify(s, { trigger, lowYieldThreshold: m.lowYieldThreshold }));
@@ -114,7 +115,7 @@ export default function TriggerSimulator({ seasons, model }: { seasons: Simulati
           </button>
         )
       }
-      source={`Recomputed in the browser for the ${now.total} district-seasons with NISR harvest data, using the leave-one-out index. A harvest ${Math.abs(model.lowYieldThreshold)}% or more below normal counts as poor. Basis risk is the average gap between the index payout and the payout the real harvest would give under the same trigger and exit.`}
+      source={`Recomputed in the browser for the ${now.total} district-seasons with NISR harvest data, using the leave-one-out index. ${POOR_RULE(model.lowYieldThreshold)} Basis risk is the average gap between the index payout and the payout the real harvest would give under the same trigger and exit.`}
     >
       <div className="flex flex-col gap-5 sm:flex-row">
         <Slider
