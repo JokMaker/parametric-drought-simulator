@@ -19,7 +19,8 @@ import type { ModelSummary, Simulation } from "@/lib/types";
 type Dot = { x: number; y: number; district: string; season: number; outcome: Outcome };
 
 const MATCH = "var(--ink)";
-const MISMATCH = "var(--pay)";
+// Mismatches use the basis-risk colour, so a mismatch reads the same everywhere.
+const MISMATCH = "var(--risk-4)";
 const TICK = { fontSize: 11, fill: "var(--muted)" };
 
 function DotTooltip({ active, payload }: TooltipContentProps) {

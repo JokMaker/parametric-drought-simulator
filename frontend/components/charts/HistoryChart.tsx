@@ -14,7 +14,7 @@ import {
   YAxis,
 } from "recharts";
 import { DROUGHT_YEARS } from "@/lib/constants";
-import { indexColor, payoutColor } from "@/lib/scales";
+import { indexClass, payoutClass } from "@/lib/scales";
 
 export type YearBar = {
   year: number; // window year (Oct–Dec rains)
@@ -111,9 +111,9 @@ export function IndexChart({ data, trigger, exit }: { data: YearBar[]; trigger: 
           strokeDasharray="2 4"
           label={{ value: `Exit ${exit}%`, position: "insideBottomRight", fontSize: 11, fill: "var(--muted)" }}
         />
-        <Bar dataKey="index" radius={[4, 4, 0, 0]} maxBarSize={24} isAnimationActive={false}>
+        <Bar dataKey="index" radius={[2, 2, 0, 0]} maxBarSize={24} isAnimationActive={false}>
           {data.map((d) => (
-            <Cell key={d.year} style={{ fill: indexColor(d.index) }} />
+            <Cell key={d.year} style={{ fill: indexClass(d.index, trigger, exit).color }} />
           ))}
         </Bar>
       </BarChart>
@@ -124,7 +124,7 @@ export function IndexChart({ data, trigger, exit }: { data: YearBar[]; trigger: 
 export function PayoutChart({ data }: { data: YearBar[] }) {
   const fmt = (v: number) => `${Math.round(v * 100)}%`;
   return (
-    <ResponsiveContainer width="100%" height={170}>
+    <ResponsiveContainer width="100%" height={200}>
       <BarChart data={data} margin={MARGIN} syncId="history" barCategoryGap={3}>
         <CartesianGrid vertical={false} stroke={GRID} />
         {DroughtBands()}
@@ -139,9 +139,9 @@ export function PayoutChart({ data }: { data: YearBar[] }) {
           tickFormatter={fmt}
         />
         <Tooltip cursor={cursor} content={YearTooltip} />
-        <Bar dataKey="payout" radius={[4, 4, 0, 0]} maxBarSize={24} isAnimationActive={false}>
+        <Bar dataKey="payout" radius={[2, 2, 0, 0]} maxBarSize={24} isAnimationActive={false}>
           {data.map((d) => (
-            <Cell key={d.year} style={{ fill: payoutColor(d.payout) }} />
+            <Cell key={d.year} style={{ fill: payoutClass(d.payout).color }} />
           ))}
         </Bar>
       </BarChart>

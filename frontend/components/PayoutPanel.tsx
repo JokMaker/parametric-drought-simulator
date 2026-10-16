@@ -1,261 +1,206 @@
-import { CheckCircle2, CircleAlert, CloudRain, Leaf, TrendingDown } from "lucide-react";
-import { anomalyLabel, classify, OUTCOME_LABEL, pct, reason, signedPct } from "@/lib/payout";
-import { indexColor, payoutColor } from "@/lib/scales";
+"use client";
+
+import { classify, pct, reason, signedPct } from "@/lib/payout";
+import { indexClass, indexClasses, payoutClass } from "@/lib/scales";
 import type { ModelSummary, Simulation } from "@/lib/types";
+import { Card } from "./ui";
 
-// Yield-change range drawn on the payout scale: better on the left, worse on the right.
-const BEST = 30;
-const WORST = -40;
-const pos = (x: number) => ((BEST - Math.min(BEST, Math.max(WORST, x))) / (BEST - WORST)) * 100;
+// Yield-change range drawn on the payout scale: losses on the left, gains on the right.
+const LOW = -40;
+const HIGH = 30;
+const at = (v: number) => ((Math.min(HIGH, Math.max(LOW, v)) - LOW) / (HIGH - LOW)) * 100;
 
-/** Half-circle gauge for the payout share. */
-function Gauge({ value }: { value: number }) {
-  const r = 80;
-  const len = Math.PI * r;
-  return (
-    <svg viewBox="0 0 200 112" className="w-full max-w-[240px]" role="img" aria-label={`Payout ${pct(value)}`}>
-      <path d="M20 100 A80 80 0 0 1 180 100" fill="none" stroke="var(--surface-2)" strokeWidth="16" strokeLinecap="round" />
-      {value > 0 && (
-        <path
-          d="M20 100 A80 80 0 0 1 180 100"
-          fill="none"
-          stroke="var(--pay)"
-          strokeWidth="16"
-          strokeLinecap="round"
-          strokeDasharray={`${len * value} ${len}`}
-        />
-      )}
-      <text x="100" y="88" textAnchor="middle" className="tabular" fontSize="36" fontWeight="600" fill="var(--ink)">
-        {pct(value)}
-      </text>
-      <text x="100" y="108" textAnchor="middle" fontSize="11" fill="var(--muted)">
-        of the full payout
-      </text>
-    </svg>
-  );
+const SOURCE_SAT = "CHIRPS rainfall and MODIS NDVI, October–December, against each district's own record.";
+
+function payoutHeadline(sim: Simulation, m: ModelSummary) {
+  const loss = sim.index < 0 ? `${Math.abs(sim.index).toFixed(0)}% below normal` : `${sim.index.toFixed(0)}% above normal`;
+  if (sim.payout >= 1) return `Full payout: the index predicts a harvest ${loss}`;
+  if (sim.payout > 0) return `${pct(sim.payout)} payout: the index predicts a harvest ${loss}`;
+  return sim.index <= m.trigger
+    ? `No payout yet: the index sits at the ${m.trigger}% trigger`
+    : `No payout: the index predicts a harvest ${loss}`;
 }
 
-/** Anomaly as a bar growing left (below normal) or right (above) from a centre line. */
-function AnomalyRow({ label, z, icon: Icon }: { label: string; z: number; icon: typeof CloudRain }) {
-  const LIMIT = 2.5;
-  const w = (Math.min(LIMIT, Math.abs(z)) / LIMIT) * 50;
-  const below = z < 0;
+function satelliteHeadline(sim: Simulation) {
+  const word = (z: number) => (Math.abs(z) < 0.25 ? "near normal" : z < 0 ? "below normal" : "above normal");
+  const rain = word(sim.rainZ);
+  const green = word(sim.ndviZ);
+  if (rain === green) return `Rainfall and crop greenness were both ${rain}`;
+  return `Rainfall was ${rain}; crop greenness was ${green}`;
+}
+
+function harvestHeadline(sim: Simulation, m: ModelSummary) {
+  const outcome = classify(sim, m)!;
+  const actual = sim.actualYieldAnom!;
+  const fell = actual < 0 ? `the harvest fell ${Math.abs(actual).toFixed(0)}%` : `the harvest rose ${actual.toFixed(0)}%`;
+  switch (outcome) {
+    case "hit":
+      return `Correct: ${fell} and the index paid ${pct(sim.payout)}`;
+    case "miss":
+      return `Missed: ${fell} but the index paid nothing`;
+    case "false-payout":
+      return `False payout: the index paid ${pct(sim.payout)} but ${fell}`;
+    default:
+      return `Correct: no payout, and ${fell}`;
+  }
+}
+
+/** Index position across the severity classes, with the harvest marked when known. */
+function PayoutScale({ sim, model }: { sim: Simulation; model: ModelSummary }) {
+  const { trigger, exit } = model;
+  const step = (trigger - exit) / 3;
+  const classes = indexClasses(trigger, exit);
+  // Class bands from left (worst) to right (best).
+  const bands = [
+    { from: LOW, to: exit, c: classes[5] },
+    { from: exit, to: exit + step, c: classes[4] },
+    { from: exit + step, to: exit + 2 * step, c: classes[3] },
+    { from: exit + 2 * step, to: trigger, c: classes[2] },
+    { from: trigger, to: 10, c: classes[1] },
+    { from: 10, to: HIGH, c: classes[0] },
+  ];
   return (
-    <div>
-      <div className="flex items-center justify-between gap-3 text-sm">
-        <span className="flex items-center gap-2 text-muted">
-          <Icon size={15} />
-          {label}
+    <div className="pt-4 pb-1">
+      <div className="relative">
+        <div className="flex h-3 overflow-hidden rounded-sm">
+          {bands.map((b) => (
+            <div key={b.c.key} style={{ width: `${at(b.to) - at(b.from)}%`, background: b.c.color }} />
+          ))}
+        </div>
+        <span className="absolute -top-1.5 h-6 w-[3px] -translate-x-1/2 bg-ink" style={{ left: `${at(sim.index)}%` }} />
+        {sim.actualYieldAnom !== null && (
+          <span
+            className="absolute -top-1.5 h-6 -translate-x-1/2 border-l-[3px] border-dotted border-ink"
+            style={{ left: `${at(sim.actualYieldAnom)}%` }}
+          />
+        )}
+      </div>
+      <div className="tabular relative mt-2 h-4 text-[11px] text-muted">
+        {[
+          { v: exit, t: `${exit}% exit`, cls: "" },
+          { v: trigger, t: `${trigger}% trigger`, cls: "" },
+          // Too close to the trigger label on narrow screens.
+          { v: 0, t: "0", cls: "hidden sm:inline" },
+        ].map((x) => (
+          <span key={x.t} className={`absolute -translate-x-1/2 whitespace-nowrap ${x.cls}`} style={{ left: `${at(x.v)}%` }}>
+            {x.t}
+          </span>
+        ))}
+      </div>
+      <div className="tabular mt-2 flex flex-wrap gap-x-5 gap-y-1 text-xs">
+        <span className="flex items-center gap-1.5">
+          <span className="h-3 w-[3px] bg-ink" /> Index {signedPct(sim.index)}
         </span>
-        <span className="font-medium">{anomalyLabel(z)}</span>
-      </div>
-      <div className="relative mt-2 h-2 rounded-full bg-surface-2">
-        <div className="absolute inset-y-[-3px] left-1/2 w-px bg-line" />
-        <div
-          className={`absolute inset-y-0 rounded-full ${below ? "bg-drought" : "bg-other"}`}
-          style={below ? { right: "50%", width: `${w}%` } : { left: "50%", width: `${w}%` }}
-        />
-      </div>
-      <div className="tabular mt-1 flex justify-between text-[11px] text-faint">
-        <span>Drier / less green</span>
-        <span>z = {z.toFixed(2)}</span>
-        <span>Wetter / greener</span>
+        {sim.actualYieldAnom !== null && (
+          <span className="flex items-center gap-1.5">
+            <span className="h-3 border-l-[3px] border-dotted border-ink" /> Actual harvest {signedPct(sim.actualYieldAnom)}
+          </span>
+        )}
       </div>
     </div>
   );
 }
 
-function Marker({ x, label, className, above }: { x: number; label: string; className: string; above?: boolean }) {
-  const p = pos(x);
-  // Keep labels near either end of the scale inside the card.
-  const align = p > 85 ? "-translate-x-full" : p < 15 ? "translate-x-0" : "-translate-x-1/2";
+function AnomalyBar({ label, z }: { label: string; z: number }) {
+  const LIMIT = 2.5;
+  const w = (Math.min(LIMIT, Math.abs(z)) / LIMIT) * 50;
+  const below = z < 0;
   return (
-    <div className="absolute top-1/2" style={{ left: `${p}%` }}>
-      <div className={`h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-surface shadow ${className}`} />
-      <span
-        className={`tabular absolute whitespace-nowrap text-xs font-medium ${align} ${above ? "-top-7" : "top-9"}`}
-      >
-        {label}
+    <div className="grid grid-cols-[150px_1fr_110px] items-center gap-4 text-sm">
+      <span>{label}</span>
+      <div className="relative h-3 bg-surface-2">
+        <div className="absolute inset-y-[-4px] left-1/2 w-px bg-ink/40" />
+        <div
+          className="absolute inset-y-0"
+          style={{
+            background: below ? "var(--drought)" : "var(--other)",
+            ...(below ? { right: "50%", width: `${w}%` } : { left: "50%", width: `${w}%` }),
+          }}
+        />
+      </div>
+      <span className="tabular text-right">
+        <span className="font-medium">{Math.abs(z).toFixed(1)}</span>{" "}
+        <span className="text-muted">{z < 0 ? "below" : "above"}</span>
       </span>
     </div>
   );
 }
 
-function PayoutScale({ index, actual, trigger, exit }: { index: number; actual: number | null; trigger: number; exit: number }) {
-  return (
-    <div className="px-1 pt-8 pb-2">
-      <div className="relative h-2.5 rounded-full">
-        <div className="absolute inset-y-0 left-0 rounded-l-full bg-good-soft" style={{ width: `${pos(trigger)}%` }} />
-        <div
-          className="absolute inset-y-0 bg-pay-soft"
-          style={{ left: `${pos(trigger)}%`, width: `${pos(exit) - pos(trigger)}%` }}
-        />
-        <div className="absolute inset-y-0 right-0 rounded-r-full bg-drought-soft" style={{ left: `${pos(exit)}%` }} />
-        {[
-          { x: trigger, label: `Trigger ${trigger}%` },
-          { x: exit, label: `Exit ${exit}%` },
-        ].map((t) => (
-          <div key={t.label} className="absolute -top-1.5 h-5 border-l border-dashed border-ink/40" style={{ left: `${pos(t.x)}%` }}>
-            <span className="absolute top-6 -translate-x-1/2 whitespace-nowrap text-[11px] text-muted">{t.label}</span>
-          </div>
-        ))}
-        <Marker x={index} label={`Index ${index.toFixed(1)}%`} className="bg-ink" above />
-        {actual !== null && <Marker x={actual} label={`Actual ${actual.toFixed(1)}%`} className="bg-drought" />}
-      </div>
-      <div className="mt-14 grid grid-cols-3 text-[11px] text-muted">
-        <span>No payout</span>
-        <span className="text-center">Partial payout</span>
-        <span className="text-right">Full payout</span>
-      </div>
-    </div>
-  );
-}
-
-/** Two values side by side on one scale, centred on zero when the scale has a negative side. */
-function CompareBars({
-  title,
-  rows,
-  min,
-  max,
-  color,
-  format,
-}: {
-  title: string;
-  rows: { label: string; value: number }[];
-  min: number;
-  max: number;
-  color: (v: number) => string;
-  format: (v: number) => string;
+function CompareRow({ label, value, min, max, color, text }: {
+  label: string; value: number; min: number; max: number; color: string; text: string;
 }) {
   const span = max - min;
   const zero = ((0 - min) / span) * 100;
+  const v = Math.min(max, Math.max(min, value));
+  const p = ((v - min) / span) * 100;
   return (
-    <div>
-      <div className="mb-2 text-xs font-medium text-muted">{title}</div>
-      <div className="space-y-2">
-        {rows.map((r) => {
-          const v = Math.min(max, Math.max(min, r.value));
-          const at = ((v - min) / span) * 100;
-          return (
-            <div key={r.label} className="grid grid-cols-[120px_1fr_64px] items-center gap-3 text-sm">
-              <span className="text-muted">{r.label}</span>
-              <div className="relative h-3.5 rounded bg-surface-2">
-                {min < 0 && <div className="absolute inset-y-[-3px] w-px bg-line" style={{ left: `${zero}%` }} />}
-                <div
-                  className="absolute inset-y-0 rounded"
-                  style={{
-                    left: `${Math.min(zero, at)}%`,
-                    width: `${Math.abs(at - zero)}%`,
-                    background: color(r.value),
-                  }}
-                />
-              </div>
-              <span className="tabular text-right font-medium">{format(r.value)}</span>
-            </div>
-          );
-        })}
+    <div className="grid grid-cols-[150px_1fr_70px] items-center gap-4 text-sm">
+      <span className="text-muted">{label}</span>
+      <div className="relative h-3 bg-surface-2">
+        {min < 0 && <div className="absolute inset-y-[-4px] w-px bg-ink/40" style={{ left: `${zero}%` }} />}
+        <div className="absolute inset-y-0" style={{ left: `${Math.min(zero, p)}%`, width: `${Math.abs(p - zero)}%`, background: color }} />
       </div>
+      <span className="tabular text-right font-medium">{text}</span>
     </div>
   );
 }
 
-export default function PayoutPanel({ sim, model }: { sim: Simulation; model: ModelSummary }) {
-  const { trigger, exit } = model;
-  const outcome = classify(sim, model);
-
+export function PayoutCard({ sim, model }: { sim: Simulation; model: ModelSummary }) {
   return (
-    <div className="space-y-4">
-      <div className="grid gap-4 lg:grid-cols-[1fr_1.2fr]">
-        <section className="card flex flex-col items-center p-6 text-center">
-          <div className="self-start text-sm font-semibold">Simulated payout</div>
-          <div className="mt-4 w-full">
-            <div className="mx-auto w-fit">
-              <Gauge value={sim.payout} />
-            </div>
-          </div>
-          <p className="mt-4 text-sm leading-6 text-muted">{reason(sim, trigger, exit)}</p>
-        </section>
-
-        <section className="card space-y-5 p-6">
-          <div className="text-sm font-semibold">What the satellites saw</div>
-          <AnomalyRow label="Rainfall (Oct–Dec)" z={sim.rainZ} icon={CloudRain} />
-          <AnomalyRow label="Vegetation (NDVI)" z={sim.ndviZ} icon={Leaf} />
-          <div className="flex items-center justify-between rounded-lg bg-surface-2 px-4 py-3">
-            <span className="flex items-center gap-2 text-sm text-muted">
-              <TrendingDown size={15} />
-              Predicted yield change
-            </span>
-            <span className="tabular text-xl font-semibold">{signedPct(sim.index)}</span>
-          </div>
-          <p className="text-xs leading-5 text-faint">
-            Anomalies are in standard deviations from the district&apos;s own long-term average.
-            Predicted by the {model.model} model.
-          </p>
-        </section>
+    <Card
+      label={`Payout · ${sim.district}, Season A ${sim.season}`}
+      title={payoutHeadline(sim, model)}
+      source={`${model.model} model. Payout starts at the ${model.trigger}% trigger and is full at the ${model.exit}% exit.`}
+    >
+      <div className="flex flex-wrap gap-x-12 gap-y-3">
+        <div>
+          <div className="tabular text-4xl font-semibold tracking-tight">{pct(sim.payout)}</div>
+          <div className="mt-1 text-[13px] text-muted">of the full payout</div>
+        </div>
+        <div>
+          <div className="tabular text-4xl font-semibold tracking-tight">{signedPct(sim.index)}</div>
+          <div className="mt-1 text-[13px] text-muted">predicted yield change</div>
+        </div>
       </div>
+      <PayoutScale sim={sim} model={model} />
+      <p className="mt-3 text-sm text-muted">{reason(sim, model.trigger, model.exit)}</p>
+    </Card>
+  );
+}
 
-      <section className="card p-6">
-        <div className="text-sm font-semibold">Where the index sits</div>
-        <PayoutScale index={sim.index} actual={sim.actualYieldAnom} trigger={trigger} exit={exit} />
-      </section>
+export function SatelliteCard({ sim }: { sim: Simulation }) {
+  return (
+    <Card label="What the satellites saw" title={satelliteHeadline(sim)} source={SOURCE_SAT + " Units: standard deviations."}>
+      <div className="space-y-3">
+        <AnomalyBar label="Rainfall" z={sim.rainZ} />
+        <AnomalyBar label="Crop greenness (NDVI)" z={sim.ndviZ} />
+      </div>
+    </Card>
+  );
+}
 
-      {sim.actualYieldAnom !== null && sim.payoutIfActual !== null && outcome ? (
-        <section className="card p-6">
-          <div className="flex flex-wrap items-center gap-3">
-            {outcome === "miss" || outcome === "false-payout" ? (
-              <CircleAlert size={18} className="text-drought" />
-            ) : (
-              <CheckCircle2 size={18} className="text-good" />
-            )}
-            <div className="text-sm font-semibold">Check against the actual harvest</div>
-            <span className="text-sm text-muted">· {OUTCOME_LABEL[outcome]}</span>
-          </div>
-          <div className="mt-5 grid gap-6 md:grid-cols-2">
-            <CompareBars
-              title="Yield change: index against the harvest"
-              rows={[
-                { label: "Predicted (index)", value: sim.index },
-                { label: "Actual harvest", value: sim.actualYieldAnom },
-              ]}
-              min={-50}
-              max={50}
-              color={indexColor}
-              format={signedPct}
-            />
-            <CompareBars
-              title="Payout: what the index paid against what the harvest called for"
-              rows={[
-                { label: "Index paid", value: sim.payout },
-                { label: "Harvest called for", value: sim.payoutIfActual },
-              ]}
-              min={0}
-              max={1}
-              color={payoutColor}
-              format={(v) => pct(v)}
-            />
-          </div>
-          <div className="tabular mt-5 grid gap-4 sm:grid-cols-3">
-            {[
-              { label: "Actual yield change", value: signedPct(sim.actualYieldAnom) },
-              { label: "Payout the harvest implies", value: pct(sim.payoutIfActual) },
-              { label: "Gap (basis risk)", value: pct(Math.abs(sim.payout - sim.payoutIfActual)) },
-            ].map((m) => (
-              <div key={m.label} className="rounded-lg bg-surface-2 px-4 py-3">
-                <div className="text-xs text-muted">{m.label}</div>
-                <div className="mt-1 text-xl font-semibold">{m.value}</div>
-              </div>
-            ))}
-          </div>
-          <p className="mt-4 text-xs text-faint">
-            A season counts as poor when the actual yield change is {model.lowYieldThreshold}% or worse.
-          </p>
-        </section>
-      ) : (
-        <p className="px-1 text-sm text-muted">
-          No NISR yield record for this season. This is a satellite-only backtest, so the payout
-          cannot be compared with actual losses.
-        </p>
-      )}
-    </div>
+export function HarvestCard({ sim, model }: { sim: Simulation; model: ModelSummary }) {
+  if (sim.actualYieldAnom === null || sim.payoutIfActual === null) return null;
+  const gap = Math.abs(sim.payout - sim.payoutIfActual);
+  return (
+    <Card
+      label="Check against the harvest"
+      title={harvestHeadline(sim, model)}
+      source={`NISR Seasonal Agricultural Survey, Season A ${sim.season}. A harvest ${Math.abs(model.lowYieldThreshold)}% or more below normal counts as poor.`}
+    >
+      <div className="space-y-3">
+        <CompareRow label="Predicted (index)" value={sim.index} min={-50} max={50} text={signedPct(sim.index)}
+          color={indexClass(sim.index, model.trigger, model.exit).color} />
+        <CompareRow label="Actual harvest" value={sim.actualYieldAnom} min={-50} max={50} text={signedPct(sim.actualYieldAnom)}
+          color={indexClass(sim.actualYieldAnom, model.trigger, model.exit).color} />
+        <div className="h-1" />
+        <CompareRow label="Index paid" value={sim.payout} min={0} max={1} text={pct(sim.payout)} color={payoutClass(sim.payout).color} />
+        <CompareRow label="Harvest called for" value={sim.payoutIfActual} min={0} max={1} text={pct(sim.payoutIfActual)}
+          color={payoutClass(sim.payoutIfActual).color} />
+      </div>
+      <p className="tabular mt-4 text-sm">
+        Gap between the two payouts (basis risk): <span className="font-semibold">{pct(gap)}</span>
+      </p>
+    </Card>
   );
 }

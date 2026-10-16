@@ -1,44 +1,23 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import ColorLegend from "@/components/charts/ColorLegend";
+import ClassLegend from "@/components/charts/ClassLegend";
 import DistrictMap from "@/components/charts/DistrictMap";
 import SeasonTimeline from "@/components/SeasonTimeline";
-import { Badge, Card, ErrorNote, Loading } from "@/components/ui";
+import { Card, ErrorNote, Loading, Tabs } from "@/components/ui";
 import { getBasisRisk, getHistory, getModel, getSeasons, getShapes } from "@/lib/api";
 import { isDroughtSeason, LAST_SEASON, SEASONS, windowYearOf, YIELD_SEASONS } from "@/lib/constants";
 import { districtsInSeason } from "@/lib/districtSeason";
 import { anomalyLabel, pct, signedPct } from "@/lib/payout";
-import {
-  INDEX_GRADIENT,
-  INDEX_RANGE,
-  indexColor,
-  PAYOUT_GRADIENT,
-  payoutColor,
-  RISK_GRADIENT,
-  RISK_RANGE,
-  riskColor,
-} from "@/lib/scales";
+import { indexClass, indexClasses, PAYOUT_CLASSES, payoutClass, RISK_CLASSES, riskClass } from "@/lib/scales";
 import { useApi } from "@/lib/useApi";
 
 export type Metric = "index" | "payout" | "risk";
 
-export const METRICS: { key: Metric; label: string; explain: string }[] = [
-  {
-    key: "index",
-    label: "Predicted yield change",
-    explain: "The index: red districts are predicted to lose yield, green ones to gain.",
-  },
-  {
-    key: "payout",
-    label: "Payout",
-    explain: "Share of the full payout each district would receive this season.",
-  },
-  {
-    key: "risk",
-    label: "Basis risk",
-    explain: "Average gap between the index payout and what the harvest called for, 2022–2025.",
-  },
+const METRICS: { key: Metric; label: string }[] = [
+  { key: "index", label: "Predicted yield change" },
+  { key: "payout", label: "Payout" },
+  { key: "risk", label: "Basis risk" },
 ];
 
 export default function DroughtMap() {
@@ -57,207 +36,164 @@ export default function DroughtMap() {
   const error = shapes.error ?? history.error ?? calibration.error ?? risk.error ?? model.error;
 
   function set(next: { season?: number; metric?: Metric }) {
-    const q = new URLSearchParams({
-      metric: next.metric ?? metric,
-      season: String(next.season ?? season),
-    });
+    const q = new URLSearchParams({ metric: next.metric ?? metric, season: String(next.season ?? season) });
     router.replace(`${pathname}?${q}`, { scroll: false });
   }
 
   if (error) return <ErrorNote message={error} />;
   if (!shapes.data || !history.data || !calibration.data || !risk.data || !model.data) return <Loading />;
 
-  const m = model.data;
+  const { trigger, exit } = model.data;
   const values = districtsInSeason(history.data, calibration.data, season);
   const riskOf = new Map(risk.data.map((r) => [r.district, r.basisRisk]));
-  const current = METRICS.find((x) => x.key === metric)!;
+  const districts = [...values.keys()];
 
-  // For basis risk, open the district's worst-matched season, which explains its score.
-  const worstSeason = (d: string) =>
-    calibration
-      .data!.filter((s) => s.district === d)
-      .sort(
-        (a, b) =>
-          Math.abs(b.payout - (b.payoutIfActual ?? 0)) - Math.abs(a.payout - (a.payoutIfActual ?? 0)),
-      )[0]?.season ?? season;
-  const open = (d: string) =>
-    router.push(`/explorer?district=${d}&season=${metric === "risk" ? worstSeason(d) : season}`);
-
-  const fill = (d: string) => {
-    if (metric === "risk") return riskColor(riskOf.get(d) ?? 0);
-    const v = values.get(d);
-    if (!v) return "var(--surface-2)";
-    return metric === "index" ? indexColor(v.index) : payoutColor(v.payout);
+  const classOf = (d: string) => {
+    if (metric === "risk") return riskClass(riskOf.get(d) ?? 0);
+    const v = values.get(d)!;
+    return metric === "index" ? indexClass(v.index, trigger, exit) : payoutClass(v.payout);
   };
   const valueText = (d: string) => {
     if (metric === "risk") return pct(riskOf.get(d) ?? 0);
-    const v = values.get(d);
-    if (!v) return "no data";
+    const v = values.get(d)!;
     return metric === "index" ? signedPct(v.index) : pct(v.payout);
   };
-  const sortValue = (d: string) =>
-    metric === "risk" ? -(riskOf.get(d) ?? 0) : metric === "index" ? values.get(d)?.index ?? 0 : -(values.get(d)?.payout ?? 0);
-  const ranked = [...values.keys()].sort((a, b) => sortValue(a) - sortValue(b));
-  const paying = [...values.values()].filter((v) => v.index <= m.trigger).length;
+  const order = (d: string) =>
+    metric === "risk" ? -(riskOf.get(d) ?? 0) : metric === "index" ? values.get(d)!.index : -values.get(d)!.payout;
+  const ranked = [...districts].sort((a, b) => order(a) - order(b));
+
+  // The finding for this view, in one sentence.
+  const paying = districts.filter((d) => values.get(d)!.index <= trigger);
+  const full = districts.filter((d) => values.get(d)!.payout >= 1);
+  const worst = ranked[0];
+  let headline: string;
+  if (metric === "risk") {
+    const best = ranked[ranked.length - 1];
+    headline = `${worst}'s payouts sit furthest from its harvests (${pct(riskOf.get(worst)!)}); ${best}'s match most closely (${pct(riskOf.get(best)!)})`;
+  } else if (paying.length === 0) {
+    headline = `No district reaches the ${trigger}% trigger in Season A ${season}`;
+  } else if (metric === "index") {
+    headline = `${paying.length} of ${districts.length} districts reach the trigger; ${worst} is hardest hit at ${signedPct(values.get(worst)!.index)}`;
+  } else {
+    headline = `${paying.length} of ${districts.length} districts would be paid${
+      full.length ? `, ${full.length === 1 ? full[0] : `${full.length} of them`} in full` : ""
+    }`;
+  }
 
   const legend =
     metric === "index" ? (
-      <ColorLegend
-        title="Predicted yield change"
-        gradient={INDEX_GRADIENT}
-        ticks={[
-          { at: 0, label: `≤ −${INDEX_RANGE}%` },
-          { at: (INDEX_RANGE + m.trigger) / (2 * INDEX_RANGE), label: `${m.trigger}% trigger` },
-          { at: 1, label: `≥ +${INDEX_RANGE}%` },
-        ]}
-      />
+      <ClassLegend title="Predicted yield change" classes={indexClasses(trigger, exit)} />
     ) : metric === "payout" ? (
-      <ColorLegend
-        title="Payout"
-        gradient={PAYOUT_GRADIENT}
-        ticks={[
-          { at: 0, label: "0% (no payout)" },
-          { at: 1, label: "100%" },
-        ]}
-      />
+      <ClassLegend title="Payout" classes={PAYOUT_CLASSES} />
     ) : (
-      <ColorLegend
-        title="Basis risk"
-        gradient={RISK_GRADIENT}
-        ticks={[
-          { at: 0, label: "0% (index matched the harvest)" },
-          { at: 1, label: `≥ ${pct(RISK_RANGE)}` },
-        ]}
-      />
+      <ClassLegend title="Basis risk: gap between the index payout and what the harvest called for" classes={RISK_CLASSES} />
     );
 
+  const worstSeason = (d: string) =>
+    calibration.data!
+      .filter((s) => s.district === d)
+      .sort((a, b) => Math.abs(b.payout - (b.payoutIfActual ?? 0)) - Math.abs(a.payout - (a.payoutIfActual ?? 0)))[0]
+      ?.season ?? season;
+  const open = (d: string) => router.push(`/explorer?district=${d}&season=${metric === "risk" ? worstSeason(d) : season}`);
+
+  const label =
+    metric === "risk"
+      ? "Basis risk · 2022–2025"
+      : `${METRICS.find((m) => m.key === metric)!.label} · Season A ${season}${
+          isDroughtSeason(season) ? ` · documented drought (${windowYearOf(season)} rains)` : ""
+        }`;
+
   return (
-    <div className="space-y-6">
-      <section className="card space-y-5 p-5 sm:p-6">
-        <div>
-          <div className="mb-2 text-xs font-medium text-muted">Show</div>
-          <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Map value">
-            {METRICS.map((x) => (
-              <button
-                key={x.key}
-                role="radio"
-                aria-checked={metric === x.key}
-                onClick={() => set({ metric: x.key })}
-                className={`rounded-full border px-3.5 py-1.5 text-sm transition-colors ${
-                  metric === x.key
-                    ? "border-accent bg-accent text-accent-ink"
-                    : "border-line text-ink/85 hover:border-ink/30 hover:bg-surface-2"
-                }`}
-              >
-                {x.label}
-              </button>
-            ))}
-          </div>
-        </div>
-        {metric === "risk" ? (
-          <p className="text-xs text-muted">
-            Basis risk is measured over the four seasons with harvest data (2022–2025), so it has no
-            season selector.
-          </p>
-        ) : (
-          <div>
-            <div className="mb-2 text-xs font-medium text-muted">Season A (harvest year)</div>
+    <div className="space-y-5">
+      <section className="card px-5 pt-2 pb-4 sm:px-6">
+        <Tabs label="Map layer" value={metric} options={METRICS} onChange={(m) => set({ metric: m })} />
+        {metric !== "risk" && (
+          <div className="mt-4">
             <SeasonTimeline season={season} onSelect={(s) => set({ season: s })} />
           </div>
         )}
       </section>
 
-      <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
-        <Card
-          title={
-            metric === "risk"
-              ? "Basis risk by district, 2022–2025"
-              : `${current.label}, Season A ${season}`
-          }
-          description={`${current.explain} Hover a district for details; click it to open it in the Explorer.`}
-          action={
-            metric !== "risk" && (
-              <div className="flex flex-wrap gap-2">
-                {YIELD_SEASONS.includes(season) && <Badge tone="accent">Harvest data</Badge>}
-                {isDroughtSeason(season) && (
-                  <Badge tone="drought">Documented drought ({windowYearOf(season)} rains)</Badge>
-                )}
-              </div>
-            )
-          }
-        >
+      <Card
+        label={label}
+        title={headline}
+        source={
+          metric === "risk"
+            ? "Average over the four seasons with NISR harvest data. Click a district to open its worst-matched season."
+            : `${YIELD_SEASONS.includes(season) ? "Leave-one-out index (season with harvest data)" : "Satellite-only backtest"}. Click a district to open it in the Explorer.`
+        }
+      >
+        <div className="mx-auto max-w-2xl">
           <DistrictMap
             shapes={shapes.data}
-            fill={fill}
+            fill={(d) => classOf(d).color}
             label={valueText}
-            ariaLabel={`Map of Eastern Province districts coloured by ${current.label.toLowerCase()}`}
+            ariaLabel={`Eastern Province districts: ${label}`}
             onSelect={open}
             tooltip={(d) => {
-              const v = values.get(d);
+              const v = values.get(d)!;
               return (
-                <div className="tabular space-y-1">
-                  <div className="font-semibold">
-                    {d}
-                    {metric !== "risk" && <span className="font-normal text-muted"> · Season A {season}</span>}
-                  </div>
+                <div className="tabular space-y-0.5">
+                  <div className="font-semibold">{d}</div>
                   {metric === "risk" ? (
-                    <Row label="Basis risk" value={pct(riskOf.get(d) ?? 0)} />
-                  ) : v ? (
-                    <>
-                      <Row label="Rainfall" value={anomalyLabel(v.rainZ)} />
-                      <Row label="Greenness (NDVI)" value={anomalyLabel(v.ndviZ)} />
-                      <Row label="Predicted yield change" value={signedPct(v.index)} />
-                      <Row label="Payout" value={pct(v.payout)} />
-                      {v.actualYieldAnom !== null && (
-                        <Row label="Actual yield change" value={signedPct(v.actualYieldAnom)} />
-                      )}
-                    </>
+                    <Row k="Basis risk" v={pct(riskOf.get(d) ?? 0)} />
                   ) : (
-                    <div className="text-muted">No satellite data</div>
+                    <>
+                      <Row k="Rainfall" v={anomalyLabel(v.rainZ)} />
+                      <Row k="Crop greenness" v={anomalyLabel(v.ndviZ)} />
+                      <Row k="Predicted yield" v={signedPct(v.index)} />
+                      <Row k="Payout" v={pct(v.payout)} />
+                      {v.actualYieldAnom !== null && <Row k="Actual harvest" v={signedPct(v.actualYieldAnom)} />}
+                    </>
                   )}
-                  <div className="pt-1 text-faint">
-                    {metric === "risk" ? "Click to open its worst-matched season" : "Click to open in the Explorer"}
-                  </div>
                 </div>
               );
             }}
           />
-          <div className="mt-4">{legend}</div>
-        </Card>
+        </div>
+        <div className="mt-4 border-t border-line pt-3">{legend}</div>
+      </Card>
 
-        <Card
-          title={metric === "risk" ? "Districts by basis risk" : "Districts this season"}
-          description={
-            metric === "risk"
-              ? "Highest gap first."
-              : `${paying} of ${values.size} districts reach the ${m.trigger}% trigger.`
-          }
-        >
-          <ul className="space-y-1">
-            {ranked.map((d) => (
-              <li key={d}>
-                <button
-                  onClick={() => open(d)}
-                  className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left text-sm hover:bg-surface-2"
-                >
-                  <span className="h-4 w-4 shrink-0 rounded" style={{ background: fill(d) }} />
-                  <span className="flex-1">{d}</span>
-                  <span className="tabular font-medium">{valueText(d)}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        </Card>
-      </div>
+      <Card label="Districts, ranked" title={metric === "risk" ? "Largest mismatch first" : "Worst-hit district first"}>
+        <table className="tabular w-full text-sm">
+          <thead>
+            <tr className="text-left text-xs text-muted">
+              <th className="pb-2 font-medium">District</th>
+              <th className="pb-2 font-medium">Class</th>
+              <th className="pb-2 text-right font-medium">{metric === "risk" ? "Basis risk" : "Predicted yield"}</th>
+              {metric !== "risk" && <th className="pb-2 text-right font-medium">Payout</th>}
+            </tr>
+          </thead>
+          <tbody>
+            {ranked.map((d) => {
+              const c = classOf(d);
+              const v = values.get(d)!;
+              return (
+                <tr key={d} className="cursor-pointer border-t border-line hover:bg-surface-2" onClick={() => open(d)}>
+                  <td className="py-2 font-medium">{d}</td>
+                  <td className="py-2">
+                    <span className="flex items-center gap-2 text-muted">
+                      <span className="h-3 w-4 border border-ink/10" style={{ background: c.color }} />
+                      {c.label}
+                    </span>
+                  </td>
+                  <td className="py-2 text-right">{metric === "risk" ? pct(riskOf.get(d) ?? 0) : signedPct(v.index)}</td>
+                  {metric !== "risk" && <td className="py-2 text-right">{pct(v.payout)}</td>}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </Card>
     </div>
   );
 }
 
-function Row({ label, value }: { label: string; value: string }) {
+function Row({ k, v }: { k: string; v: string }) {
   return (
     <div className="flex justify-between gap-4">
-      <span className="text-muted">{label}</span>
-      <span className="font-medium">{value}</span>
+      <span className="text-muted">{k}</span>
+      <span className="font-medium">{v}</span>
     </div>
   );
 }
