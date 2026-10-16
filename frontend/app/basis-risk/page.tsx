@@ -1,20 +1,18 @@
 "use client";
 
-import { ArrowDownRight, ArrowUpRight, CircleAlert, CircleOff } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import BasisRiskChart from "@/components/charts/BasisRiskChart";
-import ColorLegend from "@/components/charts/ColorLegend";
-import StatCard from "@/components/StatCard";
-import { Badge, Card, ErrorNote, Loading, PageHeader, type Tone } from "@/components/ui";
+import ClassLegend from "@/components/charts/ClassLegend";
+import { Badge, Card, ErrorNote, Loading, PageHeader, StatStrip, Tabs, type Tone } from "@/components/ui";
 import { getBasisRisk, getModel, getSeasons } from "@/lib/api";
 import { classify, OUTCOME_LABEL, pct, signedPct, type Outcome } from "@/lib/payout";
-import { RISK_GRADIENT, RISK_RANGE } from "@/lib/scales";
+import { RISK_CLASSES } from "@/lib/scales";
 import { useApi } from "@/lib/useApi";
 
 const OUTCOME_TONE: Record<Outcome, Tone> = {
   miss: "drought",
-  "false-payout": "pay",
+  "false-payout": "drought",
   hit: "good",
   "correct-no-payout": "neutral",
 };
@@ -47,65 +45,47 @@ export default function BasisRiskPage() {
     const byRisk = [...risk.data].sort((a, b) => b.basisRisk - a.basisRisk);
     const highest = byRisk[0];
     const lowest = byRisk[byRisk.length - 1];
+    const poorCount = count("hit") + count("miss");
 
     body = (
-      <div className="space-y-6">
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          <StatCard label="Highest basis risk" value={pct(highest.basisRisk)} hint={highest.district} icon={ArrowUpRight} />
-          <StatCard label="Lowest basis risk" value={pct(lowest.basisRisk)} hint={lowest.district} icon={ArrowDownRight} />
-          <StatCard
-            label="Missed poor seasons"
-            value={String(count("miss"))}
-            hint={`Harvest fell ${m.lowYieldThreshold}% or more, index did not pay`}
-            icon={CircleOff}
-          />
-          <StatCard
-            label="False payouts"
-            value={String(count("false-payout"))}
-            hint="Index paid, harvest was not poor"
-            icon={CircleAlert}
-          />
-        </div>
+      <div className="space-y-5">
+        <StatStrip
+          items={[
+            { value: pct(highest.basisRisk), label: "Highest basis risk", note: highest.district },
+            { value: pct(lowest.basisRisk), label: "Lowest basis risk", note: lowest.district },
+            { value: String(count("miss")), label: "Poor harvests the index missed", note: `of ${poorCount} poor seasons` },
+            { value: String(count("false-payout")), label: "False payouts", note: `of ${rows.length - poorCount} normal seasons` },
+          ]}
+        />
 
         <Card
-          title="Basis risk by district"
-          description={`For each season, the gap between the index payout and the payout the actual yield implies (same ${m.trigger}% trigger and ${m.exit}% exit), averaged over the four seasons with yield data (2022–2025). 0% means the index paid exactly what the harvest called for.`}
+          label="Basis risk by district · 2022–2025"
+          title={`${highest.district}'s payouts sit furthest from its harvests (${pct(highest.basisRisk)}); ${lowest.district}'s match most closely (${pct(lowest.basisRisk)})`}
+          action={
+            <Link href="/map?metric=risk" className="text-sm text-accent hover:underline">
+              See on the map
+            </Link>
+          }
+          source={`Average gap between the index payout and the payout the harvest called for (same ${m.trigger}% trigger and ${m.exit}% exit), over the four seasons with NISR harvest data.`}
         >
           <BasisRiskChart data={risk.data} />
-          <div className="mt-4 flex flex-wrap items-end justify-between gap-3">
-            <ColorLegend
-              title="Basis risk (same colours as the Drought Map)"
-              gradient={RISK_GRADIENT}
-              ticks={[
-                { at: 0, label: "0% (index matched the harvest)" },
-                { at: 1, label: `≥ ${pct(RISK_RANGE)}` },
-              ]}
-            />
-            <Link href="/map?metric=risk" className="pb-5 text-sm text-accent hover:underline">
-              See it on the map
-            </Link>
+          <div className="mt-3 border-t border-line pt-3">
+            <ClassLegend title="Basis risk" classes={RISK_CLASSES} />
           </div>
         </Card>
 
         <Card
-          title="Season by season"
-          description={`A season is poor when the actual yield change is ${m.lowYieldThreshold}% or worse. The index shown is the leave-one-out prediction, made without that season. Select a district to open it in the Explorer.`}
+          label={`Season by season · ${rows.length} district-seasons`}
+          title={`${count("hit") + count("correct-no-payout")} decisions matched the harvest; ${count("miss")} missed season and ${count("false-payout")} false payouts did not`}
+          source={`A harvest ${Math.abs(m.lowYieldThreshold)}% or more below normal counts as poor. The index is the leave-one-out prediction. Click a district to open it in the Explorer.`}
         >
-          <div className="mb-4 flex flex-wrap gap-2">
-            {FILTERS.map((f) => (
-              <button
-                key={f.key}
-                onClick={() => setFilter(f.key)}
-                aria-pressed={filter === f.key}
-                className={`rounded-full border px-3 py-1 text-xs transition-colors ${
-                  filter === f.key
-                    ? "border-ink bg-ink text-surface"
-                    : "border-line text-muted hover:border-ink/30 hover:text-ink"
-                }`}
-              >
-                {f.label} <span className="tabular opacity-70">{count(f.key)}</span>
-              </button>
-            ))}
+          <div className="mb-3">
+            <Tabs
+              label="Filter seasons"
+              value={filter}
+              options={FILTERS.map((f) => ({ key: f.key, label: `${f.label} (${count(f.key)})` }))}
+              onChange={setFilter}
+            />
           </div>
           <div className="-mx-2 overflow-x-auto">
             <table className="tabular w-full min-w-[640px] text-sm">
@@ -155,10 +135,9 @@ export default function BasisRiskPage() {
 
   return (
     <>
-      <PageHeader eyebrow="Honest limits" title="Basis Risk">
-        Basis risk is the gap between what the index pays and what farmers actually lose. The index
-        only sees rainfall and vegetation from space, so it can pay when the harvest was fine, or
-        miss a season when the harvest failed for another reason.
+      <PageHeader title="Basis Risk">
+        The gap between what the index pays and what farmers actually lose, measured against four
+        seasons of harvest surveys.
       </PageHeader>
       {body}
     </>

@@ -1,33 +1,72 @@
 // One colour meaning across the dashboard: red = drought or payout, green = normal.
-// Colours are CSS variables mixed in OKLab, so every scale follows light and dark mode.
+// Values fall into named classes (like drought-monitor categories) tied to the
+// trigger and exit, so a colour always has a label. Colours are CSS variables, so
+// every class follows light and dark mode.
 
-const DROUGHT = "var(--drought)";
-const NORMAL = "var(--other)";
-const MID = "var(--div-mid)";
-const RISK = "var(--pay)";
+export type ColorClass = { key: string; label: string; range: string; color: string };
 
-const mix = (color: string, share: number) =>
-  `color-mix(in oklab, ${color} ${Math.round(Math.min(1, Math.max(0, share)) * 100)}%, ${MID})`;
+const r = (v: number) => Math.round(v);
 
-/** Yield-change range the index colours span; values beyond it take the end colour. */
-export const INDEX_RANGE = 30;
-
-/** Predicted yield change (%): red below zero, green above, neutral at no change. */
-export function indexColor(value: number) {
-  return value < 0 ? mix(DROUGHT, -value / INDEX_RANGE) : mix(NORMAL, value / INDEX_RANGE);
+/**
+ * Predicted yield change classes. The band between trigger and exit is split in
+ * three, so each class is also a payout band (payout rises linearly in it).
+ */
+export function indexClasses(trigger: number, exit: number): ColorClass[] {
+  const step = (trigger - exit) / 3;
+  const a = trigger - step;
+  const b = trigger - 2 * step;
+  return [
+    { key: "gain", label: "Above normal", range: "> +10%", color: "var(--sev-gain)" },
+    { key: "normal", label: "Near normal, no payout", range: `${r(trigger)} to +10%`, color: "var(--sev-normal)" },
+    { key: "watch", label: "Payout starts", range: `${r(trigger)} to ${r(a)}%`, color: "var(--sev-watch)" },
+    { key: "moderate", label: "Moderate loss", range: `${r(a)} to ${r(b)}%`, color: "var(--sev-moderate)" },
+    { key: "severe", label: "Severe loss", range: `${r(b)} to ${r(exit)}%`, color: "var(--sev-severe)" },
+    { key: "extreme", label: "Full payout", range: `≤ ${r(exit)}%`, color: "var(--sev-extreme)" },
+  ];
 }
 
-/** Payout share 0–1: neutral at no payout, red at the full payout. */
-export function payoutColor(share: number) {
-  return share <= 0 ? MID : mix(DROUGHT, 0.2 + 0.8 * share);
+export function indexClass(value: number, trigger: number, exit: number): ColorClass {
+  const c = indexClasses(trigger, exit);
+  const step = (trigger - exit) / 3;
+  if (value > 10) return c[0];
+  if (value > trigger) return c[1];
+  if (value > trigger - step) return c[2];
+  if (value > trigger - 2 * step) return c[3];
+  if (value > exit) return c[4];
+  return c[5];
 }
 
-/** Basis risk 0–1, on a 0–50% scale: neutral to orange. */
-export const RISK_RANGE = 0.5;
-export function riskColor(risk: number) {
-  return mix(RISK, risk / RISK_RANGE);
+/** Payout share 0–1, on the same ramp as the index (payout grows as the index falls). */
+export const PAYOUT_CLASSES: ColorClass[] = [
+  { key: "none", label: "No payout", range: "0%", color: "var(--sev-normal)" },
+  { key: "watch", label: "Small payout", range: "1–33%", color: "var(--sev-watch)" },
+  { key: "moderate", label: "Partial payout", range: "34–66%", color: "var(--sev-moderate)" },
+  { key: "severe", label: "Large payout", range: "67–99%", color: "var(--sev-severe)" },
+  { key: "extreme", label: "Full payout", range: "100%", color: "var(--sev-extreme)" },
+];
+
+export function payoutClass(share: number): ColorClass {
+  if (share <= 0) return PAYOUT_CLASSES[0];
+  if (share <= 1 / 3) return PAYOUT_CLASSES[1];
+  if (share <= 2 / 3) return PAYOUT_CLASSES[2];
+  if (share < 1) return PAYOUT_CLASSES[3];
+  return PAYOUT_CLASSES[4];
 }
 
-export const INDEX_GRADIENT = `linear-gradient(90deg, ${DROUGHT}, ${MID}, ${NORMAL})`;
-export const PAYOUT_GRADIENT = `linear-gradient(90deg, ${MID}, ${DROUGHT})`;
-export const RISK_GRADIENT = `linear-gradient(90deg, ${MID}, ${RISK})`;
+/** Basis risk 0–1: how far the index payout was from what the harvest called for. */
+export const RISK_CLASSES: ColorClass[] = [
+  { key: "low", label: "Close match", range: "< 10%", color: "var(--risk-1)" },
+  { key: "some", label: "Some mismatch", range: "10–20%", color: "var(--risk-2)" },
+  { key: "high", label: "High mismatch", range: "20–30%", color: "var(--risk-3)" },
+  { key: "very", label: "Very high mismatch", range: "≥ 30%", color: "var(--risk-4)" },
+];
+
+export function riskClass(risk: number): ColorClass {
+  if (risk < 0.1) return RISK_CLASSES[0];
+  if (risk < 0.2) return RISK_CLASSES[1];
+  if (risk < 0.3) return RISK_CLASSES[2];
+  return RISK_CLASSES[3];
+}
+
+/** Dark classes need light text on top of them. */
+export const isDark = (c: ColorClass) => c.key === "extreme" || c.key === "severe" || c.key === "very" || c.key === "gain";

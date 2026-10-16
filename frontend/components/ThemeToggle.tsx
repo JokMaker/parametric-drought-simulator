@@ -37,11 +37,11 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={toggle}
-      className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted transition-colors hover:bg-surface-2 hover:text-ink"
+      className="flex items-center gap-1.5 rounded px-1.5 py-1 text-xs text-header-ink/80 transition-colors hover:text-header-ink"
       aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
     >
-      {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
-      {theme === "dark" ? "Light mode" : "Dark mode"}
+      {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
+      {theme === "dark" ? "Light" : "Dark"}
     </button>
   );
 }

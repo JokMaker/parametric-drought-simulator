@@ -5,9 +5,8 @@ import DroughtMap from "./DroughtMap";
 export default function MapPage() {
   return (
     <>
-      <PageHeader eyebrow="Drought monitoring" title="Drought Map">
-        The seven districts of Eastern Province, coloured by the index, the payout or the basis risk.
-        Pick a season to see where the drought index points to losses.
+      <PageHeader title="Drought Map">
+        Where the index points to losses, district by district, for any season since 2001.
       </PageHeader>
       <Suspense fallback={<Loading />}>
         <DroughtMap />

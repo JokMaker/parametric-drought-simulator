@@ -89,7 +89,7 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Open http://localhost:3000. The sidebar shows **Live API connected** when the dashboard is
+Open http://localhost:3000. The header shows **Live data** when the dashboard is
 reading from the backend. With `NEXT_PUBLIC_USE_MOCK=true` the dashboard runs without the backend
 on the saved notebook results.
 
@@ -124,23 +124,36 @@ The notebook rebuilds the model from raw data and writes its results into `backe
 
 **Figma file:** [Drought Index Simulator – Designs](https://www.figma.com/design/b7m0ZzV4ZXdzikU7GOhHUG/Drought-Index-Simulator-%E2%80%93-Designs?node-id=0-1). It holds editable designs of every
 page (Overview, District Explorer for Rwamagana 2023 and Gatsibo 2022, Drought History, Basis Risk),
-plus mobile and dark-mode versions, with the app's colour and text styles saved as Figma styles.
+plus mobile and dark-mode versions, with the app's colour and text styles saved as Figma styles. The Figma file shows the earlier
+sidebar design; the screenshots below show the current one.
 
 The interface is built for an analyst or programme officer (proposal NFR3), so every number is
 paired with a plain-language label and every payout with the reason for it.
 
 **Design decisions**
 
-- **Navigation:** a persistent sidebar lists the four pages with a one-line description each,
-  plus one-click demo cases and a live/offline API indicator. On phones it collapses into a menu.
-- **Explorer controls:** district chips and a season timeline replace dropdowns, so every option
+The layout follows public drought and climate dashboards rather than a generic app template:
+the [U.S. Drought Monitor](https://droughtmonitor.unl.edu/), [drought.gov](https://www.drought.gov/current-conditions)
+and [Our World in Data](https://ourworldindata.org/). The supervisor's 13th feedback asked for
+cards that stack vertically, each on its own, and charts that each tell a story.
+
+- **Navigation:** a dark header bar with the five pages as tabs and a live/offline data indicator.
+  On phones the tabs scroll sideways.
+- **One column of cards:** each page is a single column, one card per finding. A short row of key
+  figures sits at the top of a page, as on drought.gov.
+- **Every card title is the finding**, not the chart name. "6 of 7 districts reach the trigger;
+  Rwamagana is hardest hit" or "Payouts cluster in documented droughts: 68% of drought seasons
+  against 38% of others". The titles are computed from the data, so they change with the season or
+  district chosen. A small label above names what is shown, and a source line closes each card.
+- **Severity classes like the Drought Monitor's D0–D4:** the predicted yield change is shown in
+  labelled classes tied to the payout rule: gain, near normal (no payout), then watch, moderate and
+  severe as thirds between the -4% trigger and the -24% exit, and extreme (full payout). Payouts and
+  basis risk have their own labelled class scales (basis risk in purple). Every coloured chart has a
+  class legend with the range of each class, so no value depends on colour alone.
+- **Explorer controls:** district buttons and a season timeline replace dropdowns, so every option
   is visible. Seasons with yield data and documented drought years are marked on the timeline, and
   the arrow keys step through years. The selection is kept in the URL, so any view can be shared.
-- **One colour meaning everywhere:** red = drought or payout, green = normal, on one shared scale
-  used by the map, the bars and the heatmap (basis risk uses orange). The deep green was chosen
-  because brighter greens fail the colour-blind check against red; every chart therefore also has a
-  legend, labels and tooltips, so no value depends on colour alone. Checked in light and dark mode.
-- **Every chart has a title, a one-line plain-language explanation and a legend** (NFR3).
+  The Explorer ends with the selected season placed among all 25 seasons for that district.
 - **Light and dark mode** follow the system setting, with a manual toggle.
 - **Responsive layout** from phone to desktop.
 
@@ -258,7 +271,7 @@ parametric-drought-simulator/
 │   └── Dockerfile
 ├── frontend/
 │   ├── app/            Pages: overview, explorer, history, basis-risk
-│   ├── components/     Sidebar, payout panel, charts, shared UI
+│   ├── components/     Top navigation, payout cards, charts, shared UI
 │   ├── lib/            API client, types, payout logic, constants
 │   └── Dockerfile
 ├── notebook/           Calibration notebook: data extraction, the 2024 reconstruction, EDA,

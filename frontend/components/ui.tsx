@@ -1,94 +1,122 @@
 import { AlertTriangle } from "lucide-react";
 import type { ReactNode } from "react";
 
-export function PageHeader({
-  eyebrow,
-  title,
-  children,
-  actions,
-}: {
-  eyebrow?: string;
-  title: string;
-  children?: ReactNode;
-  actions?: ReactNode;
-}) {
+export function PageHeader({ title, children }: { title: string; children?: ReactNode }) {
   return (
-    <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
-      <div className="max-w-3xl">
-        {eyebrow && (
-          <div className="mb-1 text-xs font-medium uppercase tracking-wider text-accent">{eyebrow}</div>
-        )}
-        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{title}</h1>
-        {children && <p className="mt-2 text-sm leading-6 text-muted">{children}</p>}
-      </div>
-      {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
-    </div>
+    <header className="mb-6 border-b border-line pb-5">
+      <h1 className="text-[26px] font-semibold leading-tight tracking-tight">{title}</h1>
+      {children && <p className="mt-1.5 max-w-3xl text-[15px] leading-6 text-muted">{children}</p>}
+    </header>
   );
 }
 
+/**
+ * One self-contained panel. `label` names the topic; `title` states the finding,
+ * so the card tells its story before the reader looks at the chart.
+ */
 export function Card({
+  label,
   title,
-  description,
   action,
+  source,
   children,
   className = "",
 }: {
-  title?: string;
-  description?: ReactNode;
+  label?: string;
+  title?: ReactNode;
   action?: ReactNode;
+  source?: ReactNode;
   children: ReactNode;
   className?: string;
 }) {
   return (
-    <section className={`card p-5 sm:p-6 ${className}`}>
-      {(title || action) && (
-        <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
-          <div>
-            {title && <h2 className="text-sm font-semibold">{title}</h2>}
-            {description && <p className="mt-1 text-xs leading-5 text-muted">{description}</p>}
+    <section className={`card ${className}`}>
+      {(label || title || action) && (
+        <div className="flex flex-wrap items-start justify-between gap-3 px-5 pt-4 sm:px-6">
+          <div className="min-w-0">
+            {label && <div className="text-[13px] font-medium text-muted">{label}</div>}
+            {title && <h2 className="mt-0.5 text-[17px] font-semibold leading-snug">{title}</h2>}
           </div>
           {action}
         </div>
       )}
-      {children}
+      <div className="px-5 py-4 sm:px-6">{children}</div>
+      {source && (
+        <div className="border-t border-line px-5 py-2.5 text-xs text-faint sm:px-6">{source}</div>
+      )}
     </section>
   );
 }
 
-const TONES = {
-  neutral: "bg-surface-2",
-  accent: "bg-accent-soft",
-  drought: "bg-drought-soft",
-  pay: "bg-pay-soft",
-  good: "bg-good-soft",
-  other: "bg-other-soft",
-} as const;
-const DOTS = {
-  neutral: "bg-faint",
-  accent: "bg-accent",
-  drought: "bg-drought",
-  pay: "bg-pay",
-  good: "bg-good",
-  other: "bg-other",
-} as const;
-export type Tone = keyof typeof TONES;
-
-/** A label with a coloured dot; the text stays in ink so colour never carries meaning alone. */
-export function Badge({ tone = "neutral", children }: { tone?: Tone; children: ReactNode }) {
+/** A row of headline figures, divided like an instrument panel. */
+export function StatStrip({
+  items,
+}: {
+  items: { value: ReactNode; label: string; note?: ReactNode }[];
+}) {
   return (
-    <span
-      className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium text-ink ${TONES[tone]}`}
+    <section
+      className={`grid gap-px overflow-hidden rounded-md border border-line bg-line ${
+        items.length === 3 ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-2 md:grid-cols-4"
+      }`}
     >
-      <span className={`h-1.5 w-1.5 rounded-full ${DOTS[tone]}`} />
-      {children}
-    </span>
+      {items.map((it) => (
+        <div key={it.label} className="bg-surface px-5 py-4">
+          <div className="tabular text-[28px] font-semibold leading-none tracking-tight">{it.value}</div>
+          <div className="mt-2 text-[13px] leading-snug text-ink">{it.label}</div>
+          {it.note && <div className="mt-0.5 text-xs text-muted">{it.note}</div>}
+        </div>
+      ))}
+    </section>
   );
 }
 
-export function LegendDot({ color, children }: { color: string; children: ReactNode }) {
+/** Underlined tabs, as used for map layers in drought portals. */
+export function Tabs<T extends string>({
+  value,
+  options,
+  onChange,
+  label,
+}: {
+  value: T;
+  options: { key: T; label: string }[];
+  onChange: (v: T) => void;
+  label: string;
+}) {
   return (
-    <span className="inline-flex items-center gap-1.5 text-xs text-muted">
-      <span className={`h-2.5 w-2.5 rounded-sm ${color}`} />
+    <div role="tablist" aria-label={label} className="flex gap-1 border-b border-line">
+      {options.map((o) => (
+        <button
+          key={o.key}
+          role="tab"
+          aria-selected={value === o.key}
+          onClick={() => onChange(o.key)}
+          className={`-mb-px border-b-2 px-3 py-2 text-sm transition-colors ${
+            value === o.key ? "border-accent font-medium text-ink" : "border-transparent text-muted hover:text-ink"
+          }`}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+export type Tone = "neutral" | "accent" | "drought" | "pay" | "good" | "other";
+
+const TAG = {
+  neutral: "border-line text-muted",
+  accent: "border-accent/40 text-accent",
+  drought: "border-drought/40 text-drought",
+  pay: "border-pay/40 text-ink",
+  good: "border-good/40 text-ink",
+  other: "border-other/40 text-ink",
+} as const;
+
+/** A small outlined tag. */
+export function Badge({ tone = "neutral", children }: { tone?: Tone; children: ReactNode }) {
+  return (
+    <span className={`inline-flex items-center whitespace-nowrap rounded-sm border px-1.5 py-px text-xs ${TAG[tone]}`}>
       {children}
     </span>
   );

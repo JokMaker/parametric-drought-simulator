@@ -1,18 +1,20 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
 import Script from "next/script";
-import Sidebar from "@/components/Sidebar";
+import TopNav from "@/components/TopNav";
 import { USE_MOCK } from "@/lib/api";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const plexSans = IBM_Plex_Sans({
+  variable: "--font-plex-sans",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const plexMono = IBM_Plex_Mono({
+  variable: "--font-plex-mono",
   subsets: ["latin"],
+  weight: ["400", "500"],
 });
 
 export const metadata: Metadata = {
@@ -28,27 +30,27 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${plexSans.variable} ${plexMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       {/* Browser extensions (e.g. Grammarly) add attributes to <body> before React loads. */}
-      <body className="min-h-full font-sans lg:flex" suppressHydrationWarning>
+      <body className="flex min-h-full flex-col font-sans" suppressHydrationWarning>
         <Script id="theme" strategy="beforeInteractive">
           {THEME_SCRIPT}
         </Script>
-        <Sidebar />
-        <div className="flex min-h-screen min-w-0 flex-1 flex-col">
-          {USE_MOCK && (
-            <div className="border-b border-line bg-pay-soft px-4 py-2 text-center text-xs text-ink">
-              Showing saved results: the backend is not connected, so the dashboard uses the last
-              exported model output.
-            </div>
-          )}
-          <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-8 lg:py-10">{children}</main>
-          <footer className="px-4 pb-6 text-center text-xs text-faint sm:px-8">
-            Season A maize, Eastern Province · District-level data only, no farmer records
-          </footer>
-        </div>
+        <TopNav />
+        {USE_MOCK && (
+          <div className="border-b border-line bg-surface-2 px-4 py-1.5 text-center text-xs text-muted">
+            Showing saved results: the backend is not connected.
+          </div>
+        )}
+        <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-7 sm:px-6">{children}</main>
+        <footer className="border-t border-line">
+          <div className="mx-auto max-w-5xl px-4 py-4 text-xs text-faint sm:px-6">
+            Data: CHIRPS rainfall, MODIS NDVI (via Google Earth Engine), NISR Seasonal Agricultural
+            Survey. District-level data only; no farmer records.
+          </div>
+        </footer>
       </body>
     </html>
   );

@@ -25,7 +25,7 @@ export default function SeasonTimeline({ season, onSelect }: { season: number; o
       <button
         onClick={() => step(-1)}
         disabled={season <= FIRST_SEASON}
-        className="rounded-lg border border-line p-2 text-muted hover:bg-surface-2 hover:text-ink disabled:opacity-40"
+        className="rounded-sm border border-line p-1.5 text-muted hover:bg-surface-2 hover:text-ink disabled:opacity-40"
         aria-label="Previous season"
       >
         <ChevronLeft size={16} />
@@ -42,17 +42,17 @@ export default function SeasonTimeline({ season, onSelect }: { season: number; o
               onClick={() => onSelect(y)}
               aria-pressed={active}
               title={`Season A ${y}${hasYield ? " · yield data" : ""}${drought ? " · documented drought" : ""}`}
-              className={`relative flex min-w-[52px] flex-col items-center rounded-lg px-2 pt-2 pb-1.5 text-xs transition-colors ${
-                active ? "bg-accent font-semibold text-accent-ink" : "text-muted hover:bg-surface-2 hover:text-ink"
+              className={`relative flex min-w-[48px] flex-col items-center rounded-sm px-2 pt-2 pb-1.5 text-xs transition-colors ${
+                active ? "bg-ink font-semibold text-surface" : "text-muted hover:bg-surface-2 hover:text-ink"
               }`}
             >
               {drought && (
-                <span className={`absolute inset-x-2 top-0.5 h-0.5 rounded-full ${active ? "bg-accent-ink/70" : "bg-drought"}`} />
+                <span className={`absolute inset-x-2 top-0.5 h-0.5 rounded-full ${active ? "bg-surface/70" : "bg-drought"}`} />
               )}
               <span className="tabular">{y}</span>
               <span
                 className={`mt-1 h-1.5 w-1.5 rounded-full ${
-                  hasYield ? (active ? "bg-accent-ink" : "bg-accent") : "bg-transparent"
+                  hasYield ? (active ? "bg-surface" : "bg-ink/70") : "bg-transparent"
                 }`}
               />
             </button>
@@ -62,7 +62,7 @@ export default function SeasonTimeline({ season, onSelect }: { season: number; o
       <button
         onClick={() => step(1)}
         disabled={season >= LAST_SEASON}
-        className="rounded-lg border border-line p-2 text-muted hover:bg-surface-2 hover:text-ink disabled:opacity-40"
+        className="rounded-sm border border-line p-1.5 text-muted hover:bg-surface-2 hover:text-ink disabled:opacity-40"
         aria-label="Next season"
       >
         <ChevronRight size={16} />

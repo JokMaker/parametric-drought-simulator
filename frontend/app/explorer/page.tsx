@@ -5,9 +5,8 @@ import Explorer from "./Explorer";
 export default function ExplorerPage() {
   return (
     <>
-      <PageHeader eyebrow="Simulate a payout" title="District Explorer">
-        Pick a district and a season to see what the satellites recorded, the yield change the
-        index predicts, and the payout it would have made.
+      <PageHeader title="District Explorer">
+        One district, one season: what the satellites recorded and what the index would pay.
       </PageHeader>
       <Suspense fallback={<Loading />}>
         <Explorer />

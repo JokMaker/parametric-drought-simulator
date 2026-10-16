@@ -22,7 +22,7 @@ export function signedPct(x: number, digits = 1) {
 
 /** FR6: the reason sentence shown with every payout decision. */
 export function reason(s: Simulation, trigger: number, exit: number) {
-  const seen = `Rainfall was ${anomalyLabel(s.rainZ)} and vegetation ${anomalyLabel(s.ndviZ)}.`;
+  const seen = `Rainfall was ${anomalyLabel(s.rainZ)} and crop greenness ${anomalyLabel(s.ndviZ)}.`;
   const idx = `${s.index.toFixed(1)}%`;
   if (s.payout <= 0)
     return `${seen} Predicted yield change of ${idx} is above the ${trigger}% trigger, so no payout.`;
