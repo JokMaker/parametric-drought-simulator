@@ -14,9 +14,9 @@ client = TestClient(app)
 def test_model_summary():
     m = client.get("/api/model").json()
     assert m["model"] == "Ridge"
-    assert m["trigger"] == -4 and m["exit"] == -24 and m["lowYieldThreshold"] == -10
-    assert round(m["hitRate"], 2) == 0.91 and round(m["falsePayoutRate"], 2) == 0.18
-    assert m["coefficients"] == pytest.approx({"rain_z": 13.47, "ndvi_z": 9.91}, abs=0.01)
+    assert m["trigger"] == -2 and m["exit"] == -22 and m["lowYieldThreshold"] == -10
+    assert round(m["hitRate"], 2) == 0.50 and round(m["falsePayoutRate"], 3) == 0.225
+    assert m["coefficients"] == pytest.approx({"rain_z": 0.66, "ndvi_z": 9.17}, abs=0.01)
     assert len(m["validation"]) == 8
 
 
@@ -33,28 +33,30 @@ def test_formula_matches_exported_index():
 
 
 def test_calibration_season_uses_loo_index():
-    # The missed season: the harvest fell 16%, the index did not pay.
+    # The missed season: the harvest fell 16% below trend, the index did not pay.
     s = client.get("/api/simulate", params={"district": "Gatsibo", "season": 2022}).json()
-    assert s["index"] == pytest.approx(-2.30, abs=0.01)
+    assert s["index"] == pytest.approx(7.72, abs=0.01)
     assert s["payout"] == 0
-    assert s["actualYieldAnom"] == pytest.approx(-16.29, abs=0.01)
-    assert s["payoutIfActual"] == pytest.approx(0.61, abs=0.005)
+    assert s["actualYieldAnom"] == pytest.approx(-15.67, abs=0.01)
+    assert s["payoutIfActual"] == pytest.approx(0.68, abs=0.005)
 
-    # The good catch: full payout, and the harvest justified it.
+    # The good catch: the index paid 57%, and the harvest justified a full payout.
     s = client.get("/api/simulate", params={"district": "Rwamagana", "season": 2023}).json()
-    assert s["index"] == pytest.approx(-34.22, abs=0.01)
-    assert s["payout"] == 1 and s["payoutIfActual"] == 1
+    assert s["index"] == pytest.approx(-13.41, abs=0.01)
+    assert s["payout"] == pytest.approx(0.57, abs=0.005) and s["payoutIfActual"] == 1
 
-    s = client.get("/api/simulate", params={"district": "Bugesera", "season": 2024}).json()
-    assert s["actualYieldAnom"] == pytest.approx(13.72, abs=0.01)
+    # An older release (2019): the year the index missed most.
+    s = client.get("/api/simulate", params={"district": "Rwamagana", "season": 2019}).json()
+    assert s["actualYieldAnom"] == pytest.approx(-34.97, abs=0.01)
+    assert s["payout"] == 0
 
 
 def test_satellite_only_season():
-    # Drought year 2017 (2016 rains): satellite-only, full payout.
+    # Drought year 2017 (2016 rains): its yields are not used (imputed by NISR), so satellite-only.
     s = client.get("/api/simulate", params={"district": "Kirehe", "season": 2017}).json()
     assert s["actualYieldAnom"] is None and s["payoutIfActual"] is None
-    assert s["index"] == pytest.approx(-41.8, abs=0.1)
-    assert s["payout"] == 1
+    assert s["index"] == pytest.approx(-19.0, abs=0.1)
+    assert s["payout"] == pytest.approx(0.85, abs=0.005)
 
 
 @pytest.mark.parametrize(
@@ -74,26 +76,26 @@ def test_history_matches_drought_year_check():
     assert len(pts) == 175
     drought = [p for p in pts if p["droughtYear"]]
     other = [p for p in pts if not p["droughtYear"]]
-    assert (sum(p["pays"] for p in drought), len(drought)) == (43, 63)
-    assert (sum(p["pays"] for p in other), len(other)) == (43, 112)
-    assert all((p["payout"] > 0) == (p["index"] < -4) for p in pts)
+    assert (sum(p["pays"] for p in drought), len(drought)) == (34, 63)
+    assert (sum(p["pays"] for p in other), len(other)) == (26, 112)
+    assert all((p["payout"] > 0) == (p["index"] < -2) for p in pts)
 
 
 def test_basis_risk():
     br = {b["district"]: b["basisRisk"] for b in client.get("/api/basis-risk").json()}
-    expected = {"Bugesera": 0.31, "Kirehe": 0.28, "Gatsibo": 0.25, "Nyagatare": 0.22,
-                "Ngoma": 0.11, "Kayonza": 0.08, "Rwamagana": 0.00}
+    expected = {"Nyagatare": 0.33, "Kirehe": 0.29, "Ngoma": 0.27, "Gatsibo": 0.25,
+                "Rwamagana": 0.21, "Bugesera": 0.20, "Kayonza": 0.18}
     assert br == pytest.approx(expected, abs=0.005)
 
 
 def test_seasons_hit_and_false_payout_rates():
     rows = client.get("/api/seasons").json()
-    assert len(rows) == 28
-    assert {r["season"] for r in rows} == {2022, 2023, 2024, 2025}
+    assert len(rows) == 56
+    assert {r["season"] for r in rows} == set(range(2018, 2026))
     poor = [r for r in rows if r["actualYieldAnom"] <= -10]
     other = [r for r in rows if r["actualYieldAnom"] > -10]
-    assert (sum(r["index"] <= -4 for r in poor), len(poor)) == (10, 11)
-    assert (sum(r["index"] <= -4 for r in other), len(other)) == (3, 17)
+    assert (sum(r["index"] <= -2 for r in poor), len(poor)) == (8, 16)
+    assert (sum(r["index"] <= -2 for r in other), len(other)) == (9, 40)
 
 
 def test_district_shapes():

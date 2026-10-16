@@ -4,6 +4,7 @@ import { classify, pct, reason, signedPct } from "@/lib/payout";
 import { indexClass, indexClasses, payoutClass } from "@/lib/scales";
 import type { ModelSummary, Simulation } from "@/lib/types";
 import { ArrowRight } from "lucide-react";
+import { POOR_RULE } from "@/lib/constants";
 import { Card } from "./ui";
 
 // Yield-change range drawn on the payout scale: losses on the left, gains on the right.
@@ -137,7 +138,7 @@ function Chain({ sim }: { sim: Simulation }) {
       <Step label="Rainfall" value={sd(sim.rainZ)} sub="SD from normal" color={sim.rainZ < 0 ? DOWN : UP} />
       <Step label="Crop greenness" value={sd(sim.ndviZ)} sub="SD from normal" color={sim.ndviZ < 0 ? DOWN : UP} />
       {arrow}
-      <Step label="Predicted yield" value={signedPct(sim.index)} sub="vs a normal harvest" />
+      <Step label="Predicted yield" value={signedPct(sim.index)} sub="vs the expected harvest" />
       {arrow}
       <Step label="Payout" value={pct(sim.payout)} sub="of the sum insured" />
     </div>
@@ -265,7 +266,7 @@ export function HarvestCard({ sim, model }: { sim: Simulation; model: ModelSumma
     <Card
       label="Check against the harvest"
       title={harvestHeadline(sim, model)}
-      source={`NISR Seasonal Agricultural Survey, Season A ${sim.season}. A harvest ${Math.abs(model.lowYieldThreshold)}% or more below normal counts as poor.`}
+      source={`NISR Seasonal Agricultural Survey, Season A ${sim.season}. ${POOR_RULE(model.lowYieldThreshold)}`}
     >
       <div className="space-y-3">
         <CompareRow label="Predicted (index)" value={sim.index} min={-50} max={50} text={signedPct(sim.index)}

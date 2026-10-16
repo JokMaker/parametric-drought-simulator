@@ -19,9 +19,16 @@ export const SEASONS = Array.from(
 );
 export const windowYearOf = (season: number) => season - 1;
 
-// Seasons with NISR yield records. 2024 is rebuilt from the raw Production and
-// Screening files (notebook Section 6b).
-export const YIELD_SEASONS = [2022, 2023, 2024, 2025];
+// Seasons with NISR yield records used by the model. 2024 is rebuilt from the raw
+// Production and Screening files (notebook Section 6b); 2018-2021 come from older
+// releases (Section 6c). 2017 has yields too, but NISR imputed most of them, so it is
+// not used.
+export const YIELD_SEASONS = [2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025];
+export const YIELD_RANGE = `${YIELD_SEASONS[0]}–${YIELD_SEASONS[YIELD_SEASONS.length - 1]}`;
+
+// How a poor harvest is defined, in words shared by every card.
+export const POOR_RULE = (threshold: number) =>
+  `A harvest ${Math.abs(threshold)}% or more below the district's expected yield (its own level and the province trend) counts as poor.`;
 
 // Rwanda's most severe droughts, especially in Eastern Province
 // (Niyonsenga et al., 2024): 2003–2006 and 2013–2017, as window years.

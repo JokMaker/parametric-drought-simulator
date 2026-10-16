@@ -9,6 +9,7 @@ import { Badge, Card, DotCount, ErrorNote, Loading, PageHeader, StatStrip, Tabs,
 import { getBasisRisk, getModel, getSeasons } from "@/lib/api";
 import { classify, OUTCOME_LABEL, pct, signedPct, type Outcome } from "@/lib/payout";
 import { RISK_CLASSES } from "@/lib/scales";
+import { POOR_RULE, YIELD_RANGE, YIELD_SEASONS } from "@/lib/constants";
 import { useApi } from "@/lib/useApi";
 
 const OUTCOME_TONE: Record<Outcome, Tone> = {
@@ -72,14 +73,14 @@ export default function BasisRiskPage() {
         <TriggerSimulator seasons={seasons.data} model={m} />
 
         <Card
-          label="Basis risk by district · 2022–2025"
+          label={`Basis risk by district · ${YIELD_RANGE}`}
           title={`${highest.district}'s payouts sit furthest from its harvests (${pct(highest.basisRisk)}); ${lowest.district}'s match most closely (${pct(lowest.basisRisk)})`}
           action={
             <Link href="/map?metric=risk" className="text-sm text-accent hover:underline">
               See on the map
             </Link>
           }
-          source={`Average gap between the index payout and the payout the harvest called for (same ${m.trigger}% trigger and ${m.exit}% exit), over the four seasons with NISR harvest data.`}
+          source={`Average gap between the index payout and the payout the harvest called for (same ${m.trigger}% trigger and ${m.exit}% exit), over the ${YIELD_SEASONS.length} seasons with NISR harvest data.`}
         >
           <BasisRiskChart data={risk.data} />
           <div className="mt-3 border-t border-line pt-3">
@@ -90,7 +91,7 @@ export default function BasisRiskPage() {
         <Card
           label={`Season by season · ${rows.length} district-seasons`}
           title={`${count("hit") + count("correct-no-payout")} decisions matched the harvest; ${count("miss")} missed season and ${count("false-payout")} false payouts did not`}
-          source={`A harvest ${Math.abs(m.lowYieldThreshold)}% or more below normal counts as poor. The index is the leave-one-out prediction. Click a district to open it in the Explorer.`}
+          source={`${POOR_RULE(m.lowYieldThreshold)} The index is the leave-one-out prediction. Click a district to open it in the Explorer.`}
         >
           <div className="mb-3">
             <Tabs

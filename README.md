@@ -20,11 +20,11 @@ Kirehe, Ngoma, Nyagatare, Rwamagana), backtested from 2001 to 2025.
 
 | Page | What it does | Requirements |
 |---|---|---|
-| **Overview** | Opens with a four-step picture of how the index works and a five-stop guided tour on the map (a normal year, the worst year, a drought caught, a drought missed, a false alarm), then a scatter plot of the index against the actual harvest for all 28 district-seasons; then the selected model, trigger (−4%) and exit (−24%), hit rate (91%) and false payout rate (18%), validation results (leave-one-out and leave-one-season-out), and which input drives the index | FR7, FR8, FR9 |
+| **Overview** | Opens with a four-step picture of how the index works and a five-stop guided tour on the map (a normal year, the worst year, a drought caught, a drought missed, a false alarm), then a scatter plot of the index against the actual harvest for all 56 district-seasons; then the selected model, trigger (−2%) and exit (−22%), hit rate (50%) and false payout rate (22%), validation results (leave-one-out and leave-one-season-out), and which input drives the index | FR7, FR8, FR9 |
 | **Drought Map** | The seven districts on a map, coloured by the predicted yield change, the payout or the basis risk for any season since 2001. Press Play to watch every season from 2001 in turn. Hover a district for its rainfall and greenness anomalies, index and payout; click it to open it in the Explorer | FR1, FR3, FR5, FR10 |
-| **District Explorer** | Pick a district and season; see rainfall and vegetation anomalies, a payout gauge, where the index sits between trigger and exit, and the reason for the payout. For 2022–2025 the index and payout are shown side by side with the actual harvest | FR1, FR3, FR5, FR6, FR7, FR9 |
-| **Drought History** | The index and payout for every year since 2000, with documented drought years (2003–2006, 2013–2017) shaded, and a district-by-year heatmap: payouts in 68% of drought-year seasons against 38% of other years | FR9 |
-| **Basis Risk** | A "what if" simulator: move the trigger and exit and see how many poor harvests are paid, how many are missed, the false payouts and the basis risk change live. Then basis risk per district (Bugesera 31% highest, Rwamagana 0% lowest) and a season-by-season table filterable by outcome (missed, false payout, paid correctly) | FR10 |
+| **District Explorer** | Pick a district and season; see rainfall and vegetation anomalies, a payout gauge, where the index sits between trigger and exit, and the reason for the payout. For 2018–2025 the index and payout are shown side by side with the actual harvest | FR1, FR3, FR5, FR6, FR7, FR9 |
+| **Drought History** | The index and payout for every year since 2000, with documented drought years (2003–2006, 2013–2017) shaded, and a district-by-year heatmap: payouts in 54% of drought-year seasons against 23% of other years | FR9 |
+| **Basis Risk** | A "what if" simulator: move the trigger and exit and see how many poor harvests are paid, how many are missed, the false payouts and the basis risk change live. Then basis risk per district (Nyagatare 33% highest, Kayonza 18% lowest) and a season-by-season table filterable by outcome (missed, false payout, paid correctly) | FR10 |
 
 ## Machine learning model
 
@@ -32,12 +32,12 @@ The model is built in [notebook/drought_index.ipynb](notebook/drought_index.ipyn
 
 | Item | Summary |
 |---|---|
-| **Data engineering** | CHIRPS rainfall and MODIS NDVI clipped to the 7 districts, masked to cropland, aggregated over the October–December window and turned into z-scores against each district's history; NISR survey plots filtered to smallholder maize and aggregated into survey-weighted district yields (2024 rebuilt by joining the raw Production and Screening files). Result: 28 district-seasons (2022–2025) for training, 175 for the backtest. |
+| **Data engineering** | CHIRPS rainfall and MODIS NDVI clipped to the 7 districts, masked to cropland, aggregated over the October–December window and turned into z-scores against each district's history; NISR survey plots filtered to smallholder maize and aggregated into survey-weighted district yields, from nine Season A releases (2017–2025) in four file layouts; 2024 rebuilt by joining the raw Production and Screening files, 2021's maize area joined from Screening. Yields are detrended (+9.3% a year) before computing anomalies. Result: 56 district-seasons (2018–2025) for training, 175 for the backtest. 2017 is kept but not trained on (NISR imputed most of its production); 2013–2016 cannot be used (no harvest quantities in the microdata). |
 | **Visualizations** | Distributions, scatter plots, correlation matrix, yields by district, seasonal NDVI and cloud-cover profiles, peak-NDVI sensitivity, predicted vs actual, residuals, confusion matrix, trigger selection, drought-year backtest |
-| **Architecture** | 2 inputs (rainfall and vegetation anomalies) → `StandardScaler` → Ridge regression (L2 penalty, α = 2.02 tuned by nested leave-one-out) → predicted yield change → payout rule (−4% trigger, −24% exit). Compared against Lasso, quadratic OLS and a mean-only baseline; Ridge ties Lasso under leave-one-out and is clearly better on unseen years (leave-one-season-out R² 0.13 against 0.01). |
-| **Regression metrics** (leave-one-out) | RMSE 14.95, MAE 11.38, predictive R² 0.51 (baseline: RMSE 22.16, R² −0.08) |
-| **Payout-decision metrics** | Accuracy 86%, precision 77%, recall (hit rate) 91%, F1 83%, false payout rate 18% |
-| **Backtest** | Payouts in 68% of documented drought-year seasons against 38% of other years |
+| **Architecture** | 2 inputs (rainfall and vegetation anomalies) → `StandardScaler` → Ridge regression (L2 penalty, α = 6.25 tuned by nested leave-one-out) → predicted yield change → payout rule (−2% trigger, −22% exit). Compared against Lasso, quadratic OLS and a mean-only baseline; Ridge and Lasso are tied (R² within 0.02 under both schemes). Crop greenness carries 93% of the weight. |
+| **Regression metrics** (leave-one-out) | RMSE 22.26, MAE 17.31, predictive R² 0.11 (baseline: RMSE 24.09, R² −0.04). For an unseen year (leave-one-season-out) R² is −0.11: the index does not yet predict a new season's level. The earlier 0.51, from 2022–2025 alone, came mostly from the yield trend over those four seasons. |
+| **Payout-decision metrics** | Accuracy 70%, precision 47%, recall (hit rate) 50%, F1 48%, false payout rate 22% |
+| **Backtest** | Payouts in 54% of documented drought-year seasons against 23% of other years (2.3×) |
 | **Deployment** | Exported to `backend/data/` and served by the FastAPI backend (Swagger UI at `/docs`) and the Next.js dashboard |
 
 ## Tech stack
@@ -102,16 +102,18 @@ python -m pytest
 ```
 
 The 13 tests check the API against the notebook: the index formula on all 175 district-seasons,
-the leave-one-out results, the hit and false payout rates, the drought-year totals (43/63 against
-43/112) and basis risk for every district.
+the leave-one-out results, the hit and false payout rates, the drought-year totals (34/63 against
+26/112) and basis risk for every district.
 
 ### Run the notebook
 
 The notebook rebuilds the model from raw data and writes its results into `backend/data/`.
 
 1. Put the NISR files in `data/nisr/` (they are git-ignored and never committed):
-   `season_a_2022.sav`, `season_a_2023.csv`, `season_a_2025.csv`, and
-   `2024_extra/Rwa_raw_SeasonA2024_Production.csv` and `..._Screening.csv`.
+   `season_a_2022.sav`, `season_a_2023.csv`, `season_a_2025.csv`,
+   `2024_extra/Rwa_raw_SeasonA2024_Production.csv` and `..._Screening.csv`, and the Stata
+   files for 2017–2021 in `2017/` … `2021/` (Season A Crop production and Screening; the
+   notebook's Section 6c lists each file).
 2. Install and open:
    ```bash
    pip install -r notebook/requirements.txt
@@ -142,12 +144,12 @@ cards that stack vertically, each on its own, and charts that each tell a story.
 - **One column of cards:** each page is a single column, one card per finding. A short row of key
   figures sits at the top of a page, as on drought.gov.
 - **Every card title is the finding**, not the chart name. "6 of 7 districts reach the trigger;
-  Rwamagana is hardest hit" or "Payouts cluster in documented droughts: 68% of drought seasons
-  against 38% of others". The titles are computed from the data, so they change with the season or
+  Rwamagana is hardest hit" or "Payouts cluster in documented droughts: 54% of drought seasons
+  against 23% of others". The titles are computed from the data, so they change with the season or
   district chosen. A small label above names what is shown, and a source line closes each card.
 - **Severity classes like the Drought Monitor's D0–D4:** the predicted yield change is shown in
   labelled classes tied to the payout rule: gain, near normal (no payout), then watch, moderate and
-  severe as thirds between the -4% trigger and the -24% exit, and extreme (full payout). Payouts and
+  severe as thirds between the trigger and the exit, and extreme (full payout). Payouts and
   basis risk have their own labelled class scales (basis risk in purple). Every coloured chart has a
   class legend with the range of each class, so no value depends on colour alone.
 - **The charts explain themselves, not the text:** following practitioner research on annotation
@@ -218,10 +220,10 @@ formula. This keeps every request fast (NFR1) and the thresholds reproducible (N
 | Endpoint | Returns |
 |---|---|
 | `GET /api/model` | Model, coefficients, trigger, exit, low-yield threshold, hit and false payout rates, validation |
-| `GET /api/simulate?district=Gatsibo&season=2022` | Anomalies, predicted yield change, payout, and (for 2022–2025) the actual yield and the payout it implies |
+| `GET /api/simulate?district=Gatsibo&season=2022` | Anomalies, predicted yield change, payout, and (for 2018–2025) the actual yield and the payout it implies |
 | `GET /api/history` | Index and payout for every district and year since 2000 |
 | `GET /api/basis-risk` | Basis risk per district |
-| `GET /api/seasons` | The 28 calibration district-seasons |
+| `GET /api/seasons` | The 56 calibration district-seasons |
 | `GET /api/geo/districts` | District boundaries (FAO GAUL 2025, simplified GeoJSON) for the map |
 | `GET /api/health` | Service status |
 
@@ -232,10 +234,10 @@ For seasons without yield data the backend computes the index from the saved mod
 
 ```
 index  = intercept + Σ coefficient_i × (z_i − scaler_mean_i) / scaler_scale_i     z = (rain_z, ndvi_z)
-payout = 0 above the −4% trigger, 1 at or below the −24% exit, linear in between
+payout = 0 above the −2% trigger, 1 at or below the −22% exit, linear in between
 ```
 
-For 2022–2025 it uses the leave-one-out prediction, so the comparison with the actual
+For 2018–2025 it uses the leave-one-out prediction, so the comparison with the actual
 harvest is honest (the model never saw that season).
 
 ## Data model
@@ -246,7 +248,7 @@ records are stored or processed (proposal §1.7).
 | File | Contents |
 |---|---|
 | `model.json` | Scaler, Ridge coefficients and intercept, trigger, exit, low-yield threshold, hit and false payout rates, validation results |
-| `calibration.csv` | `district, season, yield_kg_ha, yield_anom, rain_z, ndvi_z, index_loo, payout, payout_if_actual, basis_risk` (28 rows) |
+| `calibration.csv` | `district, season, yield_kg_ha, yield_anom, rain_z, ndvi_z, index_loo, payout, payout_if_actual, basis_risk` (56 rows) |
 | `eastern_districts.geojson` | The seven district boundaries (FAO GAUL 2025, simplified to about 200 m), exported by the notebook for the map |
 | `seasons.csv` | `district, season, window_year, rain_mm, ndvi, rain_z, ndvi_z, index, payout, drought_year` (one row per district-season) |
 
@@ -260,7 +262,7 @@ payout_simulation   (simulation_id PK, district_id FK, season, index_value, payo
                      payout_if_actual, trigger, exit)
 ```
 
-With 28 calibration rows and 175 history rows, in-memory files meet the performance and
+With 56 calibration rows and 175 history rows, in-memory files meet the performance and
 reproducibility requirements for the prototype; the database is introduced in the deployment
 phase below.
 

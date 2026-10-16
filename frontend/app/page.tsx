@@ -8,6 +8,7 @@ import { Card, DotCount, ErrorNote, Loading, PageHeader, ShareBars, StatStrip } 
 import ValidationTable from "@/components/ValidationTable";
 import { getHistory, getModel, getSeasons } from "@/lib/api";
 import { classify, pct } from "@/lib/payout";
+import { YIELD_RANGE } from "@/lib/constants";
 import { useApi } from "@/lib/useApi";
 
 export default function Overview() {
@@ -77,7 +78,7 @@ export default function Overview() {
         <StoryTour />
 
         <Card
-          label="Index against real harvests · 2022–2025"
+          label={`Index against real harvests · ${YIELD_RANGE}`}
           title={`The pay or no-pay decision matched the harvest in ${right} of ${outcomes.length} district-seasons`}
           source="NISR Seasonal Agricultural Survey yields against the leave-one-out index (each district-season predicted by a model that never saw it). The shaded band is the payout zone."
         >

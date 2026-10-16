@@ -5,24 +5,24 @@
     "ndvi_z"
   ],
   "scaler_mean": [
-    0.21188917308861036,
-    -0.09371776943053169
+    0.39767600421253463,
+    -0.03373190422859896
   ],
   "scaler_scale": [
-    0.715642454768987,
-    0.9833157965446259
+    0.8380641975618982,
+    0.8431767134101419
   ],
   "coefficients": [
-    13.46778086537386,
-    9.909389006046888
+    0.6572328574284386,
+    9.173449745371077
   ],
-  "intercept": -4.275312015665665e-16,
-  "alpha": 2.023589647725158,
-  "trigger": -4.0,
-  "exit": -24.0,
+  "intercept": 2.858362133009986,
+  "alpha": 6.25055192527397,
+  "trigger": -2.0,
+  "exit": -22.0,
   "low_yield_threshold": -10.0,
-  "hit_rate": 0.9090909090909091,
-  "false_payout_rate": 0.17647058823529413,
+  "hit_rate": 0.5,
+  "false_payout_rate": 0.225,
   "window_months": [
     10,
     12
@@ -42,116 +42,116 @@
     {
       "Validation": "Leave-one-out",
       "Model": "Baseline (mean)",
-      "RMSE": 22.16,
-      "MAE": 19.22,
-      "Predictive R2": -0.08
+      "RMSE": 24.09,
+      "MAE": 18.71,
+      "Predictive R2": -0.04
     },
     {
       "Validation": "Leave-one-out",
       "Model": "Ridge",
-      "RMSE": 14.95,
-      "MAE": 11.38,
-      "Predictive R2": 0.51
+      "RMSE": 22.26,
+      "MAE": 17.31,
+      "Predictive R2": 0.11
     },
     {
       "Validation": "Leave-one-out",
       "Model": "Lasso",
-      "RMSE": 14.92,
-      "MAE": 11.32,
-      "Predictive R2": 0.51
+      "RMSE": 22.13,
+      "MAE": 17.2,
+      "Predictive R2": 0.13
     },
     {
       "Validation": "Leave-one-out",
       "Model": "Quadratic OLS",
-      "RMSE": 16.53,
-      "MAE": 12.52,
-      "Predictive R2": 0.4
+      "RMSE": 22.69,
+      "MAE": 17.52,
+      "Predictive R2": 0.08
     },
     {
       "Validation": "Leave-one-season-out",
       "Model": "Baseline (mean)",
-      "RMSE": 26.78,
-      "MAE": 24.39,
-      "Predictive R2": -0.57
+      "RMSE": 25.58,
+      "MAE": 19.78,
+      "Predictive R2": -0.17
     },
     {
       "Validation": "Leave-one-season-out",
       "Model": "Ridge",
-      "RMSE": 19.91,
-      "MAE": 16.74,
-      "Predictive R2": 0.13
+      "RMSE": 24.94,
+      "MAE": 20.0,
+      "Predictive R2": -0.11
     },
     {
       "Validation": "Leave-one-season-out",
       "Model": "Lasso",
-      "RMSE": 21.31,
-      "MAE": 18.06,
-      "Predictive R2": 0.01
+      "RMSE": 24.79,
+      "MAE": 19.76,
+      "Predictive R2": -0.1
     },
     {
       "Validation": "Leave-one-season-out",
       "Model": "Quadratic OLS",
-      "RMSE": 63.1,
-      "MAE": 41.53,
-      "Predictive R2": -7.72
+      "RMSE": 27.76,
+      "MAE": 22.23,
+      "Predictive R2": -0.38
     }
   ],
   "validation_peak_ndvi": [
     {
       "Validation": "Leave-one-out",
       "Model": "Baseline (mean)",
-      "RMSE": 22.16,
-      "MAE": 19.22,
-      "Predictive R2": -0.08
+      "RMSE": 24.09,
+      "MAE": 18.71,
+      "Predictive R2": -0.04
     },
     {
       "Validation": "Leave-one-out",
       "Model": "Ridge",
-      "RMSE": 15.77,
-      "MAE": 11.52,
-      "Predictive R2": 0.46
+      "RMSE": 24.23,
+      "MAE": 18.77,
+      "Predictive R2": -0.05
     },
     {
       "Validation": "Leave-one-out",
       "Model": "Lasso",
-      "RMSE": 15.8,
-      "MAE": 11.29,
-      "Predictive R2": 0.45
+      "RMSE": 24.09,
+      "MAE": 18.71,
+      "Predictive R2": -0.04
     },
     {
       "Validation": "Leave-one-out",
       "Model": "Quadratic OLS",
-      "RMSE": 15.79,
-      "MAE": 11.77,
-      "Predictive R2": 0.45
+      "RMSE": 24.61,
+      "MAE": 18.96,
+      "Predictive R2": -0.08
     },
     {
       "Validation": "Leave-one-season-out",
       "Model": "Baseline (mean)",
-      "RMSE": 26.78,
-      "MAE": 24.39,
-      "Predictive R2": -0.57
+      "RMSE": 25.58,
+      "MAE": 19.78,
+      "Predictive R2": -0.17
     },
     {
       "Validation": "Leave-one-season-out",
       "Model": "Ridge",
-      "RMSE": 20.6,
-      "MAE": 16.5,
-      "Predictive R2": 0.07
+      "RMSE": 26.27,
+      "MAE": 20.46,
+      "Predictive R2": -0.23
     },
     {
       "Validation": "Leave-one-season-out",
       "Model": "Lasso",
-      "RMSE": 21.78,
-      "MAE": 17.72,
-      "Predictive R2": -0.04
+      "RMSE": 26.07,
+      "MAE": 20.33,
+      "Predictive R2": -0.21
     },
     {
       "Validation": "Leave-one-season-out",
       "Model": "Quadratic OLS",
-      "RMSE": 36.67,
-      "MAE": 26.61,
-      "Predictive R2": -1.94
+      "RMSE": 31.67,
+      "MAE": 25.81,
+      "Predictive R2": -0.79
     }
   ]
 }
