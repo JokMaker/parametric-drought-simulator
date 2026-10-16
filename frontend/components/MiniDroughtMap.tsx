@@ -4,14 +4,14 @@ import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import ClassLegend from "@/components/charts/ClassLegend";
+import { IndexLegend } from "@/components/charts/ClassLegend";
 import DistrictMap from "@/components/charts/DistrictMap";
 import { Card, ErrorNote, Loading } from "@/components/ui";
 import { getHistory, getModel, getSeasons, getShapes } from "@/lib/api";
 import { isDroughtSeason, LAST_SEASON, SEASONS } from "@/lib/constants";
 import { districtsInSeason } from "@/lib/districtSeason";
 import { anomalyLabel, pct, signedPct } from "@/lib/payout";
-import { indexClass, indexClasses } from "@/lib/scales";
+import { indexClass } from "@/lib/scales";
 import { useApi } from "@/lib/useApi";
 
 /** Drought map for the Overview: the index by district for one season. */
@@ -95,7 +95,7 @@ export default function MiniDroughtMap() {
         />
       </div>
       <div className="mt-4 border-t border-line pt-3">
-        <ClassLegend title="Predicted yield change" classes={indexClasses(trigger, exit)} />
+        <IndexLegend trigger={trigger} exit={exit} />
       </div>
     </Card>
   );

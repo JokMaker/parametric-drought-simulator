@@ -17,11 +17,11 @@ export function indexClasses(trigger: number, exit: number): ColorClass[] {
   const b = trigger - 2 * step;
   return [
     { key: "gain", label: "Above normal", range: "> +10%", color: "var(--sev-gain)" },
-    { key: "normal", label: "Near normal, no payout", range: `${r(trigger)} to +10%`, color: "var(--sev-normal)" },
-    { key: "watch", label: "Payout starts", range: `${r(trigger)} to ${r(a)}%`, color: "var(--sev-watch)" },
-    { key: "moderate", label: "Moderate loss", range: `${r(a)} to ${r(b)}%`, color: "var(--sev-moderate)" },
-    { key: "severe", label: "Severe loss", range: `${r(b)} to ${r(exit)}%`, color: "var(--sev-severe)" },
-    { key: "extreme", label: "Full payout", range: `≤ ${r(exit)}%`, color: "var(--sev-extreme)" },
+    { key: "normal", label: "Normal", range: `${r(trigger)} to +10%`, color: "var(--sev-normal)" },
+    { key: "watch", label: "Mild loss", range: `${r(trigger)} to ${r(a)}%`, color: "var(--sev-watch)" },
+    { key: "moderate", label: "Moderate", range: `${r(a)} to ${r(b)}%`, color: "var(--sev-moderate)" },
+    { key: "severe", label: "Severe", range: `${r(b)} to ${r(exit)}%`, color: "var(--sev-severe)" },
+    { key: "extreme", label: "Extreme", range: `≤ ${r(exit)}%`, color: "var(--sev-extreme)" },
   ];
 }
 
@@ -38,11 +38,11 @@ export function indexClass(value: number, trigger: number, exit: number): ColorC
 
 /** Payout share 0–1, on the same ramp as the index (payout grows as the index falls). */
 export const PAYOUT_CLASSES: ColorClass[] = [
-  { key: "none", label: "No payout", range: "0%", color: "var(--sev-normal)" },
-  { key: "watch", label: "Small payout", range: "1–33%", color: "var(--sev-watch)" },
-  { key: "moderate", label: "Partial payout", range: "34–66%", color: "var(--sev-moderate)" },
-  { key: "severe", label: "Large payout", range: "67–99%", color: "var(--sev-severe)" },
-  { key: "extreme", label: "Full payout", range: "100%", color: "var(--sev-extreme)" },
+  { key: "none", label: "None", range: "0%", color: "var(--sev-normal)" },
+  { key: "watch", label: "Small", range: "1–33%", color: "var(--sev-watch)" },
+  { key: "moderate", label: "Partial", range: "34–66%", color: "var(--sev-moderate)" },
+  { key: "severe", label: "Large", range: "67–99%", color: "var(--sev-severe)" },
+  { key: "extreme", label: "Full", range: "100%", color: "var(--sev-extreme)" },
 ];
 
 export function payoutClass(share: number): ColorClass {
@@ -56,9 +56,9 @@ export function payoutClass(share: number): ColorClass {
 /** Basis risk 0–1: how far the index payout was from what the harvest called for. */
 export const RISK_CLASSES: ColorClass[] = [
   { key: "low", label: "Close match", range: "< 10%", color: "var(--risk-1)" },
-  { key: "some", label: "Some mismatch", range: "10–20%", color: "var(--risk-2)" },
-  { key: "high", label: "High mismatch", range: "20–30%", color: "var(--risk-3)" },
-  { key: "very", label: "Very high mismatch", range: "≥ 30%", color: "var(--risk-4)" },
+  { key: "some", label: "Some gap", range: "10–20%", color: "var(--risk-2)" },
+  { key: "high", label: "High gap", range: "20–30%", color: "var(--risk-3)" },
+  { key: "very", label: "Very high gap", range: "≥ 30%", color: "var(--risk-4)" },
 ];
 
 export function riskClass(risk: number): ColorClass {

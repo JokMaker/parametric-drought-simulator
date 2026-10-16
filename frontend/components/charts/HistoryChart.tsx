@@ -41,9 +41,21 @@ const DROUGHT_RANGES = DROUGHT_YEARS.reduce<[number, number][]>((ranges, y) => {
   return ranges;
 }, []);
 
-function DroughtBands() {
+function DroughtBands(labelled = false) {
   return DROUGHT_RANGES.map(([a, b]) => (
-    <ReferenceArea key={a} x1={a} x2={b} fill="var(--drought)" fillOpacity={0.08} ifOverflow="extendDomain" />
+    <ReferenceArea
+      key={a}
+      x1={a}
+      x2={b}
+      fill="var(--drought)"
+      fillOpacity={0.08}
+      ifOverflow="extendDomain"
+      label={
+        labelled
+          ? { value: `Drought ${a}–${String(b).slice(2)}`, position: "insideTop", fontSize: 11, fontWeight: 600, fill: "var(--drought)" }
+          : undefined
+      }
+    />
   ));
 }
 
@@ -85,7 +97,7 @@ export function IndexChart({ data, trigger, exit }: { data: YearBar[]; trigger: 
     <ResponsiveContainer width="100%" height={300}>
       <BarChart data={data} margin={MARGIN} syncId="history" barCategoryGap={3}>
         <CartesianGrid vertical={false} stroke={GRID} />
-        {DroughtBands()}
+        {DroughtBands(true)}
         <XAxis dataKey="year" tick={AXIS_TICK} tickLine={false} axisLine={false} interval={1} />
         <YAxis
           tick={AXIS_TICK}

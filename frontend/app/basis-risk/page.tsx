@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import BasisRiskChart from "@/components/charts/BasisRiskChart";
 import ClassLegend from "@/components/charts/ClassLegend";
-import { Badge, Card, ErrorNote, Loading, PageHeader, StatStrip, Tabs, type Tone } from "@/components/ui";
+import { Badge, Card, DotCount, ErrorNote, Loading, PageHeader, StatStrip, Tabs, type Tone } from "@/components/ui";
 import { getBasisRisk, getModel, getSeasons } from "@/lib/api";
 import { classify, OUTCOME_LABEL, pct, signedPct, type Outcome } from "@/lib/payout";
 import { RISK_CLASSES } from "@/lib/scales";
@@ -53,8 +53,18 @@ export default function BasisRiskPage() {
           items={[
             { value: pct(highest.basisRisk), label: "Highest basis risk", note: highest.district },
             { value: pct(lowest.basisRisk), label: "Lowest basis risk", note: lowest.district },
-            { value: String(count("miss")), label: "Poor harvests the index missed", note: `of ${poorCount} poor seasons` },
-            { value: String(count("false-payout")), label: "False payouts", note: `of ${rows.length - poorCount} normal seasons` },
+            {
+              value: String(count("miss")),
+              label: "Poor harvests the index missed",
+              viz: <DotCount filled={count("miss")} total={poorCount} color="var(--risk-4)" />,
+              note: `of ${poorCount} poor seasons`,
+            },
+            {
+              value: String(count("false-payout")),
+              label: "False payouts",
+              viz: <DotCount filled={count("false-payout")} total={rows.length - poorCount} color="var(--risk-4)" />,
+              note: `of ${rows.length - poorCount} normal seasons`,
+            },
           ]}
         />
 
@@ -70,7 +80,7 @@ export default function BasisRiskPage() {
         >
           <BasisRiskChart data={risk.data} />
           <div className="mt-3 border-t border-line pt-3">
-            <ClassLegend title="Basis risk" classes={RISK_CLASSES} />
+            <ClassLegend classes={RISK_CLASSES} />
           </div>
         </Card>
 
@@ -135,10 +145,7 @@ export default function BasisRiskPage() {
 
   return (
     <>
-      <PageHeader title="Basis Risk">
-        The gap between what the index pays and what farmers actually lose, measured against four
-        seasons of harvest surveys.
-      </PageHeader>
+      <PageHeader title="Basis Risk" />
       {body}
     </>
   );

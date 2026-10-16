@@ -57,15 +57,33 @@ export default function IndexVsActualChart({ seasons, model }: { seasons: Simula
     }));
   const match = dots.filter((d) => d.outcome === "hit" || d.outcome === "correct-no-payout");
   const mismatch = dots.filter((d) => d.outcome === "miss" || d.outcome === "false-payout");
+  const t = model.lowYieldThreshold;
   const lim = Math.ceil(Math.max(...dots.flatMap((d) => [Math.abs(d.x), Math.abs(d.y)])) / 10) * 10;
 
   return (
     <div>
       <ResponsiveContainer width="100%" height={330}>
-        <ScatterChart margin={{ top: 12, right: 16, bottom: 18, left: 0 }}>
+        <ScatterChart margin={{ top: 22, right: 16, bottom: 18, left: 0 }}>
           <CartesianGrid stroke="var(--grid)" />
           {/* Payout zone: index at or below the trigger. */}
           <ReferenceArea y1={-lim} y2={model.trigger} fill="var(--drought)" fillOpacity={0.07} />
+          {/* The four outcomes, named in their own corner of the chart. */}
+          {[
+            { x1: -lim, x2: t, y1: model.trigger, y2: lim, pos: "insideTopLeft", text: "✗ Missed: poor harvest, no payout", bad: true },
+            { x1: t, x2: lim, y1: model.trigger, y2: lim, pos: "insideTopRight", text: "✓ No payout, harvest fine", bad: false },
+            { x1: -lim, x2: t, y1: -lim, y2: model.trigger, pos: "insideBottomLeft", text: "✓ Paid, harvest poor", bad: false },
+            { x1: t, x2: lim, y1: -lim, y2: model.trigger, pos: "insideBottomRight", text: "✗ False payout", bad: true },
+          ].map((q) => (
+            <ReferenceArea
+              key={q.pos}
+              x1={q.x1}
+              x2={q.x2}
+              y1={q.y1}
+              y2={q.y2}
+              fillOpacity={0}
+              label={{ value: q.text, position: q.pos as "insideTopLeft", fontSize: 11, fontWeight: 600, fill: q.bad ? MISMATCH : "var(--ink)" }}
+            />
+          ))}
           <XAxis
             type="number"
             dataKey="x"
@@ -98,13 +116,13 @@ export default function IndexVsActualChart({ seasons, model }: { seasons: Simula
             y={model.trigger}
             stroke="var(--ink)"
             strokeDasharray="5 4"
-            label={{ value: `Trigger ${model.trigger}%`, position: "insideTopRight", fontSize: 11, fill: "var(--ink)" }}
+            label={{ value: `Trigger ${model.trigger}%`, position: "insideBottomRight", fontSize: 11, fill: "var(--ink)" }}
           />
           <ReferenceLine
             x={model.lowYieldThreshold}
             stroke="var(--drought)"
             strokeDasharray="2 3"
-            label={{ value: `Poor harvest ${model.lowYieldThreshold}%`, position: "insideTopLeft", fontSize: 11, fill: "var(--muted)" }}
+            label={{ value: `Poor harvest ${model.lowYieldThreshold}%`, position: "top", fontSize: 11, fill: "var(--muted)" }}
           />
           <Tooltip content={DotTooltip} cursor={false} />
           <Scatter data={match} fill={MATCH} stroke="var(--surface)" strokeWidth={2} isAnimationActive={false} />
@@ -112,18 +130,7 @@ export default function IndexVsActualChart({ seasons, model }: { seasons: Simula
         </ScatterChart>
       </ResponsiveContainer>
       <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-xs text-muted">
-        <span className="flex items-center gap-1.5">
-          <span className="h-2.5 w-2.5 rounded-full" style={{ background: MATCH }} />
-          Decision matched the harvest ({match.length})
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="h-2.5 w-2.5 rounded-full" style={{ background: MISMATCH }} />
-          Missed season or false payout ({mismatch.length})
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="h-2.5 w-3 rounded-sm" style={{ background: "var(--drought)", opacity: 0.25 }} />
-          Payout zone
-        </span>
+        <span>Each dot: one district-season</span>
         <span className="flex items-center gap-1.5">
           <span className="w-4 border-t border-dotted border-faint" />
           Perfect prediction

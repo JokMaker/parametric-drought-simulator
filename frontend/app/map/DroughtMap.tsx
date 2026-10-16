@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import ClassLegend from "@/components/charts/ClassLegend";
+import ClassLegend, { IndexLegend } from "@/components/charts/ClassLegend";
 import DistrictMap from "@/components/charts/DistrictMap";
 import SeasonTimeline from "@/components/SeasonTimeline";
 import { Card, ErrorNote, Loading, Tabs } from "@/components/ui";
@@ -9,7 +9,7 @@ import { getBasisRisk, getHistory, getModel, getSeasons, getShapes } from "@/lib
 import { isDroughtSeason, LAST_SEASON, SEASONS, windowYearOf, YIELD_SEASONS } from "@/lib/constants";
 import { districtsInSeason } from "@/lib/districtSeason";
 import { anomalyLabel, pct, signedPct } from "@/lib/payout";
-import { indexClass, indexClasses, PAYOUT_CLASSES, payoutClass, RISK_CLASSES, riskClass } from "@/lib/scales";
+import { indexClass, PAYOUT_CLASSES, payoutClass, RISK_CLASSES, riskClass } from "@/lib/scales";
 import { useApi } from "@/lib/useApi";
 
 export type Metric = "index" | "payout" | "risk";
@@ -82,11 +82,11 @@ export default function DroughtMap() {
 
   const legend =
     metric === "index" ? (
-      <ClassLegend title="Predicted yield change" classes={indexClasses(trigger, exit)} />
+      <IndexLegend trigger={trigger} exit={exit} />
     ) : metric === "payout" ? (
-      <ClassLegend title="Payout" classes={PAYOUT_CLASSES} />
+      <ClassLegend classes={PAYOUT_CLASSES} />
     ) : (
-      <ClassLegend title="Basis risk: gap between the index payout and what the harvest called for" classes={RISK_CLASSES} />
+      <ClassLegend classes={RISK_CLASSES} />
     );
 
   const worstSeason = (d: string) =>

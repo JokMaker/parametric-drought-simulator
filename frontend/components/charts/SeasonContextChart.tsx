@@ -5,6 +5,7 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
+  LabelList,
   ReferenceArea,
   ReferenceLine,
   ResponsiveContainer,
@@ -61,13 +62,20 @@ export default function SeasonContextChart({
 }) {
   return (
     <ResponsiveContainer width="100%" height={230}>
-      <BarChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }} barCategoryGap={2}>
+      <BarChart data={data} margin={{ top: 8, right: 8, bottom: 16, left: 0 }} barCategoryGap={2}>
         <CartesianGrid vertical={false} stroke="var(--grid)" />
         {DROUGHT_SEASON_RANGES.map(([a, b]) => (
-          <ReferenceArea key={a} x1={a} x2={b} fill="var(--drought)" fillOpacity={0.06} />
+          <ReferenceArea
+            key={a}
+            x1={a}
+            x2={b}
+            fill="var(--drought)"
+            fillOpacity={0.06}
+            label={{ value: "Drought years", position: "insideTop", fontSize: 10, fill: "var(--drought)" }}
+          />
         ))}
         <XAxis dataKey="season" tick={TICK} tickLine={false} axisLine={false} interval={3} />
-        <YAxis tick={TICK} tickLine={false} axisLine={false} unit="%" width={44} />
+        <YAxis tick={TICK} tickLine={false} axisLine={false} unit="%" width={44} domain={[(min: number) => Math.floor((min - 8) / 10) * 10, "auto"]} />
         <Tooltip content={SeasonTooltip} cursor={{ fill: "var(--surface-2)" }} />
         <ReferenceLine y={0} stroke="var(--ink)" strokeOpacity={0.3} />
         <ReferenceLine
@@ -95,6 +103,22 @@ export default function SeasonContextChart({
               strokeWidth={1.5}
             />
           ))}
+          <LabelList
+            dataKey="index"
+            content={(p) => {
+              const i = Number(p.index);
+              if (data[i]?.season !== selected) return null;
+              const y = Number(p.y);
+              const h = Number(p.height);
+              const v = data[i].index;
+              const ty = v < 0 ? Math.max(y, y + h) + 13 : Math.min(y, y + h) - 5;
+              return (
+                <text x={Number(p.x) + Number(p.width) / 2} y={ty} textAnchor="middle" fontSize={11} fontWeight={600} fill="var(--ink)">
+                  {signedPct(v)}
+                </text>
+              );
+            }}
+          />
         </Bar>
       </BarChart>
     </ResponsiveContainer>

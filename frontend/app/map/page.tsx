@@ -5,9 +5,7 @@ import DroughtMap from "./DroughtMap";
 export default function MapPage() {
   return (
     <>
-      <PageHeader title="Drought Map">
-        Where the index points to losses, district by district, for any season since 2001.
-      </PageHeader>
+      <PageHeader title="Drought Map" />
       <Suspense fallback={<Loading />}>
         <DroughtMap />
       </Suspense>

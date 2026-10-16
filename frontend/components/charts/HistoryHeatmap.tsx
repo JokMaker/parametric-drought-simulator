@@ -84,7 +84,15 @@ export default function HistoryHeatmap({ points, trigger, exit }: { points: Hist
             <span className="font-medium">{pct(hover.payout)}</span>
           </span>
         ) : (
-          <span className="text-muted">Hover a cell for details; click it to open that season in the Explorer.</span>
+          <span className="flex flex-wrap items-center gap-x-5 gap-y-1 text-muted">
+            <span className="flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-white ring-1 ring-black/70" /> Payout
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-0.5 w-3.5 bg-drought" /> Documented drought year
+            </span>
+            <span>Hover for details · click to open</span>
+          </span>
         )}
       </div>
     </div>
