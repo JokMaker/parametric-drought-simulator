@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import BasisRiskChart from "@/components/charts/BasisRiskChart";
 import ClassLegend from "@/components/charts/ClassLegend";
+import TriggerSimulator from "@/components/TriggerSimulator";
 import { Badge, Card, DotCount, ErrorNote, Loading, PageHeader, StatStrip, Tabs, type Tone } from "@/components/ui";
 import { getBasisRisk, getModel, getSeasons } from "@/lib/api";
 import { classify, OUTCOME_LABEL, pct, signedPct, type Outcome } from "@/lib/payout";
@@ -67,6 +68,8 @@ export default function BasisRiskPage() {
             },
           ]}
         />
+
+        <TriggerSimulator seasons={seasons.data} model={m} />
 
         <Card
           label="Basis risk by district · 2022–2025"

@@ -70,6 +70,7 @@
     --header-ink: #e9efeb;
     --sev-normal: #3a3a36;
     --risk-1: #2f2840;
+    --risk-4: #a68bec;
   }
 }
 
@@ -99,6 +100,7 @@
   --header-ink: #e9efeb;
   --sev-normal: #3a3a36;
   --risk-1: #2f2840;
+  --risk-4: #a68bec;
 }
 
 @theme inline {

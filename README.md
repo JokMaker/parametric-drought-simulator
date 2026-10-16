@@ -20,11 +20,11 @@ Kirehe, Ngoma, Nyagatare, Rwamagana), backtested from 2001 to 2025.
 
 | Page | What it does | Requirements |
 |---|---|---|
-| **Overview** | Opens with a small drought map and a scatter plot of the index against the actual harvest for all 28 district-seasons; then the selected model, trigger (−4%) and exit (−24%), hit rate (91%) and false payout rate (18%), validation results (leave-one-out and leave-one-season-out), and which input drives the index | FR7, FR8, FR9 |
-| **Drought Map** | The seven districts on a map, coloured by the predicted yield change, the payout or the basis risk for any season since 2001. Hover a district for its rainfall and greenness anomalies, index and payout; click it to open it in the Explorer | FR1, FR3, FR5, FR10 |
+| **Overview** | Opens with a four-step picture of how the index works and a five-stop guided tour on the map (a normal year, the worst year, a drought caught, a drought missed, a false alarm), then a scatter plot of the index against the actual harvest for all 28 district-seasons; then the selected model, trigger (−4%) and exit (−24%), hit rate (91%) and false payout rate (18%), validation results (leave-one-out and leave-one-season-out), and which input drives the index | FR7, FR8, FR9 |
+| **Drought Map** | The seven districts on a map, coloured by the predicted yield change, the payout or the basis risk for any season since 2001. Press Play to watch every season from 2001 in turn. Hover a district for its rainfall and greenness anomalies, index and payout; click it to open it in the Explorer | FR1, FR3, FR5, FR10 |
 | **District Explorer** | Pick a district and season; see rainfall and vegetation anomalies, a payout gauge, where the index sits between trigger and exit, and the reason for the payout. For 2022–2025 the index and payout are shown side by side with the actual harvest | FR1, FR3, FR5, FR6, FR7, FR9 |
 | **Drought History** | The index and payout for every year since 2000, with documented drought years (2003–2006, 2013–2017) shaded, and a district-by-year heatmap: payouts in 68% of drought-year seasons against 38% of other years | FR9 |
-| **Basis Risk** | Basis risk per district (Bugesera 31% highest, Rwamagana 0% lowest) and a season-by-season table filterable by outcome (missed, false payout, paid correctly) | FR10 |
+| **Basis Risk** | A "what if" simulator: move the trigger and exit and see how many poor harvests are paid, how many are missed, the false payouts and the basis risk change live. Then basis risk per district (Bugesera 31% highest, Rwamagana 0% lowest) and a season-by-season table filterable by outcome (missed, false payout, paid correctly) | FR10 |
 
 ## Machine learning model
 
@@ -157,6 +157,13 @@ cards that stack vertically, each on its own, and charts that each tell a story.
   and counts are drawn as dots. The Overview opens with a four-step picture of how the index works.
   Method notes are folded under "Source & method" on each card, so they are there for a reviewer
   without crowding the view.
+- **Learn by doing, not by reading:** three interactive features replace written explanation.
+  A guided tour on the Overview steps through five seasons picked from the data, an approach shown
+  to onboard first-time dashboard users well ([D-Tour, IEEE VIS 2024](https://jku-vds-lab.at/publications/2025_d-tour/)).
+  A trigger simulator on Basis Risk lets the reader test the trade-off between missed seasons and
+  false payouts themselves, as index insurers let clients simulate payouts
+  ([Arbol](https://www.arbol.io/post/how-parametric-insurance-pricing-works)). The Drought Map
+  plays through every season, so droughts can be watched spreading and clearing.
 - **Explorer controls:** district buttons and a season timeline replace dropdowns, so every option
   is visible. Seasons with yield data and documented drought years are marked on the timeline, and
   the arrow keys step through years. The selection is kept in the URL, so any view can be shared.

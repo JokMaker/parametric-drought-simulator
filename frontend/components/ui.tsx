@@ -92,14 +92,14 @@ export function Tabs<T extends string>({
   label: string;
 }) {
   return (
-    <div role="tablist" aria-label={label} className="flex gap-1 border-b border-line">
+    <div role="tablist" aria-label={label} className="no-scrollbar flex gap-1 overflow-x-auto shadow-[inset_0_-1px_0_var(--line)]">
       {options.map((o) => (
         <button
           key={o.key}
           role="tab"
           aria-selected={value === o.key}
           onClick={() => onChange(o.key)}
-          className={`-mb-px border-b-2 px-3 py-2 text-sm transition-colors ${
+          className={`shrink-0 whitespace-nowrap border-b-2 px-3 py-2 text-sm transition-colors ${
             value === o.key ? "border-accent font-medium text-ink" : "border-transparent text-muted hover:text-ink"
           }`}
         >
