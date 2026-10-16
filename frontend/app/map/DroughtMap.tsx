@@ -1,12 +1,14 @@
 "use client";
 
+import { Pause, Play } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import ClassLegend, { IndexLegend } from "@/components/charts/ClassLegend";
 import DistrictMap from "@/components/charts/DistrictMap";
 import SeasonTimeline from "@/components/SeasonTimeline";
 import { Card, ErrorNote, Loading, Tabs } from "@/components/ui";
 import { getBasisRisk, getHistory, getModel, getSeasons, getShapes } from "@/lib/api";
-import { isDroughtSeason, LAST_SEASON, SEASONS, windowYearOf, YIELD_SEASONS } from "@/lib/constants";
+import { FIRST_SEASON, isDroughtSeason, LAST_SEASON, SEASONS, windowYearOf, YIELD_SEASONS } from "@/lib/constants";
 import { districtsInSeason } from "@/lib/districtSeason";
 import { anomalyLabel, pct, signedPct } from "@/lib/payout";
 import { indexClass, PAYOUT_CLASSES, payoutClass, RISK_CLASSES, riskClass } from "@/lib/scales";
@@ -39,6 +41,23 @@ export default function DroughtMap() {
     const q = new URLSearchParams({ metric: next.metric ?? metric, season: String(next.season ?? season) });
     router.replace(`${pathname}?${q}`, { scroll: false });
   }
+
+  // Play steps through every season, so droughts can be watched spreading and clearing.
+  const [playOn, setPlaying] = useState(false);
+  // Playback stops by itself on the last season.
+  const playing = playOn && season < LAST_SEASON;
+  useEffect(() => {
+    if (!playing) return;
+    const t = setTimeout(() => {
+      const q = new URLSearchParams({ metric, season: String(season + 1) });
+      router.replace(`${pathname}?${q}`, { scroll: false });
+    }, 900);
+    return () => clearTimeout(t);
+  }, [playing, season, metric, pathname, router]);
+  const togglePlay = () => {
+    if (!playing && season >= LAST_SEASON) set({ season: FIRST_SEASON });
+    setPlaying(!playing);
+  };
 
   if (error) return <ErrorNote message={error} />;
   if (!shapes.data || !history.data || !calibration.data || !risk.data || !model.data) return <Loading />;
@@ -108,8 +127,24 @@ export default function DroughtMap() {
       <section className="card px-5 pt-2 pb-4 sm:px-6">
         <Tabs label="Map layer" value={metric} options={METRICS} onChange={(m) => set({ metric: m })} />
         {metric !== "risk" && (
-          <div className="mt-4">
-            <SeasonTimeline season={season} onSelect={(s) => set({ season: s })} />
+          <div className="mt-4 flex items-center gap-2">
+            <button
+              onClick={togglePlay}
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-sm bg-ink px-3 py-1.5 text-sm font-medium text-surface"
+              aria-label={playing ? "Pause" : "Play every season"}
+            >
+              {playing ? <Pause size={14} /> : <Play size={14} />}
+              {playing ? "Pause" : "Play"}
+            </button>
+            <div className="min-w-0 flex-1">
+              <SeasonTimeline
+                season={season}
+                onSelect={(s) => {
+                  setPlaying(false);
+                  set({ season: s });
+                }}
+              />
+            </div>
           </div>
         )}
       </section>

@@ -29,6 +29,7 @@ export default function DistrictMap({
   onSelect,
   height = 520,
   ariaLabel,
+  highlight,
 }: {
   shapes: DistrictShapes;
   /** Fill colour for a district. */
@@ -39,6 +40,8 @@ export default function DistrictMap({
   onSelect?: (district: string) => void;
   height?: number;
   ariaLabel: string;
+  /** A district to bring forward; the others fade back. */
+  highlight?: string;
 }) {
   const box = useRef<HTMLDivElement>(null);
   // Position and container width are measured in event handlers, never during render.
@@ -80,6 +83,7 @@ export default function DistrictMap({
               hover?.district === district ? "stroke-ink" : ""
             }`}
             strokeWidth={hover?.district === district ? 2.5 : 1.5}
+            opacity={highlight && highlight !== district ? 0.35 : 1}
             strokeLinejoin="round"
             tabIndex={onSelect ? 0 : undefined}
             role={onSelect ? "button" : undefined}
@@ -100,6 +104,16 @@ export default function DistrictMap({
             }}
           />
         ))}
+        {highlight && (
+          <path
+            d={drawn.find((x) => x.district === highlight)?.d ?? ""}
+            fill="none"
+            stroke="var(--ink)"
+            strokeWidth={3}
+            strokeLinejoin="round"
+            pointerEvents="none"
+          />
+        )}
         {/* Direct labels, so a district never depends on colour alone. */}
         {drawn.map(({ district, centroid: [x, y] }) => (
           <g key={district} pointerEvents="none" textAnchor="middle" className="tabular">

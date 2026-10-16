@@ -2,7 +2,7 @@
 
 import IndexVsActualChart from "@/components/charts/IndexVsActualChart";
 import InfluenceChart from "@/components/charts/InfluenceChart";
-import MiniDroughtMap from "@/components/MiniDroughtMap";
+import StoryTour from "@/components/StoryTour";
 import HowItWorks from "@/components/HowItWorks";
 import { Card, DotCount, ErrorNote, Loading, PageHeader, ShareBars, StatStrip } from "@/components/ui";
 import ValidationTable from "@/components/ValidationTable";
@@ -74,7 +74,7 @@ export default function Overview() {
           ]}
         />
 
-        <MiniDroughtMap />
+        <StoryTour />
 
         <Card
           label="Index against real harvests · 2022–2025"
