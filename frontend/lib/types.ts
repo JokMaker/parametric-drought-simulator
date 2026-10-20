@@ -53,6 +53,40 @@ export type HistoryPoint = {
   droughtYear: boolean;
 };
 
+/** The Season A window in progress (notebook/update_current_season.py). */
+export type SeasonSkill = {
+  day: number; // day of the window the early read was taken
+  seasons: number;
+  correlation: number; // early read against the final index
+  agreement: number; // share with the same pay / no-pay decision
+  finalPaidCaught: number | null; // share of finally paid district-seasons the early read already paid
+};
+
+export type CurrentSeason = {
+  season: number;
+  windowStart: string;
+  windowEnd: string;
+  asOf: string;
+  daysElapsed: number;
+  windowDays: number;
+  status: "open" | "closed";
+  generatedAt: string;
+  sources: { rainfall: string; greenness: string };
+  skill: SeasonSkill;
+  skillCurve: SeasonSkill[];
+  districts: {
+    district: string;
+    rainMm: number;
+    rainNormalMm: number;
+    rainZ: number;
+    ndvi: number;
+    ndviNormal: number;
+    ndviZ: number;
+    index: number;
+    payout: number;
+  }[];
+};
+
 export type BasisRisk = { district: string; basisRisk: number };
 
 /** District boundaries (GeoJSON FeatureCollection, property `district`). */

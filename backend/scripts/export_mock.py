@@ -31,6 +31,7 @@ payload = {
     "history": client.get("/api/history").json(),
     "simulations": simulations,
     "geo": client.get("/api/geo/districts").json(),
+    "currentSeason": client.get("/api/current-season").json(),
 }
 OUT.write_text(json.dumps(payload, separators=(",", ":")) + "\n")
 print(f"wrote {OUT.relative_to(OUT.parents[2])}: {len(simulations)} simulations, "
