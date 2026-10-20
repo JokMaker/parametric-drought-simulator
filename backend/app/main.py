@@ -131,6 +131,16 @@ def basis_risk() -> list[BasisRisk]:
     return [BasisRisk(district=d, basis_risk=sum(g) / len(g)) for d, g in sorted(gaps.items())]
 
 
+@app.get("/api/current-season")
+def current_season() -> FileResponse:
+    """The Season A window in progress: a provisional index from near-real-time data
+    (notebook/update_current_season.py), and how far such an early read can be trusted."""
+    path = data.DATA_DIR / "current_season.json"
+    if not path.exists():
+        raise HTTPException(404, "No season monitor yet; run notebook/update_current_season.py")
+    return FileResponse(path, media_type="application/json")
+
+
 @app.get("/api/geo/districts")
 def district_shapes() -> FileResponse:
     """District boundaries (FAO GAUL 2025, simplified) for the dashboard map."""

@@ -98,6 +98,15 @@ def test_seasons_hit_and_false_payout_rates():
     assert (sum(r["index"] <= -2 for r in other), len(other)) == (9, 40)
 
 
+def test_current_season():
+    s = client.get("/api/current-season").json()
+    assert s["windowDays"] == 92 and 1 <= s["daysElapsed"] <= 92
+    assert sorted(d["district"] for d in s["districts"]) == [
+        "Bugesera", "Gatsibo", "Kayonza", "Kirehe", "Ngoma", "Nyagatare", "Rwamagana"]
+    assert all(0 <= d["payout"] <= 1 for d in s["districts"])
+    assert [c["day"] for c in s["skillCurve"]] == [15, 31, 46, 61, 92]
+
+
 def test_district_shapes():
     r = client.get("/api/geo/districts")
     assert r.status_code == 200

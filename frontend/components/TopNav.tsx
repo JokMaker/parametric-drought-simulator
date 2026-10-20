@@ -8,6 +8,7 @@ import ThemeToggle from "./ThemeToggle";
 
 const NAV = [
   { href: "/", label: "Overview" },
+  { href: "/season", label: "This Season" },
   { href: "/map", label: "Drought Map" },
   { href: "/explorer", label: "District Explorer" },
   { href: "/history", label: "Drought History" },

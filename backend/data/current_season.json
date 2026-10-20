@@ -1,0 +1,137 @@
+{
+ "season": 2027,
+ "windowStart": "2026-10-01",
+ "windowEnd": "2026-12-31",
+ "asOf": "2026-10-13",
+ "daysElapsed": 13,
+ "windowDays": 92,
+ "status": "open",
+ "generatedAt": "2026-10-20T23:05:50+00:00",
+ "sources": {
+  "rainfall": "NASA GPM IMERG V07 (to 2026-10-19)",
+  "greenness": "MODIS MOD09GA daily NDVI, cloud-masked (to 2026-10-13)"
+ },
+ "skill": {
+  "day": 13,
+  "seasons": 25,
+  "correlation": 0.414,
+  "agreement": 0.617,
+  "finalPaidCaught": 0.417
+ },
+ "skillCurve": [
+  {
+   "day": 15,
+   "seasons": 25,
+   "correlation": 0.437,
+   "agreement": 0.6,
+   "finalPaidCaught": 0.417
+  },
+  {
+   "day": 31,
+   "seasons": 25,
+   "correlation": 0.479,
+   "agreement": 0.623,
+   "finalPaidCaught": 0.483
+  },
+  {
+   "day": 46,
+   "seasons": 25,
+   "correlation": 0.571,
+   "agreement": 0.68,
+   "finalPaidCaught": 0.5
+  },
+  {
+   "day": 61,
+   "seasons": 25,
+   "correlation": 0.64,
+   "agreement": 0.76,
+   "finalPaidCaught": 0.617
+  },
+  {
+   "day": 92,
+   "seasons": 25,
+   "correlation": 0.731,
+   "agreement": 0.777,
+   "finalPaidCaught": 0.55
+  }
+ ],
+ "districts": [
+  {
+   "district": "Bugesera",
+   "rainMm": 18.7,
+   "rainNormalMm": 38.8,
+   "rainZ": -1.311,
+   "ndvi": 0.3805,
+   "ndviNormal": 0.4148,
+   "ndviZ": -0.463,
+   "index": -3.16,
+   "payout": 0.0578
+  },
+  {
+   "district": "Gatsibo",
+   "rainMm": 21.4,
+   "rainNormalMm": 34.8,
+   "rainZ": -0.964,
+   "ndvi": 0.4712,
+   "ndviNormal": 0.4766,
+   "ndviZ": -0.064,
+   "index": 1.47,
+   "payout": 0.0
+  },
+  {
+   "district": "Kayonza",
+   "rainMm": 20.0,
+   "rainNormalMm": 33.3,
+   "rainZ": -0.923,
+   "ndvi": 0.3944,
+   "ndviNormal": 0.4059,
+   "ndviZ": -0.263,
+   "index": -0.67,
+   "payout": 0.0
+  },
+  {
+   "district": "Kirehe",
+   "rainMm": 37.0,
+   "rainNormalMm": 28.8,
+   "rainZ": 0.262,
+   "ndvi": 0.4255,
+   "ndviNormal": 0.4016,
+   "ndviZ": 0.384,
+   "index": 7.3,
+   "payout": 0.0
+  },
+  {
+   "district": "Ngoma",
+   "rainMm": 22.5,
+   "rainNormalMm": 40.1,
+   "rainZ": -1.105,
+   "ndvi": 0.4651,
+   "ndviNormal": 0.4509,
+   "ndviZ": 0.269,
+   "index": 4.97,
+   "payout": 0.0
+  },
+  {
+   "district": "Nyagatare",
+   "rainMm": 36.2,
+   "rainNormalMm": 44.3,
+   "rainZ": -0.467,
+   "ndvi": 0.4558,
+   "ndviNormal": 0.4688,
+   "ndviZ": -0.245,
+   "index": -0.12,
+   "payout": 0.0
+  },
+  {
+   "district": "Rwamagana",
+   "rainMm": 17.9,
+   "rainNormalMm": 47.5,
+   "rainZ": -1.437,
+   "ndvi": 0.4886,
+   "ndviNormal": 0.4591,
+   "ndviZ": 0.332,
+   "index": 5.39,
+   "payout": 0.0
+  }
+ ]
+}

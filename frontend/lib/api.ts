@@ -3,13 +3,14 @@
 
 import {
   mockBasisRisk,
+  mockCurrentSeason,
   mockHistory,
   mockModel,
   mockSeasons,
   mockShapes,
   mockSimulation,
 } from "./mock";
-import type { BasisRisk, DistrictShapes, HistoryPoint, ModelSummary, Simulation } from "./types";
+import type { BasisRisk, CurrentSeason, DistrictShapes, HistoryPoint, ModelSummary, Simulation } from "./types";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 export const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK !== "false";
@@ -55,6 +56,12 @@ export async function getBasisRisk(): Promise<BasisRisk[]> {
 export async function getSeasons(): Promise<Simulation[]> {
   if (USE_MOCK) return mockSeasons;
   return get("/api/seasons", "season comparison");
+}
+
+/** The Season A window in progress, from near-real-time satellite data. */
+export async function getCurrentSeason(): Promise<CurrentSeason> {
+  if (USE_MOCK) return mockCurrentSeason;
+  return get("/api/current-season", "current season");
 }
 
 /** The seven district boundaries for the map. */
