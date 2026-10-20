@@ -18,6 +18,17 @@ export type ModelSummary = {
   hitRate: number; // 0.86
   falsePayoutRate: number; // 0.29
   validation: ValidationRow[];
+  pricingInputs: PricingInputs;
+};
+
+/** What a farmer's maize is worth, from the NISR surveys (notebook Section 10b). */
+export type PricingInputs = {
+  season: number; // the season the expected yields are for
+  maizePriceRwfKg: number; // farm-gate price used by default
+  priceByYear: Record<string, number>; // median farm-gate price per survey year
+  expectedYieldKgHa: Record<string, number>; // trend-adjusted expected yield per district
+  maizeAreaHa: Record<string, number>; // survey-weighted smallholder maize area per district
+  farmSizeHa: { p25: number; p50: number; p75: number; p90: number }; // maize area per farmer
 };
 
 export type Simulation = {

@@ -115,3 +115,15 @@ def test_history_has_anomalies_for_tooltips():
 def test_cors_allows_frontend():
     r = client.get("/api/model", headers={"Origin": "http://localhost:3000"})
     assert r.headers["access-control-allow-origin"] == "http://localhost:3000"
+
+
+def test_pricing_inputs():
+    """What a farmer's maize is worth, as the notebook's Section 10b computes it."""
+    p = client.get("/api/model").json()["pricingInputs"]
+    assert p["season"] == 2025
+    assert p["maizePriceRwfKg"] == 200
+    assert p["priceByYear"] == {"2019": 150, "2020": 250, "2021": 200, "2022": 200}
+    assert set(p["expectedYieldKgHa"]) == set(p["maizeAreaHa"]) == {
+        "Bugesera", "Gatsibo", "Kayonza", "Kirehe", "Ngoma", "Nyagatare", "Rwamagana"}
+    assert p["expectedYieldKgHa"]["Kayonza"] == pytest.approx(1581.8, abs=0.1)
+    assert p["farmSizeHa"]["p50"] == pytest.approx(0.0624, abs=1e-4)
