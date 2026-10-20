@@ -12,6 +12,8 @@ const NAV = [
   { href: "/explorer", label: "District Explorer" },
   { href: "/history", label: "Drought History" },
   { href: "/basis-risk", label: "Basis Risk" },
+  { href: "/pricing", label: "Pricing" },
+  { href: "/farmer", label: "Farmer View" },
 ];
 
 function DataStatus() {
