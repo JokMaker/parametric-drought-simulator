@@ -153,5 +153,39 @@
       "MAE": 25.81,
       "Predictive R2": -0.79
     }
-  ]
+  ],
+  "pricing_inputs": {
+    "season": 2025,
+    "maize_price_rwf_kg": 200.0,
+    "price_by_year": {
+      "2019": 150.0,
+      "2020": 250.0,
+      "2021": 200.0,
+      "2022": 200.0
+    },
+    "expected_yield_kg_ha": {
+      "Bugesera": 1698.2,
+      "Gatsibo": 2391.4,
+      "Kayonza": 1581.8,
+      "Kirehe": 1962.6,
+      "Ngoma": 2240.9,
+      "Nyagatare": 2939.1,
+      "Rwamagana": 1905.2
+    },
+    "maize_area_ha": {
+      "Bugesera": 8060.0,
+      "Gatsibo": 20054.0,
+      "Kayonza": 15289.0,
+      "Kirehe": 22397.0,
+      "Ngoma": 15489.0,
+      "Nyagatare": 27685.0,
+      "Rwamagana": 9713.0
+    },
+    "farm_size_ha": {
+      "p25": 0.0267,
+      "p50": 0.0624,
+      "p75": 0.1362,
+      "p90": 0.2705
+    }
+  }
 }

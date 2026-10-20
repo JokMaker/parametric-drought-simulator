@@ -1,15 +1,20 @@
 import { DISTRICTS } from "./constants";
-import type { HistoryPoint, Simulation } from "./types";
+import type { HistoryPoint, ModelSummary, Simulation } from "./types";
 
-// Contract terms an insurer sets. Defaults are illustrative and every one is editable.
+// Cover is priced from what the maize is worth: area x expected yield x price.
+// Price, yields and areas come from the NISR surveys (notebook Section 10b); the
+// insurer's own choices (cover level, loading, subsidy, uptake) are editable.
 export type Terms = {
-  sumInsured: number; // RWF paid per farmer at a full payout
+  price: number; // RWF per kg, farm-gate
+  coverLevel: number; // share of the crop's value insured; the exit level by default
   loading: number; // share added to the fair premium for costs and risk
   subsidy: number; // share of the premium the government pays
-  farmers: number; // farmers insured in each district
+  uptake: number; // share of each district's smallholder maize area insured
 };
 
-export const DEFAULT_TERMS: Terms = { sumInsured: 60_000, loading: 0.3, subsidy: 0.4, farmers: 10_000 };
+export function defaultTerms(m: ModelSummary): Terms {
+  return { price: m.pricingInputs.maizePriceRwfKg, coverLevel: Math.abs(m.exit) / 100, loading: 0.3, subsidy: 0.4, uptake: 0.3 };
+}
 
 export const rwf = (v: number) => `RWF ${Math.round(v).toLocaleString("en-US")}`;
 
@@ -29,39 +34,51 @@ export function payoutHistory(history: HistoryPoint[], calibration: Simulation[]
   });
 }
 
-export type DistrictPrice = {
+/** Average payout share per season for a district over the whole backtest. */
+export function expectedPayout(history: HistoryPoint[], district: string) {
+  const pts = history.filter((p) => p.district === district);
+  return pts.reduce((s, p) => s + p.payout, 0) / pts.length;
+}
+
+/** One hectare of maize in a district: what it is worth, its cover and its premium. */
+export function perHectare(district: string, m: ModelSummary, terms: Terms, payoutRate: number) {
+  const yieldKg = m.pricingInputs.expectedYieldKgHa[district];
+  const value = yieldKg * terms.price;
+  const cover = value * terms.coverLevel;
+  const fairPremium = cover * payoutRate;
+  const premium = fairPremium * (1 + terms.loading);
+  return { yieldKg, value, cover, fairPremium, premium, farmerPays: premium * (1 - terms.subsidy) };
+}
+
+export type DistrictPrice = ReturnType<typeof perHectare> & {
   district: string;
   seasons: number;
   paidSeasons: number;
   expectedPayout: number; // average payout share per season (0-1)
   worst: { season: number; payout: number };
-  fairPremium: number; // RWF: expected payout x sum insured
-  premium: number; // RWF: fair premium plus loading
-  farmerPays: number; // RWF: premium after subsidy
-  rate: number; // premium as a share of the sum insured
+  rate: number; // premium as a share of the cover
+  insuredHa: number;
 };
 
 /**
  * Burning-cost pricing: the fair premium is the average payout the index would
  * have made over every season in the backtest (2001-2025).
  */
-export function priceDistricts(history: HistoryPoint[], terms: Terms): DistrictPrice[] {
+export function priceDistricts(history: HistoryPoint[], m: ModelSummary, terms: Terms): DistrictPrice[] {
   return DISTRICTS.map((district) => {
     const pts = history.filter((p) => p.district === district);
-    const expectedPayout = pts.reduce((s, p) => s + p.payout, 0) / pts.length;
+    const rate = expectedPayout(history, district);
     const worstPt = pts.reduce((a, b) => (b.payout > a.payout ? b : a));
-    const fairPremium = expectedPayout * terms.sumInsured;
-    const premium = fairPremium * (1 + terms.loading);
+    const ha = perHectare(district, m, terms, rate);
     return {
+      ...ha,
       district,
       seasons: pts.length,
       paidSeasons: pts.filter((p) => p.payout > 0).length,
-      expectedPayout,
+      expectedPayout: rate,
       worst: { season: worstPt.windowYear + 1, payout: worstPt.payout },
-      fairPremium,
-      premium,
-      farmerPays: premium * (1 - terms.subsidy),
-      rate: premium / terms.sumInsured,
+      rate: ha.premium / ha.cover,
+      insuredHa: m.pricingInputs.maizeAreaHa[district] * terms.uptake,
     };
   });
 }
@@ -69,12 +86,22 @@ export function priceDistricts(history: HistoryPoint[], terms: Terms): DistrictP
 export type SeasonBook = { season: number; premiums: number; payouts: number; lossRatio: number; districtsPaid: number };
 
 /** Each season of the backtest as the insurer's books would show it. */
-export function seasonBooks(history: HistoryPoint[], prices: DistrictPrice[], terms: Terms): SeasonBook[] {
-  const premiums = prices.reduce((s, p) => s + p.premium, 0) * terms.farmers;
+export function seasonBooks(history: HistoryPoint[], prices: DistrictPrice[]): SeasonBook[] {
+  const byDistrict = new Map(prices.map((p) => [p.district, p]));
+  const premiums = prices.reduce((s, p) => s + p.premium * p.insuredHa, 0);
   const seasons = [...new Set(history.map((p) => p.windowYear + 1))].sort((a, b) => a - b);
   return seasons.map((season) => {
-    const pts = history.filter((p) => p.windowYear + 1 === season);
-    const payouts = pts.reduce((s, p) => s + p.payout, 0) * terms.sumInsured * terms.farmers;
+    const pts = history.filter((p) => p.windowYear + 1 === season && byDistrict.has(p.district));
+    const payouts = pts.reduce((s, p) => {
+      const d = byDistrict.get(p.district)!;
+      return s + p.payout * d.cover * d.insuredHa;
+    }, 0);
     return { season, premiums, payouts, lossRatio: payouts / premiums, districtsPaid: pts.filter((p) => p.payout > 0).length };
   });
+}
+
+/** The payout total reached or exceeded in one season out of ten. */
+export function oneInTen(books: SeasonBook[]) {
+  const sorted = books.map((b) => b.payouts).sort((a, b) => b - a);
+  return sorted[Math.max(0, Math.ceil(sorted.length / 10) - 1)];
 }

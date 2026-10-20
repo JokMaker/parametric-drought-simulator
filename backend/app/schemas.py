@@ -21,6 +21,17 @@ class ValidationRow(BaseModel):
     r2: float
 
 
+class PricingInputs(CamelModel):
+    """What a farmer's maize is worth, from the NISR surveys (notebook Section 10b)."""
+
+    season: int
+    maize_price_rwf_kg: float
+    price_by_year: dict[int, float]
+    expected_yield_kg_ha: dict[str, float]
+    maize_area_ha: dict[str, float]
+    farm_size_ha: dict[str, float]
+
+
 class ModelSummary(CamelModel):
     model: str
     coefficients: Coefficients
@@ -30,6 +41,7 @@ class ModelSummary(CamelModel):
     hit_rate: float
     false_payout_rate: float
     validation: list[ValidationRow]
+    pricing_inputs: PricingInputs
 
 
 class Simulation(CamelModel):

@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, RedirectResponse
 
 from . import data
-from .schemas import BasisRisk, Coefficients, HistoryPoint, ModelSummary, Simulation, ValidationRow
+from .schemas import BasisRisk, Coefficients, HistoryPoint, ModelSummary, PricingInputs, Simulation, ValidationRow
 
 app = FastAPI(
     title="Drought Index Simulator API",
@@ -70,6 +70,7 @@ def get_model() -> ModelSummary:
             )
             for v in meta["validation_main"]
         ],
+        pricing_inputs=PricingInputs(**meta["pricing_inputs"]),
     )
 
 
