@@ -136,3 +136,52 @@ def test_pricing_inputs():
         "Bugesera", "Gatsibo", "Kayonza", "Kirehe", "Ngoma", "Nyagatare", "Rwamagana"}
     assert p["expectedYieldKgHa"]["Kayonza"] == pytest.approx(1581.8, abs=0.1)
     assert p["farmSizeHa"]["p50"] == pytest.approx(0.0624, abs=1e-4)
+
+
+@pytest.fixture
+def report_db(tmp_path, monkeypatch):
+    """A fresh reports database for each test, so tests never touch real reports."""
+    from app import reports
+
+    monkeypatch.setattr(reports, "DB_PATH", tmp_path / "loss_reports.sqlite3")
+
+
+def test_loss_reports_count_once_per_policy(report_db):
+    report = {"policyId": "RDI-RWA-1233", "district": "Rwamagana", "season": 2019}
+    r = client.post("/api/loss-reports", json=report)
+    assert r.status_code == 201 and r.json() == {"created": True, "reports": 1}
+    # The same farmer reporting again does not add to the count.
+    assert client.post("/api/loss-reports", json=report).json() == {"created": False, "reports": 1}
+    other = {**report, "policyId": "RDI-RWA-1244"}
+    assert client.post("/api/loss-reports", json=other).json() == {"created": True, "reports": 2}
+    assert client.get("/api/loss-reports/summary").json() == [
+        {"district": "Rwamagana", "season": 2019, "reports": 2}]
+
+
+@pytest.mark.parametrize(
+    "report",
+    [
+        {"policyId": "RDI-RWA-1233", "district": "Nowhere", "season": 2019},
+        {"policyId": "RDI-RWA-1233", "district": "Rwamagana", "season": 1990},
+        {"policyId": "not-a-policy", "district": "Rwamagana", "season": 2019},
+    ],
+)
+def test_loss_reports_rejected(report_db, report):
+    assert client.post("/api/loss-reports", json=report).status_code == 422
+
+
+def test_loss_report_for_the_season_in_progress(report_db):
+    season = client.get("/api/current-season").json()["season"]
+    report = {"policyId": "RDI-BUG-1011", "district": "Bugesera", "season": season}
+    assert client.post("/api/loss-reports", json=report).status_code == 201
+
+
+def test_plot_losses():
+    """Survey evidence for field checks, as the notebook exports it."""
+    rows = client.get("/api/plot-losses").json()
+    assert len(rows) == 56
+    by = {(r["district"], r["season"]): r["severeLossShare"] for r in rows}
+    # Season A 2019, the index's worst miss: about half of all surveyed farms lost half their harvest.
+    assert all(by[(d, 2019)] > 0.45 for d in
+               ["Bugesera", "Gatsibo", "Kayonza", "Kirehe", "Ngoma", "Nyagatare", "Rwamagana"])
+    assert by[("Bugesera", 2023)] == pytest.approx(0.63, abs=0.01)

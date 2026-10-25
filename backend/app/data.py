@@ -1,10 +1,12 @@
-"""Loads the Step 12 notebook export (backend/data/) into memory once.
+"""Loads the notebook export (backend/data/) into memory once.
 
-- model.json       scaler, Ridge coefficients, thresholds, validation
-- calibration.csv  the 21 district-seasons with yield data; index is the
+- model.json       scaler, Ridge coefficients, thresholds, validation, pricing inputs
+- calibration.csv  the 56 district-seasons with yield data; index is the
                    leave-one-out prediction
 - seasons.csv      every district-season; index from the model fitted on all
-                   21 observations (blank before NDVI begins)
+                   56 observations (blank before NDVI begins)
+- plot_losses.csv  share of surveyed farms that lost more than half their
+                   expected harvest, per district-season with yield data
 """
 
 import csv
@@ -43,11 +45,20 @@ class SeasonRow:
 
 
 @dataclass(frozen=True)
+class PlotLoss:
+    district: str
+    season: int
+    plots: int
+    severe_loss_share: float
+
+
+@dataclass(frozen=True)
 class Dataset:
     model: IndexModel
     meta: dict
     calibration: dict[tuple[str, int], CalibrationRow]
     seasons: dict[tuple[str, int], SeasonRow]
+    plot_losses: list[PlotLoss]
 
     @property
     def districts(self) -> list[str]:
@@ -105,4 +116,9 @@ def load() -> Dataset:
         )
         seasons[(row.district, row.season)] = row
 
-    return Dataset(model=model, meta=meta, calibration=calibration, seasons=seasons)
+    plot_losses = [
+        PlotLoss(r["district"], int(r["season"]), int(r["plots"]), float(r["severe_loss_share"]))
+        for r in _read_csv("plot_losses.csv")
+    ] if (DATA_DIR / "plot_losses.csv").exists() else []
+
+    return Dataset(model=model, meta=meta, calibration=calibration, seasons=seasons, plot_losses=plot_losses)

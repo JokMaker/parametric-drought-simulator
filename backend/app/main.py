@@ -1,3 +1,4 @@
+import json
 import os
 from collections import defaultdict
 
@@ -5,8 +6,20 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, RedirectResponse
 
-from . import data
-from .schemas import BasisRisk, Coefficients, HistoryPoint, ModelSummary, PricingInputs, Simulation, ValidationRow
+from . import data, reports
+from .schemas import (
+    BasisRisk,
+    Coefficients,
+    HistoryPoint,
+    LossReportIn,
+    LossReportOut,
+    ModelSummary,
+    PlotLoss,
+    PricingInputs,
+    ReportCount,
+    Simulation,
+    ValidationRow,
+)
 
 app = FastAPI(
     title="Drought Index Simulator API",
@@ -16,7 +29,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=os.environ.get("CORS_ORIGINS", "http://localhost:3000").split(","),
-    allow_methods=["GET"],
+    allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
 
@@ -139,6 +152,39 @@ def current_season() -> FileResponse:
     if not path.exists():
         raise HTTPException(404, "No season monitor yet; run notebook/update_current_season.py")
     return FileResponse(path, media_type="application/json")
+
+
+def _current_season() -> int | None:
+    path = data.DATA_DIR / "current_season.json"
+    return json.loads(path.read_text())["season"] if path.exists() else None
+
+
+@app.post("/api/loss-reports", response_model=LossReportOut, status_code=201)
+def report_loss(body: LossReportIn) -> LossReportOut:
+    """A farmer reports a crop loss. Reports count towards a field check for the district-season."""
+    ds = data.load()
+    if body.district not in ds.districts:
+        raise HTTPException(422, f"Unknown district: {body.district}")
+    if (body.district, body.season) not in ds.seasons and body.season != _current_season():
+        raise HTTPException(422, f"No Season A {body.season} to report on")
+    created = reports.add(body.policy_id, body.district, body.season)
+    total = next((n for d, s, n in reports.summary() if d == body.district and s == body.season), 0)
+    return LossReportOut(created=created, reports=total)
+
+
+@app.get("/api/loss-reports/summary", response_model=list[ReportCount])
+def loss_report_summary() -> list[ReportCount]:
+    """Crop-loss reports on file, per district-season."""
+    return [ReportCount(district=d, season=s, reports=n) for d, s, n in reports.summary()]
+
+
+@app.get("/api/plot-losses", response_model=list[PlotLoss])
+def plot_losses() -> list[PlotLoss]:
+    """Share of NISR-surveyed farms that lost more than half their expected maize harvest."""
+    return [
+        PlotLoss(district=p.district, season=p.season, plots=p.plots, severe_loss_share=p.severe_loss_share)
+        for p in data.load().plot_losses
+    ]
 
 
 @app.get("/api/geo/districts")

@@ -87,6 +87,14 @@ export type CurrentSeason = {
   }[];
 };
 
+/** Share of NISR-surveyed farms that lost more than half their expected maize harvest. */
+export type PlotLoss = { district: string; season: number; plots: number; severeLossShare: number };
+
+/** Crop-loss reports on file for a district-season. */
+export type ReportCount = { district: string; season: number; reports: number };
+
+export type LossReportResult = { created: boolean; reports: number };
+
 export type BasisRisk = { district: string; basisRisk: number };
 
 /** District boundaries (GeoJSON FeatureCollection, property `district`). */
