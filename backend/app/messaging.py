@@ -5,9 +5,13 @@ Credentials come from the environment or from backend/.env (git-ignored):
     AT_USERNAME=sandbox          # "sandbox" for the free test environment
     AT_API_KEY=...               # from the Africa's Talking dashboard
     AT_PHONE=+2507XXXXXXXX       # the phone the demo sends to (the simulator's number)
+    AT_DAILY_LIMIT=20            # live mode only: most SMS a day (default 20)
 
 With the sandbox username, messages go to Africa's Talking's online phone
-simulator, not to real phones.
+simulator, not to real phones. With a live username they go to the real phone
+and cost credit, so live mode only sends single-SMS messages and stops at the
+daily limit: the API is reachable from the internet through the tunnel, and it
+must not be possible to drain the account. It only ever sends to AT_PHONE.
 """
 
 import json
@@ -15,6 +19,8 @@ import os
 import urllib.parse
 import urllib.request
 from pathlib import Path
+
+from . import reports
 
 ENV_FILE = Path(__file__).resolve().parent.parent / ".env"
 
@@ -35,7 +41,7 @@ def _env_file() -> dict[str, str]:
 def settings() -> dict[str, str]:
     """Environment variables win over backend/.env."""
     file = _env_file()
-    return {k: os.environ.get(k) or file.get(k, "") for k in ("AT_USERNAME", "AT_API_KEY", "AT_PHONE")}
+    return {k: os.environ.get(k) or file.get(k, "") for k in ("AT_USERNAME", "AT_API_KEY", "AT_PHONE", "AT_DAILY_LIMIT")}
 
 
 def configured() -> bool:
@@ -56,11 +62,37 @@ class SmsError(RuntimeError):
     pass
 
 
+GSM_BASIC = set("@£$¥èéùìòÇ\nØø\rÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ !\"#¤%&'()*+,-./0123456789:;<=>?¡"
+                "ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÑÜ§¿abcdefghijklmnopqrstuvwxyzäöñüà")
+GSM_EXTENDED = set("^{}\\[~]|€")
+
+
+def sms_parts(text: str) -> int:
+    """How many SMS a message is billed as (same rule as frontend/lib/sms.ts)."""
+    if all(c in GSM_BASIC or c in GSM_EXTENDED for c in text):
+        length = sum(2 if c in GSM_EXTENDED else 1 for c in text)
+        return 1 if length <= 160 else -(-length // 153)
+    return 1 if len(text) <= 70 else -(-len(text) // 67)
+
+
+def daily_limit() -> int:
+    try:
+        return int(settings()["AT_DAILY_LIMIT"] or 20)
+    except ValueError:
+        return 20
+
+
 def send_sms(message: str) -> dict:
     """Send one SMS to AT_PHONE; returns Africa's Talking's recipient status."""
     s = settings()
     if not configured():
         raise SmsError("SMS is not set up: add AT_USERNAME, AT_API_KEY and AT_PHONE to backend/.env")
+    parts = sms_parts(message)
+    live = not sandbox()
+    if live and parts > 1:
+        raise SmsError(f"Not sent: this message would be billed as {parts} SMS; live mode sends single-SMS messages only")
+    if live and reports.live_sms_today() + parts > daily_limit():
+        raise SmsError(f"Not sent: the daily limit of {daily_limit()} live SMS is reached (AT_DAILY_LIMIT in backend/.env)")
     host = "api.sandbox.africastalking.com" if sandbox() else "api.africastalking.com"
     body = urllib.parse.urlencode({"username": s["AT_USERNAME"], "to": s["AT_PHONE"], "message": message}).encode()
     req = urllib.request.Request(
@@ -83,4 +115,5 @@ def send_sms(message: str) -> dict:
     r = recipients[0]
     if r.get("status") != "Success":
         raise SmsError(f"Not sent: {r.get('status')}")
-    return {"status": r.get("status"), "cost": r.get("cost"), "messageId": r.get("messageId")}
+    reports.log_sms(parts, live)
+    return {"status": r.get("status"), "cost": r.get("cost"), "messageId": r.get("messageId"), "parts": parts}

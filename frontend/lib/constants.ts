@@ -34,3 +34,7 @@ export const POOR_RULE = (threshold: number) =>
 // (Niyonsenga et al., 2024): 2003–2006 and 2013–2017, as window years.
 export const DROUGHT_YEARS = [2003, 2004, 2005, 2006, 2013, 2014, 2015, 2016, 2017];
 export const isDroughtSeason = (season: number) => DROUGHT_YEARS.includes(windowYearOf(season));
+
+// The USSD code farmers dial: the Africa's Talking sandbox channel on the shared
+// *384# code. A live scheme would use a code allocated through the operators.
+export const USSD_CODE = process.env.NEXT_PUBLIC_USSD_CODE ?? "*384*16779#";

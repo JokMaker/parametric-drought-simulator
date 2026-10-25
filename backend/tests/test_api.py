@@ -214,3 +214,26 @@ def test_ussd_report_is_saved(report_db):
 def test_sms_status_hides_the_key():
     s = client.get("/api/sms/status").json()
     assert set(s) == {"configured", "sandbox", "phone"}
+
+
+def test_sms_parts_counts_like_a_phone():
+    from app.messaging import sms_parts
+
+    assert sms_parts("x" * 160) == 1 and sms_parts("x" * 161) == 2
+    # One character outside the GSM alphabet switches the whole message to 70 per SMS.
+    assert sms_parts("07•• ••• 185 " + "x" * 60) == 2
+
+
+def test_live_sms_is_limited(report_db, monkeypatch):
+    from app import messaging
+
+    monkeypatch.setattr(messaging, "settings", lambda: {
+        "AT_USERNAME": "my-live-app", "AT_API_KEY": "k", "AT_PHONE": "+250700000000", "AT_DAILY_LIMIT": "2"})
+    monkeypatch.setattr(messaging.urllib.request, "urlopen", lambda *a, **k: (_ for _ in ()).throw(AssertionError("must not send")))
+    # Too long for one SMS: refused before anything is sent.
+    with pytest.raises(messaging.SmsError, match="billed as 2 SMS"):
+        messaging.send_sms("x" * 200)
+    # Daily limit reached: refused before anything is sent.
+    messaging.reports.log_sms(2, live=True)
+    with pytest.raises(messaging.SmsError, match="daily limit"):
+        messaging.send_sms("short")
