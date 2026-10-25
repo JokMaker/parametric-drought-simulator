@@ -77,6 +77,16 @@ class LossReportOut(CamelModel):
     reports: int  # reports now on file for the district-season
 
 
+class SmsIn(CamelModel):
+    message: str = Field(min_length=1, max_length=480)
+
+
+class SmsStatus(CamelModel):
+    configured: bool
+    sandbox: bool
+    phone: str  # masked
+
+
 class ReportCount(CamelModel):
     district: str
     season: int

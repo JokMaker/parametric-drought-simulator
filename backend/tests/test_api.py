@@ -185,3 +185,32 @@ def test_plot_losses():
     assert all(by[(d, 2019)] > 0.45 for d in
                ["Bugesera", "Gatsibo", "Kayonza", "Kirehe", "Ngoma", "Nyagatare", "Rwamagana"])
     assert by[("Bugesera", 2023)] == pytest.approx(0.63, abs=0.01)
+
+
+@pytest.mark.parametrize(
+    "text,starts,contains",
+    [
+        ("", "CON", "1. My cover"),
+        ("1", "END", "Cover RWF"),
+        ("2", "END", "provisional"),
+        ("3", "END", "Season A 2025"),
+        ("4", "CON", "1. Yes"),
+        ("4*0", "CON", "1. My cover"),
+        ("0", "END", "Thank you"),
+    ],
+)
+def test_ussd_menu(text, starts, contains):
+    r = client.post("/api/ussd", data={"sessionId": "s1", "serviceCode": "*384*1#", "phoneNumber": "+250700000000", "text": text})
+    assert r.status_code == 200 and r.text.startswith(starts) and contains in r.text
+
+
+def test_ussd_report_is_saved(report_db):
+    r = client.post("/api/ussd", data={"sessionId": "s2", "text": "4*1"})
+    assert r.text.startswith("END Thank you") and "1 report(s) for Rwamagana" in r.text
+    season = client.get("/api/current-season").json()["season"]
+    assert client.get("/api/loss-reports/summary").json() == [{"district": "Rwamagana", "season": season, "reports": 1}]
+
+
+def test_sms_status_hides_the_key():
+    s = client.get("/api/sms/status").json()
+    assert set(s) == {"configured", "sandbox", "phone"}

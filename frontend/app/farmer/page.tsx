@@ -6,7 +6,7 @@ import NumberInput from "@/components/NumberInput";
 import SeasonTimeline from "@/components/SeasonTimeline";
 import { Card, ErrorNote, Loading, PageHeader } from "@/components/ui";
 import Link from "next/link";
-import { getHistory, getModel, getSeasons, reportLoss, USE_MOCK } from "@/lib/api";
+import { getHistory, getModel, getSeasons, getSmsStatus, reportLoss, sendSms, USE_MOCK } from "@/lib/api";
 import { districtsInSeason, type DistrictSeason } from "@/lib/districtSeason";
 import { pct } from "@/lib/payout";
 import { DEMO_POLICIES, findPolicy, type Policy } from "@/lib/policies";
@@ -53,6 +53,37 @@ function Phone({ text, lang, onLang }: { text: string; lang: Lang; onLang: (l: L
         <div className="rounded-2xl rounded-tl-sm bg-surface px-3 py-2.5 text-[13px] leading-snug shadow-sm">{text}</div>
         <div className="mt-2 px-1 text-[10px] text-faint">Delivered when the season&apos;s index is published</div>
       </div>
+      <SendSms key={text} text={text} />
+    </div>
+  );
+}
+
+/** Sends the message for real through Africa's Talking when the backend is set up for it. */
+function SendSms({ text }: { text: string }) {
+  const status = useApi("sms-status", getSmsStatus);
+  const [state, setState] = useState<{ ok: boolean; text: string } | "sending" | null>(null);
+  if (!status.data?.configured) return null;
+  const where = status.data.sandbox ? "the Africa's Talking simulator" : status.data.phone;
+  return (
+    <div className="mt-2 text-center text-xs">
+      {state && state !== "sending" ? (
+        <p className={state.ok ? "text-accent" : "text-drought"}>{state.text}</p>
+      ) : (
+        <button
+          disabled={state === "sending"}
+          onClick={() => {
+            setState("sending");
+            sendSms(text).then(
+              (r) => setState({ ok: true, text: `Sent to ${r.phone}${r.sandbox ? " (sandbox simulator)" : ""}.` }),
+              (e: Error) => setState({ ok: false, text: e.message }),
+            );
+          }}
+          className="rounded-sm border border-line px-3 py-1.5 font-medium text-ink hover:bg-surface-2 disabled:opacity-50"
+        >
+          {state === "sending" ? "Sending…" : `Send this SMS to ${status.data.phone}`}
+        </button>
+      )}
+      <div className="mt-1 text-[10px] text-faint">via {where}</div>
     </div>
   );
 }
