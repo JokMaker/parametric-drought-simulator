@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Card, ErrorNote, Loading, PageHeader } from "@/components/ui";
 import { getCurrentSeason, getHistory, getModel, getSeasons, reportLoss, USE_MOCK } from "@/lib/api";
-import { LAST_SEASON } from "@/lib/constants";
+import { LAST_SEASON, USSD_CODE } from "@/lib/constants";
 import { districtsInSeason } from "@/lib/districtSeason";
 import { pct, signedPct } from "@/lib/payout";
 import { DEMO_POLICIES, type Policy } from "@/lib/policies";
@@ -12,7 +12,7 @@ import { useApi } from "@/lib/useApi";
 
 type Screen = "idle" | "menu" | "cover" | "season" | "last" | "report" | "reported";
 
-const CODE = "*xxx#";
+const CODE = USSD_CODE;
 const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "*", "0", "#"];
 
 /**
@@ -93,7 +93,7 @@ export default function UssdPage() {
         <Card
           label="How a farmer on a basic phone reaches the cover"
           title="Dial a short code, answer with numbers: no smartphone, app or data bundle needed"
-          source={`USSD menus run on any mobile phone over the network's signalling channel, so they work without internet. ${CODE} stands for the short code a telecom operator would assign. The figures come from the same data as the Farmer View; reports go to the Field Checks page.`}
+          source={`USSD menus run on any mobile phone over the network's signalling channel, so they work without internet. ${CODE} is the Africa's Talking sandbox channel: dial it on their phone simulator to use this menu for real. A live scheme would use a short code allocated through the operators. The figures come from the same data as the Farmer View; reports go to the Field Checks page.`}
         >
           <label className="text-sm text-muted">
             Demo policy{" "}

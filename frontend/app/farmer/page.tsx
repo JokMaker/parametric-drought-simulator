@@ -9,6 +9,8 @@ import Link from "next/link";
 import { getHistory, getModel, getSeasons, getSmsStatus, reportLoss, sendSms, USE_MOCK } from "@/lib/api";
 import { districtsInSeason, type DistrictSeason } from "@/lib/districtSeason";
 import { pct } from "@/lib/payout";
+import { USSD_CODE } from "@/lib/constants";
+import { smsParts } from "@/lib/sms";
 import { DEMO_POLICIES, findPolicy, type Policy } from "@/lib/policies";
 import { defaultTerms, expectedPayout, payoutHistory, perHectare, rwf } from "@/lib/pricing";
 import { useApi } from "@/lib/useApi";
@@ -19,18 +21,20 @@ const word = (z: number) => (z <= -0.5 ? "below normal" : z >= 0.5 ? "above norm
 
 /** The message a farmer would receive when the season's result is published. */
 function smsText(lang: Lang, p: Policy, v: DistrictSeason, amount: number) {
+  // Kept to one SMS (160 plain GSM characters) in every case; checked in lib/sms.ts.
   const money = rwf(amount);
   if (lang === "rw") {
     return v.payout > 0
-      ? `RDI: Ubwishingizi bw'ibigori, ${p.district}, Igihembwe A ${v.season}. Ibyogajuru byerekanye ko imyaka yahuye n'izuba. Uzahabwa ingurane ya ${money} kuri MoMo ${p.phone}. Ibibazo: kanda *xxx#`
-      : `RDI: Ubwishingizi bw'ibigori, ${p.district}, Igihembwe A ${v.season}. Ibipimo by'ibyogajuru byari mu rugero, nta ngurane muri iki gihembwe. Niba umusaruro wawe warangiritse, kanda *xxx# ubimenyeshe.`;
+      ? `RDI: Ubwishingizi bw'ibigori, ${p.district}, Igihembwe A ${v.season}. Imyaka yahuye n'izuba. Uzahabwa ${money} kuri MoMo ${p.phone}. Kanda ${USSD_CODE}`
+      : `RDI: Ubwishingizi bw'ibigori, ${p.district}, Igihembwe A ${v.season}. Ibipimo byari mu rugero, nta ngurane. Umusaruro warangiritse? Kanda ${USSD_CODE}`;
   }
   return v.payout > 0
-    ? `RDI maize cover, ${p.district}, Season A ${v.season}: satellites showed crops under drought stress. You will receive ${money} on MoMo ${p.phone}. Questions: dial *xxx#`
-    : `RDI maize cover, ${p.district}, Season A ${v.season}: satellite readings were in the normal range, so there is no payout this season. If your harvest failed, dial *xxx# to report it.`;
+    ? `RDI maize cover, ${p.district} Season A ${v.season}: satellites showed drought stress. You will get ${money} on MoMo ${p.phone}. Info: dial ${USSD_CODE}`
+    : `RDI maize cover, ${p.district} Season A ${v.season}: satellite readings were normal, so no payout this season. Harvest failed? Dial ${USSD_CODE} to report.`;
 }
 
 function Phone({ text, lang, onLang }: { text: string; lang: Lang; onLang: (l: Lang) => void }) {
+  const parts = smsParts(text);
   return (
     <div className="mx-auto w-full max-w-[290px]">
       <div className="mb-2 flex justify-center gap-1 text-xs" role="group" aria-label="SMS language">
@@ -51,7 +55,12 @@ function Phone({ text, lang, onLang }: { text: string; lang: Lang; onLang: (l: L
           <span>SMS</span>
         </div>
         <div className="rounded-2xl rounded-tl-sm bg-surface px-3 py-2.5 text-[13px] leading-snug shadow-sm">{text}</div>
-        <div className="mt-2 px-1 text-[10px] text-faint">Delivered when the season&apos;s index is published</div>
+        <div className="mt-2 flex justify-between gap-2 px-1 text-[10px] text-faint">
+          <span>Delivered when the season&apos;s index is published</span>
+          <span className={`tabular whitespace-nowrap ${parts.parts > 1 ? "font-medium text-drought" : ""}`}>
+            {parts.parts} SMS · {parts.length} chars
+          </span>
+        </div>
       </div>
       <SendSms key={text} text={text} />
     </div>

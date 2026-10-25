@@ -13,7 +13,8 @@ export const DEMO_POLICIES: Policy[] = DISTRICTS.flatMap((district, d) =>
     id: `RDI-${CODE[district]}-${String(1000 + d * 37 + k * 11).padStart(4, "0")}`,
     district,
     areaM2: k === 1 ? 600 + d * 40 : 2_500 + d * 150,
-    phone: `07•• ••• ${String(100 + d * 13 + k * 7).slice(-3)}`,
+    // Masked with plain "x": a "•" would switch the SMS to UCS-2 and triple its cost.
+    phone: `07xx xxx ${String(100 + d * 13 + k * 7).slice(-3)}`,
   })),
 );
 
