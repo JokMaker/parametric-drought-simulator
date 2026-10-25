@@ -2,6 +2,7 @@
 
 import { CheckCircle2, MessageSquareText, Search } from "lucide-react";
 import { useState } from "react";
+import NumberInput from "@/components/NumberInput";
 import SeasonTimeline from "@/components/SeasonTimeline";
 import { Card, ErrorNote, Loading, PageHeader } from "@/components/ui";
 import Link from "next/link";
@@ -197,19 +198,14 @@ export default function FarmerPage() {
           <label htmlFor="area" className="text-sm font-medium">Your maize area</label>
           <div className="mt-1.5 flex flex-wrap items-center gap-3">
             <div className="flex w-40 items-center rounded-sm border border-line focus-within:border-accent">
-              <input
+              <NumberInput
                 id="area"
-                type="number"
-                inputMode="numeric"
                 min={50}
                 max={50_000}
                 step={50}
                 value={areaM2}
-                onChange={(e) => {
-                  const n = Number(e.target.value);
-                  if (Number.isFinite(n)) setAreaM2(Math.min(50_000, Math.max(50, Math.round(n))));
-                }}
-                className="tabular w-full min-w-0 bg-transparent px-2.5 py-1.5 text-sm outline-none"
+                onChange={(n) => setAreaM2(Math.round(n))}
+                className="w-full min-w-0 bg-transparent px-2.5 py-1.5 text-sm outline-none"
               />
               <span className="pr-2.5 text-xs text-muted">m²</span>
             </div>
