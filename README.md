@@ -21,7 +21,7 @@ Kirehe, Ngoma, Nyagatare, Rwamagana), backtested from 2001 to 2025.
 | Page | What it does | Requirements |
 |---|---|---|
 | **Overview** | Opens with a four-step picture of how the index works and a five-stop guided tour on the map (a normal year, the worst year, a drought caught, a drought missed, a false alarm), then a scatter plot of the index against the actual harvest for all 56 district-seasons; then the selected model, trigger (−2%) and exit (−22%), hit rate (50%) and false payout rate (22%), validation results (leave-one-out and leave-one-season-out), and which input drives the index | FR7, FR8, FR9 |
-| **This Season** | Follows the Season A window in progress (now October–December 2026) with near-real-time data: rainfall from NASA GPM IMERG and crop greenness from MODIS daily reflectance, each against the same dates in every season since 2001. Shows a provisional index per district on a map, rainfall and greenness so far against normal, and how far an early read can be trusted (tested on 25 past seasons: 60% agreement with the final decision by mid-October, 78% at the close). Refresh with `python notebook/update_current_season.py` | — |
+| **This Season** | Follows the Season A window in progress (now October–December 2026) with near-real-time data: rainfall from NASA GPM IMERG and crop greenness from MODIS daily reflectance, each against the same dates in every season since 2001. Shows a provisional index per district on a map, rainfall and greenness so far against normal, and how far an early read can be trusted (tested on 25 past seasons: 60% agreement with the final decision by mid-October, 78% at the close). Refresh with `notebook/jok/bin/python notebook/update_current_season.py` | — |
 | **Drought Map** | The seven districts on a map, coloured by the predicted yield change, the payout or the basis risk for any season since 2001. Press Play to watch every season from 2001 in turn. Hover a district for its rainfall and greenness anomalies, index and payout; click it to open it in the Explorer | FR1, FR3, FR5, FR10 |
 | **District Explorer** | Pick a district and season; see rainfall and vegetation anomalies, a payout gauge, where the index sits between trigger and exit, and the reason for the payout. For 2018–2025 the index and payout are shown side by side with the actual harvest | FR1, FR3, FR5, FR6, FR7, FR9 |
 | **Drought History** | The index and payout for every year since 2000, with documented drought years (2003–2006, 2013–2017) shaded, and a district-by-year heatmap: payouts in 54% of drought-year seasons against 23% of other years | FR9 |
@@ -119,13 +119,14 @@ The notebook rebuilds the model from raw data and writes its results into `backe
    notebook's Section 6c lists each file).
 2. Install and open:
    ```bash
-   pip install -r notebook/requirements.txt
+   python3 -m venv notebook/jok
+   notebook/jok/bin/pip install -r notebook/requirements.txt
    ```
-   then open `notebook/drought_index.ipynb` in VS Code or Jupyter and run all cells. The first run
+   then open `notebook/drought_index.ipynb` in VS Code or Jupyter, choose `notebook/jok` as the kernel, and run all cells. The first run
    asks you to sign in to Google Earth Engine; satellite extracts are cached in `data/`.
 3. Refresh the dashboard's offline data: `cd backend && .venv/bin/python scripts/export_mock.py`.
 4. During the October–December window, refresh the This Season page with
-   `python notebook/update_current_season.py` (about a minute; add `--skill-curve` to redo the
+   `notebook/jok/bin/python notebook/update_current_season.py` (about a minute; add `--skill-curve` to redo the
    reliability test, a few minutes). It needs the same Earth Engine sign-in as the notebook.
 
 ## Designs

@@ -227,3 +227,6 @@ data/nisr/
 
 # The Python template above ignores lib/; the frontend keeps its source there
 !frontend/lib/
+
+# Notebook environment (python3 -m venv notebook/jok)
+notebook/jok/

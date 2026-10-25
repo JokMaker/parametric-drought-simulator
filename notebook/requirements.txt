@@ -1,5 +1,5 @@
 earthengine-api
-pandas
+pandas<3  # the notebook is tested on pandas 2.3
 numpy
 scipy
 scikit-learn
