@@ -1,12 +1,13 @@
 import json
 import os
 from collections import defaultdict
+from urllib.parse import parse_qs
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.responses import FileResponse, PlainTextResponse, RedirectResponse
 
-from . import data, reports
+from . import data, messaging, reports, ussd
 from .schemas import (
     BasisRisk,
     Coefficients,
@@ -17,6 +18,8 @@ from .schemas import (
     PlotLoss,
     PricingInputs,
     ReportCount,
+    SmsIn,
+    SmsStatus,
     Simulation,
     ValidationRow,
 )
@@ -185,6 +188,33 @@ def plot_losses() -> list[PlotLoss]:
         PlotLoss(district=p.district, season=p.season, plots=p.plots, severe_loss_share=p.severe_loss_share)
         for p in data.load().plot_losses
     ]
+
+
+@app.get("/api/sms/status", response_model=SmsStatus)
+def sms_status() -> SmsStatus:
+    """Whether SMS through Africa's Talking is set up (backend/.env), without revealing the key."""
+    return SmsStatus(configured=messaging.configured(), sandbox=messaging.sandbox(), phone=messaging.masked_phone())
+
+
+@app.post("/api/sms")
+def send_sms(body: SmsIn) -> dict:
+    """Send a payout message to the demo phone through Africa's Talking."""
+    if not messaging.configured():
+        raise HTTPException(503, "SMS is not set up: add AT_USERNAME, AT_API_KEY and AT_PHONE to backend/.env")
+    try:
+        return messaging.send_sms(body.message) | {"phone": messaging.masked_phone(), "sandbox": messaging.sandbox()}
+    except messaging.SmsError as e:
+        raise HTTPException(502, str(e)) from e
+
+
+@app.post("/api/ussd", response_class=PlainTextResponse)
+async def ussd_callback(request: Request) -> str:
+    """Africa's Talking calls this on every key press of a USSD session; the reply is the next screen.
+
+    The form (sessionId, serviceCode, phoneNumber, text) is parsed with the standard
+    library, so the backend needs no extra form-parsing package."""
+    form = parse_qs((await request.body()).decode(), keep_blank_values=True)
+    return ussd.respond(form.get("text", [""])[0])
 
 
 @app.get("/api/geo/districts")

@@ -21,6 +21,7 @@ import type {
   PlotLoss,
   ReportCount,
   Simulation,
+  SmsStatus,
 } from "./types";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
@@ -97,6 +98,24 @@ export async function reportLoss(policyId: string, district: string, season: num
   });
   if (!res.ok) throw new Error("Could not send the report");
   return res.json() as Promise<LossReportResult>;
+}
+
+/** Whether the backend can send SMS (Africa's Talking credentials in backend/.env). */
+export async function getSmsStatus(): Promise<SmsStatus> {
+  if (USE_MOCK) return { configured: false, sandbox: true, phone: "" };
+  return get("/api/sms/status", "SMS status");
+}
+
+/** Send a message to the demo phone through Africa's Talking. */
+export async function sendSms(message: string): Promise<{ status: string; phone: string; sandbox: boolean }> {
+  const res = await fetch(`${API}/api/sms`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message }),
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(body.detail ?? "Could not send the SMS");
+  return body;
 }
 
 /** The seven district boundaries for the map. */

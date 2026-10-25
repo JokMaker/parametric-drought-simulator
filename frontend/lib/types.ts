@@ -93,6 +93,9 @@ export type PlotLoss = { district: string; season: number; plots: number; severe
 /** Crop-loss reports on file for a district-season. */
 export type ReportCount = { district: string; season: number; reports: number };
 
+/** Whether SMS through Africa's Talking is set up; the phone is masked. */
+export type SmsStatus = { configured: boolean; sandbox: boolean; phone: string };
+
 export type LossReportResult = { created: boolean; reports: number };
 
 export type BasisRisk = { district: string; basisRisk: number };
