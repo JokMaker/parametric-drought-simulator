@@ -4,6 +4,7 @@ import { RotateCcw } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import LossRatioChart from "@/components/charts/LossRatioChart";
+import NumberInput from "@/components/NumberInput";
 import { Card, ErrorNote, Loading, PageHeader, StatStrip } from "@/components/ui";
 import { getHistory, getModel, getSeasons } from "@/lib/api";
 import { pct } from "@/lib/payout";
@@ -18,19 +19,14 @@ function Field({ id, label, value, onChange, unit, step, min, max, hint }: {
     <div className="min-w-0">
       <label htmlFor={id} className="text-sm font-medium">{label}</label>
       <div className="mt-1 flex items-center rounded-sm border border-line bg-surface focus-within:border-accent">
-        <input
+        <NumberInput
           id={id}
-          type="number"
-          inputMode="numeric"
           value={value}
           step={step}
           min={min}
           max={max}
-          onChange={(e) => {
-            const v = Number(e.target.value);
-            if (Number.isFinite(v)) onChange(Math.min(max, Math.max(min, v)));
-          }}
-          className="tabular w-full min-w-0 bg-transparent px-2.5 py-1.5 text-sm outline-none"
+          onChange={onChange}
+          className="w-full min-w-0 bg-transparent px-2.5 py-1.5 text-sm outline-none"
         />
         <span className="shrink-0 pr-2.5 text-xs text-muted">{unit}</span>
       </div>

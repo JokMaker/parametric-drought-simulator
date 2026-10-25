@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import NumberInput from "@/components/NumberInput";
 import { useState } from "react";
 import { Card, ErrorNote, Loading, PageHeader, StatStrip } from "@/components/ui";
 import { getCurrentSeason, getPlotLosses, getReportCounts, getSeasons, USE_MOCK } from "@/lib/api";
@@ -108,26 +109,24 @@ export default function FieldChecksPage() {
             </div>
             <label className="text-[13px] text-muted">
               Reports needed
-              <input
-                type="number"
+              <NumberInput
                 min={1}
                 max={1000}
                 value={rule.reports}
-                onChange={(e) => setRule({ ...rule, reports: Math.max(1, Number(e.target.value) || 1) })}
-                className="tabular mt-1.5 block w-24 rounded-sm border border-line bg-surface px-2 py-1.5 text-sm text-ink"
+                onChange={(n) => setRule({ ...rule, reports: Math.round(n) })}
+                className="mt-1.5 block w-24 rounded-sm border border-line bg-surface px-2 py-1.5 text-sm text-ink outline-none focus:border-accent"
               />
             </label>
             <label className="text-[13px] text-muted">
               Survey loss share needed
               <div className="mt-1.5 flex w-28 items-center rounded-sm border border-line bg-surface">
-                <input
-                  type="number"
+                <NumberInput
                   min={5}
                   max={100}
                   step={5}
                   value={Math.round(rule.lossShare * 100)}
-                  onChange={(e) => setRule({ ...rule, lossShare: Math.min(1, Math.max(0.05, (Number(e.target.value) || 25) / 100)) })}
-                  className="tabular w-full min-w-0 bg-transparent px-2 py-1.5 text-sm text-ink outline-none"
+                  onChange={(n) => setRule({ ...rule, lossShare: n / 100 })}
+                  className="w-full min-w-0 bg-transparent px-2 py-1.5 text-sm text-ink outline-none"
                 />
                 <span className="pr-2 text-xs">%</span>
               </div>
