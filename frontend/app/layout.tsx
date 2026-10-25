@@ -40,12 +40,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         </Script>
         <TopNav />
         {USE_MOCK && (
-          <div className="border-b border-line bg-surface-2 px-4 py-1.5 text-center text-xs text-muted">
+          <div className="border-b border-line bg-surface-2 px-4 py-1.5 text-center text-xs text-muted print:hidden">
             Showing saved results: the backend is not connected.
           </div>
         )}
-        <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-7 sm:px-6">{children}</main>
-        <footer className="border-t border-line">
+        <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-7 sm:px-6 print:max-w-none print:p-0">{children}</main>
+        <footer className="border-t border-line print:hidden">
           <div className="mx-auto max-w-5xl px-4 py-4 text-xs text-faint sm:px-6">
             Data: CHIRPS rainfall, MODIS NDVI (via Google Earth Engine), NISR Seasonal Agricultural
             Survey. District-level data only; no farmer records.

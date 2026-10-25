@@ -1,6 +1,7 @@
 "use client";
 
 import { RotateCcw } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import LossRatioChart from "@/components/charts/LossRatioChart";
 import { Card, ErrorNote, Loading, PageHeader, StatStrip } from "@/components/ui";
@@ -114,6 +115,11 @@ export default function PricingPage() {
 
         <Card
           label={`Premium by district · priced on ${n} seasons (2001–2025)`}
+          action={
+            <Link href="/term-sheet" className="text-sm text-accent hover:underline">
+              Term sheets (PDF)
+            </Link>
+          }
           title={`A hectare of maize costs a farmer ${rwf(byCost[0].farmerPays)} a season to insure in ${byCost[0].district}, ${rwf(byCost[byCost.length - 1].farmerPays)} in ${byCost[byCost.length - 1].district}`}
           source={`Fair premium = the cover × the average payout share over every season since 2001 (burning-cost pricing). Payouts use the ${m.model} index (leave-one-out for the seasons with harvest data, as on every other page) with the ${m.trigger}% trigger and ${m.exit}% exit. Farmer prices are after subsidy.`}
         >
