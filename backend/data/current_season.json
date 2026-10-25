@@ -6,7 +6,7 @@
  "daysElapsed": 15,
  "windowDays": 92,
  "status": "open",
- "generatedAt": "2026-10-25T21:47:43+00:00",
+ "generatedAt": "2026-10-25T21:53:17+00:00",
  "sources": {
   "rainfall": "NASA GPM IMERG V07 (to 2026-10-23)",
   "greenness": "MODIS MOD09GA daily NDVI, cloud-masked (to 2026-10-15)"
