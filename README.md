@@ -23,11 +23,13 @@ Kirehe, Ngoma, Nyagatare, Rwamagana), backtested from 2001 to 2025.
 | **Overview** | Opens with a four-step picture of how the index works and a five-stop guided tour on the map (a normal year, the worst year, a drought caught, a drought missed, a false alarm), then a scatter plot of the index against the actual harvest for all 56 district-seasons; then the selected model, trigger (−2%) and exit (−22%), hit rate (50%) and false payout rate (22%), validation results (leave-one-out and leave-one-season-out), and which input drives the index | FR7, FR8, FR9 |
 | **This Season** | Follows the Season A window in progress (now October–December 2026) with near-real-time data: rainfall from NASA GPM IMERG and crop greenness from MODIS daily reflectance, each against the same dates in every season since 2001. Shows a provisional index per district on a map, rainfall and greenness so far against normal, and how far an early read can be trusted (tested on 25 past seasons: 60% agreement with the final decision by mid-October, 78% at the close). Refresh with `notebook/jok/bin/python notebook/update_current_season.py` | — |
 | **Drought Map** | The seven districts on a map, coloured by the predicted yield change, the payout or the basis risk for any season since 2001. Press Play to watch every season from 2001 in turn. Hover a district for its rainfall and greenness anomalies, index and payout; click it to open it in the Explorer | FR1, FR3, FR5, FR10 |
-| **District Explorer** | Pick a district and season; see rainfall and vegetation anomalies, a payout gauge, where the index sits between trigger and exit, and the reason for the payout. For 2018–2025 the index and payout are shown side by side with the actual harvest | FR1, FR3, FR5, FR6, FR7, FR9 |
+| **District Explorer** | Pick a district and season; see rainfall and vegetation anomalies, a payout gauge with the index's likely range (± the model's leave-one-out error) and the chance the harvest really fell past the trigger, where the index sits between trigger and exit, and the reason for the payout. For 2018–2025 the index and payout are shown side by side with the actual harvest | FR1, FR3, FR5, FR6, FR7, FR9 |
 | **Drought History** | The index and payout for every year since 2000, with documented drought years (2003–2006, 2013–2017) shaded, and a district-by-year heatmap: payouts in 54% of drought-year seasons against 23% of other years | FR9 |
 | **Basis Risk** | A "what if" simulator: move the trigger and exit and see how many poor harvests are paid, how many are missed, the false payouts and the basis risk change live. Then basis risk per district (Nyagatare 33% highest, Kayonza 18% lowest) and a season-by-season table filterable by outcome (missed, false payout, paid correctly) | FR10 |
+| **Field Checks** | The safety net for losses the index misses. A district needs a field check when the index paid under 25% but there is evidence of loss: at least 3 farmer reports (saved by the API in SQLite), or at least 45% of NISR-surveyed farms harvesting under half the expected yield. Season A 2019 flags all seven districts. Thresholds are editable | FR10 |
 | **Pricing** | Prices the cover from what the maize is worth: maize area × expected yield × price (RWF 200/kg, the NISR farm-gate median). Set the cover level, loading, subsidy and share of the 118,687 ha insured; see the premium per hectare and for a median farm in each district, premiums against expected payouts, the 1-in-10 season, the reserve needed for the worst season (2006), and a loss ratio for every season since 2001 | — |
-| **Farmer View** | Look up a synthetic demo policy, enter the maize area, and see the crop's value, the cover, the premium and the payout for any season, with the SMS the farmer would receive in English or Kinyarwanda (draft). When the district is not paid, the farmer can report a crop loss, the route for losses the satellites miss | — |
+| **Farmer View** | Look up a synthetic demo policy, enter the maize area, and see the crop's value, the cover, the premium and the payout for any season, with the SMS the farmer would receive in English or Kinyarwanda (draft). When the district is not paid, the farmer can report a crop loss, the route for losses the satellites miss; reports go to Field Checks. A USSD page shows the same cover on a basic phone (`*xxx#` menu: my cover, this season, last result, report a loss) | — |
+| **Term sheet** | A printable one-page contract summary per district (cover, index formula, accuracy, payout schedule, settlement, field-check clause, 2001–2025 record), downloadable as PDF; linked from Pricing | — |
 
 ## Machine learning model
 
@@ -207,6 +209,13 @@ cards that stack vertically, each on its own, and charts that each tell a story.
 ### Farmer View
 ![Farmer View](docs/screenshots/farmer-view.png)
 
+### Field Checks
+![Field Checks](docs/screenshots/field-checks.png)
+
+### Term sheet and USSD menu
+| ![Term sheet](docs/screenshots/term-sheet.png) | ![USSD menu](docs/screenshots/ussd.png) |
+|---|---|
+
 ### Dark mode and mobile
 | Dark mode | Mobile |
 |---|---|
@@ -217,14 +226,47 @@ cards that stack vertically, each on its own, and charts that each tell a story.
 
 ## Architecture
 
-```
-Browser ──► Next.js dashboard (port 3000)
-               │  fetch JSON
-               ▼
-            FastAPI backend (port 8000) ──► calibrated model + results (backend/data/)
-                                                ▲
-                          exported from the calibration notebook
-                          (CHIRPS + MODIS via Google Earth Engine, NISR yields)
+```mermaid
+flowchart LR
+  subgraph Sources["Data sources"]
+    direction TB
+    CH["CHIRPS rainfall<br/>MODIS MOD13Q1 NDVI<br/>(final, 3–6 weeks late)"]
+    NR["NASA GPM IMERG rainfall<br/>MODIS MOD09GA daily NDVI<br/>(near real time)"]
+    NISR["NISR Seasonal Agricultural<br/>Survey, 2017–2025"]
+  end
+
+  subgraph Offline["Offline, on the analyst's computer"]
+    direction TB
+    NB["Calibration notebook<br/>yields, anomalies, Ridge,<br/>trigger and exit, pricing inputs"]
+    MON["Season monitor script<br/>update_current_season.py"]
+  end
+
+  subgraph Server["Docker Compose, one host"]
+    direction TB
+    FILES[("backend/data/<br/>model.json · calibration.csv · seasons.csv<br/>plot_losses.csv · current_season.json · districts")]
+    API["FastAPI backend<br/>applies the saved model and payout rule"]
+    DB[("SQLite<br/>crop-loss reports")]
+    WEB["Next.js dashboard"]
+  end
+
+  CH -- "Earth Engine API" --> NB
+  NISR -- "Stata, SPSS, CSV files" --> NB
+  NR -- "Earth Engine API" --> MON
+  NB -- "exports" --> FILES
+  MON -- "writes" --> FILES
+  FILES --> API
+  API <--> DB
+  WEB -- "JSON over HTTP" --> API
+  WEB --> U1["Analyst, insurer,<br/>programme officer"]
+  WEB --> U2["Farmer view, SMS and<br/>USSD previews (demo)"]
+
+  subgraph Future["Future deployment (not built)"]
+    direction TB
+    F1["PostgreSQL, accounts and roles"]
+    F2["SMS / USSD gateway"]
+    F3["Mobile Money payouts"]
+  end
+  API -.-> Future
 ```
 
 The calibration (Ridge regression, leave-one-out validation, trigger and exit) runs once in the
@@ -241,6 +283,10 @@ formula. This keeps every request fast (NFR1) and the thresholds reproducible (N
 | `GET /api/basis-risk` | Basis risk per district |
 | `GET /api/seasons` | The 56 calibration district-seasons |
 | `GET /api/geo/districts` | District boundaries (FAO GAUL 2025, simplified GeoJSON) for the map |
+| `GET /api/current-season` | The Season A window in progress: provisional index per district from near-real-time data, and how far an early read can be trusted |
+| `GET /api/plot-losses` | Share of NISR-surveyed farms that lost more than half their expected harvest, per district-season |
+| `POST /api/loss-reports` | A farmer reports a crop loss (one report per policy per season counts) |
+| `GET /api/loss-reports/summary` | Crop-loss reports on file, per district-season |
 | `GET /api/health` | Service status |
 
 ### Index formula
