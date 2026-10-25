@@ -1,6 +1,6 @@
 "use client";
 
-import { classify, pct, reason, signedPct } from "@/lib/payout";
+import { classify, pct, reason, signedPct, uncertainty } from "@/lib/payout";
 import { indexClass, indexClasses, payoutClass } from "@/lib/scales";
 import type { ModelSummary, Simulation } from "@/lib/types";
 import { ArrowRight } from "lucide-react";
@@ -70,6 +70,7 @@ function Pin({ value, label, dotted = false }: { value: number; label: string; d
 /** Index position across the severity classes, with the payout zones named on the bar. */
 function PayoutScale({ sim, model }: { sim: Simulation; model: ModelSummary }) {
   const { trigger, exit } = model;
+  const range = uncertainty(sim.index, model);
   const step = (trigger - exit) / 3;
   const classes = indexClasses(trigger, exit);
   // Class bands from left (worst) to right (best).
@@ -106,8 +107,28 @@ function PayoutScale({ sim, model }: { sim: Simulation; model: ModelSummary }) {
           <div key={b.c.key} style={{ width: `${at(b.to) - at(b.from)}%`, background: b.c.color }} />
         ))}
       </div>
+      <Range low={range.low} high={range.high} />
       <Pin value={sim.index} label={`Index ${signedPct(sim.index)}`} />
       {harvest !== null && <Pin value={harvest} label={`Real harvest ${signedPct(harvest)}`} dotted />}
+    </div>
+  );
+}
+
+/** The likely range of the real yield change, drawn as a bracket under the scale. */
+function Range({ low, high }: { low: number; high: number }) {
+  const a = at(low);
+  const b = at(high);
+  return (
+    <div className="relative mt-1 h-4" aria-label={`Likely range ${signedPct(low, 0)} to ${signedPct(high, 0)}`}>
+      <span className="absolute top-1.5 h-0.5 bg-ink/35" style={{ left: `${a}%`, width: `${b - a}%` }} />
+      <span className="absolute top-0.5 h-2.5 w-0.5 bg-ink/35" style={{ left: `${a}%` }} />
+      <span className="absolute top-0.5 h-2.5 w-0.5 -translate-x-full bg-ink/35" style={{ left: `${b}%` }} />
+      <span
+        className="tabular absolute -top-0.5 -translate-x-1/2 whitespace-nowrap bg-surface px-1 text-[11px] text-muted"
+        style={{ left: `${(a + b) / 2}%` }}
+      >
+        likely range {signedPct(low, 0)} to {signedPct(high, 0)}
+      </span>
     </div>
   );
 }
@@ -131,14 +152,15 @@ function Step({ label, value, sub, color }: { label: string; value: string; sub?
 const sd = (z: number) => `${z < 0 ? "▼" : "▲"} ${Math.abs(z).toFixed(1)}`;
 
 /** Satellites in, payout out: the whole index in one row. */
-function Chain({ sim }: { sim: Simulation }) {
+function Chain({ sim, model }: { sim: Simulation; model: ModelSummary }) {
+  const range = uncertainty(sim.index, model);
   const arrow = <ArrowRight size={16} className="hidden shrink-0 self-center text-faint sm:block" />;
   return (
     <div className="grid grid-cols-2 gap-2 sm:flex sm:items-stretch">
       <Step label="Rainfall" value={sd(sim.rainZ)} sub="SD from normal" color={sim.rainZ < 0 ? DOWN : UP} />
       <Step label="Crop greenness" value={sd(sim.ndviZ)} sub="SD from normal" color={sim.ndviZ < 0 ? DOWN : UP} />
       {arrow}
-      <Step label="Predicted yield" value={signedPct(sim.index)} sub="vs the expected harvest" />
+      <Step label="Predicted yield" value={signedPct(sim.index)} sub={`± ${range.error.toFixed(0)} pts, vs the expected harvest`} />
       {arrow}
       <Step label="Payout" value={pct(sim.payout)} sub="of the sum insured" />
     </div>
@@ -164,15 +186,30 @@ function CompareRow({ label, value, min, max, color, text }: {
   );
 }
 
+/** How sure the index is: the chance the real harvest fell past the trigger. */
+function Confidence({ sim, model }: { sim: Simulation; model: ModelSummary }) {
+  const u = uncertainty(sim.index, model);
+  const chance = u.chanceBelowTrigger;
+  const word = chance >= 0.8 ? "very likely" : chance >= 0.6 ? "likely" : chance > 0.4 ? "a toss-up" : chance > 0.2 ? "unlikely" : "very unlikely";
+  return (
+    <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-line pt-3 text-sm">
+      <span className="text-muted">Chance the real harvest fell past the {model.trigger}% trigger</span>
+      <span className="tabular text-lg font-semibold">{pct(chance)}</span>
+      <span className="text-muted">({word})</span>
+    </div>
+  );
+}
+
 export function PayoutCard({ sim, model }: { sim: Simulation; model: ModelSummary }) {
   return (
     <Card
       label={`Payout · ${sim.district}, Season A ${sim.season}`}
       title={payoutHeadline(sim, model)}
-      source={`${reason(sim, model.trigger, model.exit)} ${model.model} model; rainfall is CHIRPS and crop greenness MODIS NDVI, October–December, in standard deviations (SD) from each district's own record.`}
+      source={`${reason(sim, model.trigger, model.exit)} ${model.model} model; rainfall is CHIRPS and crop greenness MODIS NDVI, October–December, in standard deviations (SD) from each district's own record. The likely range is the index plus or minus the model's typical error on a district-season it never saw (leave-one-out RMSE ${uncertainty(sim.index, model).error.toFixed(1)} points); the chance treats that error as normally distributed.`}
     >
-      <Chain sim={sim} />
+      <Chain sim={sim} model={model} />
       <PayoutScale sim={sim} model={model} />
+      <Confidence sim={sim} model={model} />
     </Card>
   );
 }
