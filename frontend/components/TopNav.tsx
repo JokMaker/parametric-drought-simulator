@@ -13,6 +13,7 @@ const NAV = [
   { href: "/explorer", label: "District Explorer" },
   { href: "/history", label: "Drought History" },
   { href: "/basis-risk", label: "Basis Risk" },
+  { href: "/field-checks", label: "Field Checks" },
   { href: "/pricing", label: "Pricing" },
   { href: "/farmer", label: "Farmer View" },
 ];
@@ -37,7 +38,7 @@ function DataStatus() {
 export default function TopNav() {
   const pathname = usePathname();
   return (
-    <header className="bg-header text-header-ink">
+    <header className="bg-header text-header-ink print:hidden">
       <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-6 gap-y-1 px-4 pt-3 sm:px-6">
         <Link href="/" className="leading-tight">
           <span className="block text-[15px] font-semibold tracking-tight">Rwanda Drought Index</span>

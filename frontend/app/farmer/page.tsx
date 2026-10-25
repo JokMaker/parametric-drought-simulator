@@ -4,7 +4,8 @@ import { CheckCircle2, MessageSquareText, Search } from "lucide-react";
 import { useState } from "react";
 import SeasonTimeline from "@/components/SeasonTimeline";
 import { Card, ErrorNote, Loading, PageHeader } from "@/components/ui";
-import { getHistory, getModel, getSeasons } from "@/lib/api";
+import Link from "next/link";
+import { getHistory, getModel, getSeasons, reportLoss, USE_MOCK } from "@/lib/api";
 import { districtsInSeason, type DistrictSeason } from "@/lib/districtSeason";
 import { pct } from "@/lib/payout";
 import { DEMO_POLICIES, findPolicy, type Policy } from "@/lib/policies";
@@ -76,7 +77,8 @@ export default function FarmerPage() {
   const [areaM2, setAreaM2] = useState(DEFAULT_POLICY.areaM2);
   const [season, setSeason] = useState(2023);
   const [lang, setLang] = useState<Lang>("en");
-  const [reported, setReported] = useState<string | null>(null);
+  // The latest report sent, keyed by policy and season so it clears when either changes.
+  const [reported, setReported] = useState<{ key: string; text: string; ok: boolean } | null>(null);
   const error = history.error ?? seasons.error ?? model.error;
   const notFound = query.trim() !== "" && !findPolicy(query);
 
@@ -147,12 +149,33 @@ export default function FarmerPage() {
                     Satellites can miss losses from pests, disease or a dry spell on one hillside. Reports from farmers in
                     the same district are counted, and a district with many reports gets a field check.
                   </p>
-                  {reported === reportKey ? (
-                    <p className="mt-2 flex items-center gap-1.5 text-sm font-medium text-accent">
-                      <CheckCircle2 size={16} /> Loss reported for {policy.district}, Season A {season} (demo, not saved)
+                  {reported?.key === reportKey ? (
+                    <p className={`mt-2 flex items-start gap-1.5 text-sm font-medium ${reported.ok ? "text-accent" : "text-drought"}`}>
+                      {reported.ok && <CheckCircle2 size={16} className="mt-0.5 shrink-0" />}
+                      <span>
+                        {reported.text}{" "}
+                        {reported.ok && <Link href="/field-checks" className="underline underline-offset-2">See field checks</Link>}
+                      </span>
                     </p>
                   ) : (
-                    <button onClick={() => setReported(reportKey)} className="mt-2 rounded-sm bg-ink px-3 py-1.5 text-sm font-medium text-surface">
+                    <button
+                      onClick={() =>
+                        reportLoss(policy.id, policy.district, season).then(
+                          (r) =>
+                            setReported({
+                              key: reportKey,
+                              ok: true,
+                              text: USE_MOCK
+                                ? "Report noted (saved-results mode: not stored)."
+                                : r.created
+                                  ? `Report received: ${r.reports} ${r.reports === 1 ? "report" : "reports"} on file for ${policy.district}, Season A ${season}.`
+                                  : `You have already reported this season; ${r.reports} on file for ${policy.district}.`,
+                            }),
+                          (e: Error) => setReported({ key: reportKey, ok: false, text: e.message }),
+                        )
+                      }
+                      className="mt-2 rounded-sm bg-ink px-3 py-1.5 text-sm font-medium text-surface"
+                    >
                       Report a crop loss
                     </button>
                   )}
@@ -262,7 +285,8 @@ export default function FarmerPage() {
         </div>
         <p className="flex items-center gap-1.5 text-xs text-faint">
           <MessageSquareText size={13} />
-          Demo: policies and phone numbers are synthetic. The Kinyarwanda text is a draft for a native speaker to check.
+          Demo: policies and phone numbers are synthetic. The Kinyarwanda text is a draft for a native speaker to check.{" "}
+          <Link href="/ussd" className="text-accent underline-offset-2 hover:underline">On a basic phone: try the USSD menu</Link>
         </p>
       </section>
       {body}

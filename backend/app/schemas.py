@@ -1,6 +1,6 @@
 """Response shapes. These mirror frontend/lib/types.ts field for field."""
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 
 
@@ -64,6 +64,30 @@ class HistoryPoint(CamelModel):
     payout: float
     pays: bool
     drought_year: bool
+
+
+class LossReportIn(CamelModel):
+    policy_id: str = Field(pattern=r"^RDI-[A-Z]{3}-\d{4}$")
+    district: str
+    season: int
+
+
+class LossReportOut(CamelModel):
+    created: bool  # False when this policy had already reported this season
+    reports: int  # reports now on file for the district-season
+
+
+class ReportCount(CamelModel):
+    district: str
+    season: int
+    reports: int
+
+
+class PlotLoss(CamelModel):
+    district: str
+    season: int
+    plots: int
+    severe_loss_share: float
 
 
 class BasisRisk(CamelModel):
