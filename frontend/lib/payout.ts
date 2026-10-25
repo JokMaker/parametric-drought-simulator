@@ -1,4 +1,4 @@
-import type { Simulation } from "./types";
+import type { ModelSummary, Simulation } from "./types";
 
 /** Linear payout: 0 at or above the trigger, rising to 1 at the exit. */
 export function payoutFromIndex(index: number, trigger: number, exit: number) {
@@ -55,3 +55,25 @@ export const OUTCOME_LABEL: Record<Outcome, string> = {
   "false-payout": "False payout",
   "correct-no-payout": "Correctly did not pay",
 };
+
+/** Standard normal cumulative distribution (Abramowitz and Stegun 7.1.26, error below 1e-7). */
+function normalCdf(x: number) {
+  const t = 1 / (1 + 0.3275911 * Math.abs(x) / Math.SQRT2);
+  const y = 1 - ((((1.061405429 * t - 1.453152027) * t + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-(x * x) / 2);
+  return x >= 0 ? (1 + y) / 2 : (1 - y) / 2;
+}
+
+/**
+ * The model's typical error on a district-season it never saw (leave-one-out RMSE),
+ * in percentage points of yield change: the honest spread around any index value.
+ */
+export function modelError(m: ModelSummary) {
+  return m.validation.find((v) => v.scheme === "Leave-one-out" && v.model === m.model)?.rmse ?? 0;
+}
+
+/** Likely range of the real yield change (index plus or minus one model error) and the
+ *  chance it fell at or below the trigger, treating the error as normal. */
+export function uncertainty(index: number, m: ModelSummary) {
+  const e = modelError(m);
+  return { low: index - e, high: index + e, error: e, chanceBelowTrigger: e ? normalCdf((m.trigger - index) / e) : index <= m.trigger ? 1 : 0 };
+}
