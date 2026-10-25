@@ -90,6 +90,11 @@ days = (as_of - WIN_START).days + 1
 window_days = (WIN_END - WIN_START).days + 1
 if days < 1:
     raise SystemExit(f"No near-real-time data inside the {WIN_START}–{WIN_END} window yet (latest {as_of}).")
+OUT = EXPORT / "current_season.json"
+previous = json.loads(OUT.read_text()) if OUT.exists() else {}
+if previous.get("season") == SEASON and previous.get("asOf") == as_of.isoformat() and "--skill-curve" not in sys.argv:
+    print(f"No new data since {as_of} (day {days} of the window); nothing to update.")
+    sys.exit(0)
 print(f"Season A {SEASON}: window {WIN_START} to {WIN_END}; data to {as_of} "
       f"(rainfall {rain_last}, greenness {ndvi_last}), day {days} of {window_days}")
 
@@ -131,8 +136,7 @@ print(f"Early read on day {days} against the final index, {skill['seasons']} pas
 
 # The reliability curve: the same test at fixed points of the window. It only uses past
 # seasons, so it is kept from the previous run unless asked for.
-OUT = EXPORT / "current_season.json"
-curve = json.loads(OUT.read_text()).get("skillCurve") if OUT.exists() else None
+curve = previous.get("skillCurve")
 if "--skill-curve" in sys.argv or not curve:
     curve = []
     for day in (15, 31, 46, 61, window_days):
