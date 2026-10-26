@@ -118,6 +118,17 @@ export async function sendSms(message: string): Promise<{ status: string; phone:
   return body;
 }
 
+/** The USSD menu's next screen for a demo policy, from the same backend menu Africa's Talking calls. */
+export async function ussdPreview(text: string, policyId: string): Promise<string> {
+  const res = await fetch(`${API}/api/ussd/preview`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text, policyId }),
+  });
+  if (!res.ok) throw new Error("Could not reach the USSD menu");
+  return ((await res.json()) as { reply: string }).reply;
+}
+
 /** The seven district boundaries for the map. */
 export async function getShapes(): Promise<DistrictShapes> {
   if (USE_MOCK) return mockShapes;

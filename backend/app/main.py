@@ -19,6 +19,8 @@ from .schemas import (
     PricingInputs,
     ReportCount,
     SmsIn,
+    UssdPreviewIn,
+    UssdPreviewOut,
     SmsStatus,
     Simulation,
     ValidationRow,
@@ -215,6 +217,14 @@ async def ussd_callback(request: Request) -> str:
     library, so the backend needs no extra form-parsing package."""
     form = parse_qs((await request.body()).decode(), keep_blank_values=True)
     return ussd.respond(form.get("text", [""])[0], form.get("phoneNumber", [""])[0])
+
+
+@app.post("/api/ussd/preview", response_model=UssdPreviewOut)
+def ussd_preview(body: UssdPreviewIn) -> UssdPreviewOut:
+    """The same USSD menu for a chosen demo policy, for the dashboard's phone screen."""
+    if body.policy_id not in ussd.demo_policies():
+        raise HTTPException(422, f"Unknown demo policy: {body.policy_id}")
+    return UssdPreviewOut(reply=ussd.respond(body.text, policy_id=body.policy_id))
 
 
 @app.get("/api/geo/districts")

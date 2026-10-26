@@ -77,6 +77,15 @@ class LossReportOut(CamelModel):
     reports: int  # reports now on file for the district-season
 
 
+class UssdPreviewIn(CamelModel):
+    text: str = Field("", max_length=100)  # the answers so far, joined by "*"
+    policy_id: str
+
+
+class UssdPreviewOut(CamelModel):
+    reply: str  # starts with "CON " (waiting for an answer) or "END " (session over)
+
+
 class SmsIn(CamelModel):
     message: str = Field(min_length=1, max_length=480)
 

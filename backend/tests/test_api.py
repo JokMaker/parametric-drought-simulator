@@ -307,3 +307,13 @@ def test_live_sms_uses_the_sender_id(report_db, monkeypatch):
     monkeypatch.setattr(messaging.urllib.request, "urlopen", fake_urlopen)
     assert messaging.send_sms("short")["status"] == "Success"
     assert sent["from"] == ["RDIMaize"] and sent["to"] == ["+250700000000"]
+
+
+def test_ussd_preview_runs_the_same_menu(report_db):
+    def preview(text, policy="RDI-KAY-1085"):
+        return client.post("/api/ussd/preview", json={"text": text, "policyId": policy})
+
+    assert preview("").json()["reply"].startswith("CON RDI Maize Insurance\nKayonza RDI-KAY-1085")
+    assert "Your payouts" in preview("3").json()["reply"]
+    assert preview("4*1").json()["reply"].startswith("END Thank you. Report received (drought)")
+    assert preview("", policy="RDI-XXX-0000").status_code == 422
