@@ -237,3 +237,25 @@ def test_live_sms_is_limited(report_db, monkeypatch):
     messaging.reports.log_sms(2, live=True)
     with pytest.raises(messaging.SmsError, match="daily limit"):
         messaging.send_sms("short")
+
+
+def test_live_sms_uses_the_sender_id(report_db, monkeypatch):
+    import io
+    import json as jsonlib
+    from urllib.parse import parse_qs
+
+    from app import messaging
+
+    monkeypatch.setattr(messaging, "settings", lambda: {
+        "AT_USERNAME": "my-live-app", "AT_API_KEY": "k", "AT_PHONE": "+250700000000",
+        "AT_DAILY_LIMIT": "20", "AT_SENDER_ID": "RDIMaize"})
+    sent = {}
+
+    def fake_urlopen(req, timeout):
+        sent.update(parse_qs(req.data.decode()))
+        reply = {"SMSMessageData": {"Recipients": [{"status": "Success", "cost": "RWF 12", "messageId": "x"}]}}
+        return io.BytesIO(jsonlib.dumps(reply).encode())
+
+    monkeypatch.setattr(messaging.urllib.request, "urlopen", fake_urlopen)
+    assert messaging.send_sms("short")["status"] == "Success"
+    assert sent["from"] == ["RDIMaize"] and sent["to"] == ["+250700000000"]

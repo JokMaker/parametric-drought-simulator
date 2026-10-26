@@ -6,6 +6,7 @@ Credentials come from the environment or from backend/.env (git-ignored):
     AT_API_KEY=...               # from the Africa's Talking dashboard
     AT_PHONE=+2507XXXXXXXX       # the phone the demo sends to (the simulator's number)
     AT_DAILY_LIMIT=20            # live mode only: most SMS a day (default 20)
+    AT_SENDER_ID=RDIMaize        # optional: an approved alphanumeric sender name
 
 With the sandbox username, messages go to Africa's Talking's online phone
 simulator, not to real phones. With a live username they go to the real phone
@@ -41,7 +42,7 @@ def _env_file() -> dict[str, str]:
 def settings() -> dict[str, str]:
     """Environment variables win over backend/.env."""
     file = _env_file()
-    return {k: os.environ.get(k) or file.get(k, "") for k in ("AT_USERNAME", "AT_API_KEY", "AT_PHONE", "AT_DAILY_LIMIT")}
+    return {k: os.environ.get(k) or file.get(k, "") for k in ("AT_USERNAME", "AT_API_KEY", "AT_PHONE", "AT_DAILY_LIMIT", "AT_SENDER_ID")}
 
 
 def configured() -> bool:
@@ -94,7 +95,11 @@ def send_sms(message: str) -> dict:
     if live and reports.live_sms_today() + parts > daily_limit():
         raise SmsError(f"Not sent: the daily limit of {daily_limit()} live SMS is reached (AT_DAILY_LIMIT in backend/.env)")
     host = "api.sandbox.africastalking.com" if sandbox() else "api.africastalking.com"
-    body = urllib.parse.urlencode({"username": s["AT_USERNAME"], "to": s["AT_PHONE"], "message": message}).encode()
+    fields = {"username": s["AT_USERNAME"], "to": s["AT_PHONE"], "message": message}
+    # An approved sender name; the sandbox ignores it, so it is only sent live.
+    if live and s["AT_SENDER_ID"]:
+        fields["from"] = s["AT_SENDER_ID"]
+    body = urllib.parse.urlencode(fields).encode()
     req = urllib.request.Request(
         f"https://{host}/version1/messaging",
         data=body,
