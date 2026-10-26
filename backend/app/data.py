@@ -53,6 +53,22 @@ class PlotLoss:
 
 
 @dataclass(frozen=True)
+class SeasonResult:
+    """What the index says for one district-season. Seasons with harvest data use the
+    leave-one-out index, so the comparison with the actual harvest is honest (the model
+    never saw that season); the others use the model fitted on all observations."""
+
+    district: str
+    season: int
+    rain_z: float
+    ndvi_z: float
+    index: float
+    payout: float
+    actual_yield_anom: float | None = None
+    payout_if_actual: float | None = None
+
+
+@dataclass(frozen=True)
 class Dataset:
     model: IndexModel
     meta: dict
@@ -63,6 +79,38 @@ class Dataset:
     @property
     def districts(self) -> list[str]:
         return sorted({d for d, _ in self.seasons})
+
+    def result(self, district: str, season: int) -> SeasonResult | None:
+        """The index and payout for a district-season, or None if there is no satellite data."""
+        cal = self.calibration.get((district, season))
+        if cal is not None:
+            return SeasonResult(cal.district, cal.season, cal.rain_z, cal.ndvi_z, cal.index_loo, cal.payout,
+                                cal.yield_anom, cal.payout_if_actual)
+        row = self.seasons.get((district, season))
+        if row is None:
+            return None
+        index = self.model.predict(row.rain_z, row.ndvi_z)
+        return SeasonResult(row.district, row.season, row.rain_z, row.ndvi_z, index, self.model.payout(index))
+
+    def payout_rate(self, district: str) -> float:
+        """Average payout share per season over the whole record: the fair premium rate
+        (burning cost), the same figure the dashboard's pricing uses."""
+        shares = [self.result(d, s).payout for (d, s) in self.seasons if d == district]
+        return sum(shares) / len(shares)
+
+    def basis_risk(self) -> dict[str, float]:
+        """Average gap between the index payout and the harvest's payout, per district."""
+        gaps: dict[str, list[float]] = {}
+        for row in self.calibration.values():
+            gaps.setdefault(row.district, []).append(row.basis_risk)
+        return {d: sum(g) / len(g) for d, g in sorted(gaps.items())}
+
+    @property
+    def current_season(self) -> dict | None:
+        """The season monitor's latest output (notebook/update_current_season.py). Read
+        on every call, because the script rewrites the file while the server runs."""
+        path = DATA_DIR / "current_season.json"
+        return json.loads(path.read_text()) if path.exists() else None
 
 
 def _read_csv(name: str) -> list[dict[str, str]]:

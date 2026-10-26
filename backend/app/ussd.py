@@ -11,14 +11,13 @@ default). Other numbers have no policy. The Kinyarwanda text is a draft for a
 native speaker to check.
 """
 
-import json
-import os
+from dataclasses import dataclass
 
-from . import data, messaging, reports
+from .data import Dataset
+from .messaging import SmsError, SmsGateway
+from .policies import CoverQuote, DemoPolicy, PolicyBook
+from .reports import ReportStore
 
-DISTRICTS = ["Bugesera", "Gatsibo", "Kayonza", "Kirehe", "Ngoma", "Nyagatare", "Rwamagana"]
-CODES = {"Bugesera": "BUG", "Gatsibo": "GAT", "Kayonza": "KAY", "Kirehe": "KIR", "Ngoma": "NGO", "Nyagatare": "NYA", "Rwamagana": "RWA"}
-LOADING, SUBSIDY = 0.3, 0.4  # the dashboard's default terms
 CAUSE_KEYS = {"1": "drought", "2": "pests", "3": "flood", "4": "other"}
 
 T = {
@@ -31,7 +30,6 @@ T = {
         "paid": "{season}: {amount} ({share})",
         "none": "{season}: none",
         "sms_option": "\n1. Send me this by SMS\n0. Back",
-        "back": "\n0. Back",
         "cause": "What damaged your crop?\n1. Drought\n2. Pests or disease\n3. Flood or hail\n4. Other\n0. Back",
         "causes": {"drought": "drought", "pests": "pests or disease", "flood": "flood or hail", "other": "other"},
         "thanks": "Thank you. Report received ({cause}).\n{n} report(s) for {district}, Season A {season}.",
@@ -51,7 +49,6 @@ T = {
         "paid": "{season}: {amount} ({share})",
         "none": "{season}: nta ngurane",
         "sms_option": "\n1. Mbyoherereze kuri SMS\n0. Subira inyuma",
-        "back": "\n0. Subira inyuma",
         "cause": "Ni iki cyangije imyaka?\n1. Izuba\n2. Udukoko cyangwa indwara\n3. Imyuzure cyangwa urubura\n4. Ibindi\n0. Subira inyuma",
         "causes": {"drought": "izuba", "pests": "udukoko", "flood": "imyuzure", "other": "ibindi"},
         "thanks": "Murakoze. Igihombo cyakiriwe ({cause}).\nRaporo {n} muri {district}, Igihembwe A {season}.",
@@ -65,16 +62,6 @@ T = {
 }
 
 
-def demo_policies() -> dict[str, tuple[str, int]]:
-    """The dashboard's synthetic demo policies: id -> (district, maize area in m2)."""
-    out = {}
-    for d, district in enumerate(DISTRICTS):
-        for k in (1, 2):
-            pid = f"RDI-{CODES[district]}-{1000 + d * 37 + k * 11:04d}"
-            out[pid] = (district, 600 + d * 40 if k == 1 else 2_500 + d * 150)
-    return out
-
-
 def rwf(v: float) -> str:
     return f"RWF {round(v):,}"
 
@@ -83,117 +70,109 @@ def signed(v: float) -> str:
     return f"{'+' if v > 0 else ''}{v:.1f}%"
 
 
-def _digits(phone: str) -> str:
-    return "".join(c for c in phone if c.isdigit())[-9:]
+def same_number(a: str, b: str) -> bool:
+    """Compare phone numbers by their last nine digits (+250788... and 0788... match)."""
+    digits = lambda s: "".join(c for c in s if c.isdigit())[-9:]  # noqa: E731
+    return bool(a and b) and digits(a) == digits(b)
 
 
-def policy_for(phone: str) -> str | None:
-    """The demo policy belongs to the demo phone (AT_PHONE); other numbers have none."""
-    demo_phone = messaging.settings()["AT_PHONE"]
-    if demo_phone and _digits(phone) == _digits(demo_phone):
-        return os.environ.get("AT_POLICY", "RDI-RWA-1233")
-    return None
+@dataclass(frozen=True)
+class Session:
+    """Where a USSD session is, replayed from Africa's Talking's `text`: the language and
+    the path of choices. On the main menu "5" switches language; elsewhere "0" goes back
+    a screen and anything else goes forward."""
+
+    lang: str
+    path: tuple[str, ...]
+
+    @classmethod
+    def replay(cls, text: str) -> "Session":
+        lang, path = "en", []
+        for answer in text.split("*") if text else []:
+            if not path and answer == "5":
+                lang = "rw" if lang == "en" else "en"
+            elif answer == "0" and path:
+                path.pop()
+            else:
+                path.append(answer)
+        return cls(lang, tuple(path))
 
 
-def _payout_record(ds: data.Dataset, district: str) -> list[float]:
-    """Payout share per season: leave-one-out where there is harvest data, as on the dashboard."""
-    shares = []
-    for (d, season), row in ds.seasons.items():
-        if d != district:
-            continue
-        cal = ds.calibration.get((d, season))
-        shares.append(cal.payout if cal else ds.model.payout(ds.model.predict(row.rain_z, row.ndvi_z)))
-    return shares
+class UssdMenu:
+    """The farmer's menu: one method per screen. It reads the index from the dataset,
+    stores loss reports in the store and sends SMS copies through the gateway, so each
+    of those can be replaced (in tests, or by another provider)."""
 
+    def __init__(self, ds: Dataset, store: ReportStore, gateway: SmsGateway, policies: PolicyBook):
+        self.ds = ds
+        self.store = store
+        self.gateway = gateway
+        self.policies = policies
 
-def _current() -> dict | None:
-    path = data.DATA_DIR / "current_season.json"
-    return json.loads(path.read_text()) if path.exists() else None
+    def respond(self, text: str, policy: DemoPolicy | None) -> str:
+        session = Session.replay(text)
+        t = T[session.lang]
+        if policy is None:
+            return "END " + t["no_policy"]
+        path = session.path
+        if not path:
+            return "CON " + t["menu"].format(district=policy.district, policy=policy.id)
+        screens = {"1": self.cover, "2": self.this_season, "3": self.payouts, "4": self.report_loss}
+        if path[0] == "0":
+            return "END " + t["exit"]
+        if path[0] not in screens:
+            return "CON " + t["menu"].format(district=policy.district, policy=policy.id)
+        return screens[path[0]](t, policy, path[1:])
 
-
-def _replay(text: str) -> tuple[str, list[str]]:
-    """Replay the answers so far. On the main menu "5" switches language; elsewhere
-    "0" goes back a screen and anything else goes forward."""
-    lang, path = "en", []
-    for a in text.split("*") if text else []:
-        if not path and a == "5":
-            lang = "rw" if lang == "en" else "en"
-        elif a == "0" and path:
-            path.pop()
-        else:
-            path.append(a)
-    return lang, path
-
-
-def respond(text: str, phone: str = "", policy_id: str | None = None) -> str:
-    """The next screen. Africa's Talking identifies the farmer by phone; the dashboard's
-    preview passes a demo policy directly."""
-    lang, path = _replay(text)
-    t = T[lang]
-
-    if policy_id is None:
-        policy_id = policy_for(phone)
-    if policy_id is None:
-        return "END " + t["no_policy"]
-
-    ds = data.load()
-    district, area_m2 = demo_policies()[policy_id]
-    p = ds.meta["pricing_inputs"]
-    ha = area_m2 / 10_000
-    cover = p["expected_yield_kg_ha"][district] * p["maize_price_rwf_kg"] * abs(ds.model.exit) / 100 * ha
-    record = _payout_record(ds, district)
-    premium = cover * (sum(record) / len(record)) * (1 + LOADING) * (1 - SUBSIDY)
-    current = _current()
-    trigger = f"{ds.model.trigger:.0f}"
-
-    def sms_screen(body: str) -> str:
-        # A screen that offers to send itself by SMS; answering 1 sends it.
-        if len(path) > 1 and path[1] == "1":
+    def _with_sms(self, t: dict, body: str, rest: tuple[str, ...]) -> str:
+        """A screen that offers to send itself by SMS; answering 1 sends it."""
+        if rest and rest[0] == "1":
             try:
-                messaging.send_sms(body.replace("\n", ". "))
+                self.gateway.send(body.replace("\n", ". "))
                 return "END " + t["sent"]
-            except messaging.SmsError:
+            except SmsError:
                 return "END " + t["not_sent"]
         return "CON " + body + t["sms_option"]
 
-    if not path:
-        return "CON " + t["menu"].format(district=district, policy=policy_id)
-    choice = path[0]
+    def cover(self, t: dict, policy: DemoPolicy, rest: tuple[str, ...]) -> str:
+        quote = CoverQuote.for_policy(self.ds, policy)
+        current = self.ds.current_season
+        season = current["season"] if current else max(s for (_, s) in self.ds.seasons) + 1
+        body = t["cover"].format(season=season, area=f"{policy.area_m2:,}", district=policy.district,
+                                 cover=rwf(quote.cover), premium=rwf(quote.premium), trigger=f"{self.ds.model.trigger:.0f}")
+        return self._with_sms(t, body, rest)
 
-    if choice == "1":
-        season = current["season"] if current else max(s for (_, s) in ds.seasons) + 1
-        return sms_screen(t["cover"].format(season=season, area=f"{area_m2:,}", district=district,
-                                            cover=rwf(cover), premium=rwf(premium), trigger=trigger))
-    if choice == "2":
+    def this_season(self, t: dict, policy: DemoPolicy, rest: tuple[str, ...]) -> str:
+        current = self.ds.current_season
         if not current:
             return "END " + t["no_season"]
-        d = next(x for x in current["districts"] if x["district"] == district)
+        d = next(x for x in current["districts"] if x["district"] == policy.district)
         rain = round(100 * d["rainMm"] / d["rainNormalMm"]) if d["rainNormalMm"] else 100
         state = "trigger" if d["payout"] > 0 else "watch" if d["rainZ"] <= -0.5 or d["ndviZ"] <= -0.5 else "normal"
-        return sms_screen(t["season"].format(season=current["season"], day=current["daysElapsed"], days=current["windowDays"],
-                                             rain=rain, index=signed(d["index"]), state=t["states"][state]))
-    if choice == "3":
-        seasons = sorted((s for (dd, s) in ds.calibration if dd == district), reverse=True)[:3]
+        body = t["season"].format(season=current["season"], day=current["daysElapsed"], days=current["windowDays"],
+                                  rain=rain, index=signed(d["index"]), state=t["states"][state])
+        return self._with_sms(t, body, rest)
+
+    def payouts(self, t: dict, policy: DemoPolicy, rest: tuple[str, ...]) -> str:
+        cover = CoverQuote.for_policy(self.ds, policy).cover
+        seasons = sorted((s for (d, s) in self.ds.calibration if d == policy.district), reverse=True)[:3]
         lines = []
         for s in seasons:
-            row = ds.calibration[(district, s)]
-            lines.append(t["paid"].format(season=s, amount=rwf(row.payout * cover), share=f"{row.payout:.0%}")
-                         if row.payout > 0 else t["none"].format(season=s))
-        return sms_screen(t["payouts"].format(lines="\n".join(lines)))
-    if choice == "4":
+            share = self.ds.calibration[(policy.district, s)].payout
+            lines.append(t["paid"].format(season=s, amount=rwf(share * cover), share=f"{share:.0%}")
+                         if share > 0 else t["none"].format(season=s))
+        return self._with_sms(t, t["payouts"].format(lines="\n".join(lines)), rest)
+
+    def report_loss(self, t: dict, policy: DemoPolicy, rest: tuple[str, ...]) -> str:
+        current = self.ds.current_season
         if not current:
             return "END " + t["no_season"]
-        if len(path) == 1:
-            return "CON " + t["cause"]
-        cause = CAUSE_KEYS.get(path[1])
+        cause = CAUSE_KEYS.get(rest[0]) if rest else None
         if cause is None:
             return "CON " + t["cause"]
         season = current["season"]
-        created = reports.add(policy_id, district, season, cause)
-        n = next((c for d, s, c in reports.summary() if d == district and s == season), 0)
+        created = self.store.add(policy.id, policy.district, season, cause)
+        n = self.store.count(policy.district, season)
         if created:
-            return "END " + t["thanks"].format(cause=t["causes"][cause], n=n, district=district, season=season)
-        return "END " + t["already"].format(n=n, district=district)
-    if choice == "0":
-        return "END " + t["exit"]
-    return "CON " + t["menu"].format(district=district, policy=policy_id)
+            return "END " + t["thanks"].format(cause=t["causes"][cause], n=n, district=policy.district, season=season)
+        return "END " + t["already"].format(n=n, district=policy.district)

@@ -6,7 +6,20 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app import data
+from app.dependencies import get_gateway, get_sms_settings, get_store
 from app.main import app
+from app.messaging import (
+    LiveGateway,
+    SandboxGateway,
+    SmsError,
+    SmsGateway,
+    SmsSettings,
+    UnconfiguredGateway,
+    gateway_for,
+    sms_parts,
+)
+from app.reports import ReportStore
+from app.ussd import Session
 
 client = TestClient(app)
 
@@ -138,12 +151,43 @@ def test_pricing_inputs():
     assert p["farmSizeHa"]["p50"] == pytest.approx(0.0624, abs=1e-4)
 
 
-@pytest.fixture
-def report_db(tmp_path, monkeypatch):
-    """A fresh reports database for each test, so tests never touch real reports."""
-    from app import reports
+# Fixtures inject test versions of the API's building blocks through FastAPI's
+# dependency overrides, so no test touches the real database, .env or Africa's Talking.
 
-    monkeypatch.setattr(reports, "DB_PATH", tmp_path / "loss_reports.sqlite3")
+DEMO_PHONE = "+250700000001"
+
+
+@pytest.fixture
+def report_db(tmp_path):
+    """A fresh, temporary report store for each test."""
+    store = ReportStore(tmp_path / "loss_reports.sqlite3")
+    app.dependency_overrides[get_store] = lambda: store
+    yield store
+    app.dependency_overrides.pop(get_store, None)
+
+
+class FakeGateway(SmsGateway):
+    """Records messages instead of sending them."""
+
+    def __init__(self, settings):
+        super().__init__(settings)
+        self.sent = []
+
+    def send(self, message):
+        self.sent.append(message)
+        return {"status": "Success", "parts": sms_parts(message)}
+
+
+@pytest.fixture
+def demo_phone(report_db):
+    """Sandbox settings with a test phone, and a gateway that never sends."""
+    settings = SmsSettings(username="sandbox", api_key="k", phone=DEMO_PHONE)
+    gateway = FakeGateway(settings)
+    app.dependency_overrides[get_sms_settings] = lambda: settings
+    app.dependency_overrides[get_gateway] = lambda: gateway
+    yield gateway.sent
+    app.dependency_overrides.pop(get_sms_settings, None)
+    app.dependency_overrides.pop(get_gateway, None)
 
 
 def test_loss_reports_count_once_per_policy(report_db):
@@ -187,21 +231,6 @@ def test_plot_losses():
     assert by[("Bugesera", 2023)] == pytest.approx(0.63, abs=0.01)
 
 
-DEMO_PHONE = "+250700000001"
-
-
-@pytest.fixture
-def demo_phone(monkeypatch):
-    """The USSD demo policy belongs to AT_PHONE; use a fixed test number, and never send real SMS."""
-    from app import messaging
-
-    monkeypatch.setattr(messaging, "settings", lambda: {
-        "AT_USERNAME": "sandbox", "AT_API_KEY": "k", "AT_PHONE": DEMO_PHONE, "AT_DAILY_LIMIT": "", "AT_SENDER_ID": ""})
-    sent = []
-    monkeypatch.setattr(messaging, "send_sms", lambda message: sent.append(message) or {"status": "Success"})
-    return sent
-
-
 def ussd(text, phone=DEMO_PHONE):
     r = client.post("/api/ussd", data={"sessionId": "s1", "serviceCode": "*384*1#", "phoneNumber": phone, "text": text})
     assert r.status_code == 200
@@ -238,75 +267,22 @@ def test_ussd_unknown_number_has_no_policy(demo_phone):
     assert ussd("", phone="+250788000000").startswith("END No RDI policy")
 
 
+def test_ussd_matches_the_number_in_any_format(demo_phone):
+    assert ussd("", phone="0700000001").startswith("CON RDI Maize Insurance")
+
+
 def test_ussd_sends_a_screen_by_sms(demo_phone):
     assert ussd("1*1") == "END Sent. Check your SMS messages."
     assert "Insured value RWF" in demo_phone[0] and "\n" not in demo_phone[0]
 
 
-def test_ussd_report_saves_the_cause(report_db, demo_phone):
+def test_ussd_report_saves_the_cause(demo_phone):
     reply = ussd("4*2")
     assert reply.startswith("END Thank you") and "(pests or disease)" in reply and "1 report(s) for Rwamagana" in reply
     assert ussd("4*1").startswith("END You have already reported")
     season = client.get("/api/current-season").json()["season"]
     assert client.get("/api/loss-reports/summary").json() == [
         {"district": "Rwamagana", "season": season, "reports": 1, "causes": {"pests": 1}}]
-
-
-def test_reset_removes_reports(report_db):
-    from app import reports
-
-    reports.add("RDI-RWA-1233", "Rwamagana", 2019, "drought")
-    assert reports.clear() == 1 and reports.summary() == []
-
-
-def test_sms_status_hides_the_key():
-    s = client.get("/api/sms/status").json()
-    assert set(s) == {"configured", "sandbox", "phone"}
-
-
-def test_sms_parts_counts_like_a_phone():
-    from app.messaging import sms_parts
-
-    assert sms_parts("x" * 160) == 1 and sms_parts("x" * 161) == 2
-    # One character outside the GSM alphabet switches the whole message to 70 per SMS.
-    assert sms_parts("07•• ••• 185 " + "x" * 60) == 2
-
-
-def test_live_sms_is_limited(report_db, monkeypatch):
-    from app import messaging
-
-    monkeypatch.setattr(messaging, "settings", lambda: {
-        "AT_USERNAME": "my-live-app", "AT_API_KEY": "k", "AT_PHONE": "+250700000000", "AT_DAILY_LIMIT": "2"})
-    monkeypatch.setattr(messaging.urllib.request, "urlopen", lambda *a, **k: (_ for _ in ()).throw(AssertionError("must not send")))
-    # Too long for one SMS: refused before anything is sent.
-    with pytest.raises(messaging.SmsError, match="billed as 2 SMS"):
-        messaging.send_sms("x" * 200)
-    # Daily limit reached: refused before anything is sent.
-    messaging.reports.log_sms(2, live=True)
-    with pytest.raises(messaging.SmsError, match="daily limit"):
-        messaging.send_sms("short")
-
-
-def test_live_sms_uses_the_sender_id(report_db, monkeypatch):
-    import io
-    import json as jsonlib
-    from urllib.parse import parse_qs
-
-    from app import messaging
-
-    monkeypatch.setattr(messaging, "settings", lambda: {
-        "AT_USERNAME": "my-live-app", "AT_API_KEY": "k", "AT_PHONE": "+250700000000",
-        "AT_DAILY_LIMIT": "20", "AT_SENDER_ID": "RDIMaize"})
-    sent = {}
-
-    def fake_urlopen(req, timeout):
-        sent.update(parse_qs(req.data.decode()))
-        reply = {"SMSMessageData": {"Recipients": [{"status": "Success", "cost": "RWF 12", "messageId": "x"}]}}
-        return io.BytesIO(jsonlib.dumps(reply).encode())
-
-    monkeypatch.setattr(messaging.urllib.request, "urlopen", fake_urlopen)
-    assert messaging.send_sms("short")["status"] == "Success"
-    assert sent["from"] == ["RDIMaize"] and sent["to"] == ["+250700000000"]
 
 
 def test_ussd_preview_runs_the_same_menu(report_db):
@@ -317,3 +293,96 @@ def test_ussd_preview_runs_the_same_menu(report_db):
     assert "Your payouts" in preview("3").json()["reply"]
     assert preview("4*1").json()["reply"].startswith("END Thank you. Report received (drought)")
     assert preview("", policy="RDI-XXX-0000").status_code == 422
+
+
+def test_session_replays_back_and_language():
+    assert Session.replay("") == Session("en", ())
+    assert Session.replay("1*0*3") == Session("en", ("3",))
+    assert Session.replay("5*2") == Session("rw", ("2",))
+    assert Session.replay("5*5") == Session("en", ())
+
+
+def test_store_reset_and_causes(tmp_path):
+    store = ReportStore(tmp_path / "r.sqlite3")
+    store.add("RDI-RWA-1233", "Rwamagana", 2019, "drought")
+    store.add("RDI-RWA-1244", "Rwamagana", 2019, "pests")
+    assert store.count("Rwamagana", 2019) == 2 and store.causes("Rwamagana", 2019) == {"drought": 1, "pests": 1}
+    with pytest.raises(ValueError):
+        store.add("RDI-BUG-1011", "Bugesera", 2019, "locusts")
+    assert store.clear() == 2 and store.summary() == []
+
+
+def test_sms_status_hides_the_key():
+    s = client.get("/api/sms/status").json()
+    assert set(s) == {"configured", "sandbox", "phone"}
+
+
+def test_sms_parts_counts_like_a_phone():
+    assert sms_parts("x" * 160) == 1 and sms_parts("x" * 161) == 2
+    # One character outside the GSM alphabet switches the whole message to 70 per SMS.
+    assert sms_parts("07•• ••• 185 " + "x" * 60) == 2
+
+
+class RecordingTransport:
+    """Stands in for the HTTP call to Africa's Talking."""
+
+    def __init__(self, status="Success"):
+        self.calls = []
+        self.status = status
+
+    def __call__(self, url, fields, headers):
+        self.calls.append((url, fields))
+        return {"SMSMessageData": {"Recipients": [{"status": self.status, "cost": "RWF 12", "messageId": "x"}]}}
+
+
+def test_gateway_for_picks_the_right_class(tmp_path):
+    store = ReportStore(tmp_path / "r.sqlite3")
+    assert isinstance(gateway_for(SmsSettings(), store), UnconfiguredGateway)
+    assert isinstance(gateway_for(SmsSettings("sandbox", "k", "+250700000001"), store), SandboxGateway)
+    assert isinstance(gateway_for(SmsSettings("my-live-app", "k", "+250700000001"), store), LiveGateway)
+
+
+def test_sandbox_gateway_sends_to_the_sandbox_host(tmp_path):
+    transport = RecordingTransport()
+    gateway = SandboxGateway(SmsSettings("sandbox", "k", "+250700000001"), ReportStore(tmp_path / "r.sqlite3"), transport)
+    assert gateway.send("x" * 200)["parts"] == 2  # the sandbox allows long messages
+    url, fields = transport.calls[0]
+    assert url.startswith("https://api.sandbox.africastalking.com") and "from" not in fields
+
+
+def test_live_gateway_limits(tmp_path):
+    store = ReportStore(tmp_path / "r.sqlite3")
+    transport = RecordingTransport()
+    gateway = LiveGateway(SmsSettings("my-live-app", "k", "+250700000000", daily_limit=2), store, transport)
+    # Too long for one SMS: refused before anything is sent.
+    with pytest.raises(SmsError, match="billed as 2 SMS"):
+        gateway.send("x" * 200)
+    # Daily limit reached: refused before anything is sent.
+    store.log_sms(2, live=True)
+    with pytest.raises(SmsError, match="daily limit"):
+        gateway.send("short")
+    assert transport.calls == []
+
+
+def test_live_gateway_uses_the_sender_id(tmp_path):
+    transport = RecordingTransport()
+    gateway = LiveGateway(SmsSettings("my-live-app", "k", "+250700000000", sender_id="RDIMaize"),
+                          ReportStore(tmp_path / "r.sqlite3"), transport)
+    assert gateway.send("short")["status"] == "Success"
+    url, fields = transport.calls[0]
+    assert url.startswith("https://api.africastalking.com") and fields["from"] == "RDIMaize" and fields["to"] == "+250700000000"
+
+
+def test_rejected_message_raises(tmp_path):
+    gateway = SandboxGateway(SmsSettings("sandbox", "k", "+250700000001"), ReportStore(tmp_path / "r.sqlite3"),
+                             RecordingTransport(status="Rejected"))
+    with pytest.raises(SmsError, match="Rejected"):
+        gateway.send("short")
+
+
+def test_unconfigured_sms_returns_503():
+    app.dependency_overrides[get_sms_settings] = lambda: SmsSettings()
+    try:
+        assert client.post("/api/sms", json={"message": "hello"}).status_code == 503
+    finally:
+        app.dependency_overrides.pop(get_sms_settings, None)

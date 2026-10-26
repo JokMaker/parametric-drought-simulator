@@ -15,8 +15,8 @@ class IndexModel:
 
     def predict(self, rain_z: float, ndvi_z: float) -> float:
         """Predicted yield change (%). Inputs are each district's own z-scores;
-        they are standardised again with the scaler fitted on the 21 calibration
-        observations before the Ridge coefficients apply."""
+        they are standardised again with the scaler fitted on the calibration
+        observations (2018-2025) before the Ridge coefficients apply."""
         total = self.intercept
         for x, mean, scale, coef in zip(
             (rain_z, ndvi_z), self.scaler_mean, self.scaler_scale, self.coefficients
