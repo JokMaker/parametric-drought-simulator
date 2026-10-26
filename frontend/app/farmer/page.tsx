@@ -20,17 +20,25 @@ type Lang = "en" | "rw";
 const word = (z: number) => (z <= -0.5 ? "below normal" : z >= 0.5 ? "above normal" : "about normal");
 
 /** The message a farmer would receive when the season's result is published. */
+/** "26 Oct" or "26/10", the day the message is issued: the simulator shows no time, and a
+ *  farmer may read the message days later. */
+const issued = (lang: Lang) => {
+  const d = new Date();
+  return lang === "rw" ? `${d.getDate()}/${d.getMonth() + 1}` : d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+};
+
 function smsText(lang: Lang, p: Policy, v: DistrictSeason, amount: number) {
   // Kept to one SMS (160 plain GSM characters) in every case; checked in lib/sms.ts.
   const money = rwf(amount);
+  const day = issued(lang);
   if (lang === "rw") {
     return v.payout > 0
-      ? `RDI: Ubwishingizi bw'ibigori, ${p.district}, Igihembwe A ${v.season}. Imyaka yahuye n'izuba. Uzahabwa ${money} kuri MoMo ${p.phone}. Kanda ${USSD_CODE}`
-      : `RDI: Ubwishingizi bw'ibigori, ${p.district}, Igihembwe A ${v.season}. Ibipimo byari mu rugero, nta ngurane. Umusaruro warangiritse? Kanda ${USSD_CODE}`;
+      ? `${day} RDI: Ubwishingizi bw'ibigori, ${p.district}, Igihembwe A ${v.season}. Imyaka yahuye n'izuba. Uzahabwa ${money} kuri MoMo ${p.phone}. Kanda ${USSD_CODE}`
+      : `${day} RDI: Ubwishingizi bw'ibigori, ${p.district}, Igihembwe A ${v.season}. Ibipimo byari mu rugero, nta ngurane. Umusaruro warangiritse? Kanda ${USSD_CODE}`;
   }
   return v.payout > 0
-    ? `RDI maize cover, ${p.district} Season A ${v.season}: satellites showed drought stress. You will get ${money} on MoMo ${p.phone}. Info: dial ${USSD_CODE}`
-    : `RDI maize cover, ${p.district} Season A ${v.season}: satellite readings were normal, so no payout this season. Harvest failed? Dial ${USSD_CODE} to report.`;
+    ? `${day} RDI maize cover, ${p.district} Season A ${v.season}: satellites showed drought stress. You will get ${money} on MoMo ${p.phone}. Info: dial ${USSD_CODE}`
+    : `${day} RDI maize cover, ${p.district} Season A ${v.season}: satellite readings were normal, so no payout this season. Harvest failed? Dial ${USSD_CODE} to report.`;
 }
 
 function Phone({ text, lang, onLang }: { text: string; lang: Lang; onLang: (l: Lang) => void }) {
@@ -83,7 +91,11 @@ function SendSms({ text }: { text: string }) {
           onClick={() => {
             setState("sending");
             sendSms(text).then(
-              (r) => setState({ ok: true, text: `Sent to ${r.phone}${r.sandbox ? " (sandbox simulator)" : ""}.` }),
+              (r) =>
+                setState({
+                  ok: true,
+                  text: `Sent at ${new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })} to ${r.phone}${r.sandbox ? " (sandbox simulator)" : ""}.`,
+                }),
               (e: Error) => setState({ ok: false, text: e.message }),
             );
           }}
