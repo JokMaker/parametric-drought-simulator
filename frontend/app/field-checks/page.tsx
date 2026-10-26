@@ -42,7 +42,11 @@ export default function FieldChecksPage() {
   else if (!seasons.data || !losses.data || !reports.data || !current.data) body = <Loading />;
   else {
     const live = season === current.data.season;
-    const count = (d: string) => reports.data!.find((r) => r.district === d && r.season === season)?.reports ?? 0;
+    const entry = (d: string) => reports.data!.find((r) => r.district === d && r.season === season);
+    const count = (d: string) => entry(d)?.reports ?? 0;
+    const CAUSE: Record<string, string> = { drought: "drought", pests: "pests", flood: "flood", other: "other" };
+    const causeText = (d: string) =>
+      Object.entries(entry(d)?.causes ?? {}).map(([c, n]) => `${CAUSE[c] ?? c} ${n}`).join(", ");
     const rows: Row[] = DISTRICTS.map((district) => {
       const loss = losses.data!.find((l) => l.district === district && l.season === season);
       const v = live
@@ -175,7 +179,10 @@ export default function FieldChecksPage() {
                         </div>
                       )}
                     </td>
-                    <td className="px-2 py-2.5 text-right">{r.reports}</td>
+                    <td className="px-2 py-2.5 text-right">
+                      {r.reports}
+                      {causeText(r.district) && <span className="ml-1.5 text-xs text-muted">({causeText(r.district)})</span>}
+                    </td>
                     <td className="px-2 py-2.5 text-right">{r.actual === null ? "–" : signedPct(r.actual)}</td>
                   </tr>
                 ))}

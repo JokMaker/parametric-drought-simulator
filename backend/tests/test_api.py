@@ -155,7 +155,7 @@ def test_loss_reports_count_once_per_policy(report_db):
     other = {**report, "policyId": "RDI-RWA-1244"}
     assert client.post("/api/loss-reports", json=other).json() == {"created": True, "reports": 2}
     assert client.get("/api/loss-reports/summary").json() == [
-        {"district": "Rwamagana", "season": 2019, "reports": 2}]
+        {"district": "Rwamagana", "season": 2019, "reports": 2, "causes": {}}]
 
 
 @pytest.mark.parametrize(
@@ -187,28 +187,76 @@ def test_plot_losses():
     assert by[("Bugesera", 2023)] == pytest.approx(0.63, abs=0.01)
 
 
+DEMO_PHONE = "+250700000001"
+
+
+@pytest.fixture
+def demo_phone(monkeypatch):
+    """The USSD demo policy belongs to AT_PHONE; use a fixed test number, and never send real SMS."""
+    from app import messaging
+
+    monkeypatch.setattr(messaging, "settings", lambda: {
+        "AT_USERNAME": "sandbox", "AT_API_KEY": "k", "AT_PHONE": DEMO_PHONE, "AT_DAILY_LIMIT": "", "AT_SENDER_ID": ""})
+    sent = []
+    monkeypatch.setattr(messaging, "send_sms", lambda message: sent.append(message) or {"status": "Success"})
+    return sent
+
+
+def ussd(text, phone=DEMO_PHONE):
+    r = client.post("/api/ussd", data={"sessionId": "s1", "serviceCode": "*384*1#", "phoneNumber": phone, "text": text})
+    assert r.status_code == 200
+    return r.text
+
+
 @pytest.mark.parametrize(
     "text,starts,contains",
     [
         ("", "CON", "1. My cover"),
-        ("1", "END", "Cover RWF"),
-        ("2", "END", "provisional"),
-        ("3", "END", "Season A 2025"),
-        ("4", "CON", "1. Yes"),
+        ("1", "CON", "Insured value RWF"),
+        ("2", "CON", "Rain so far"),
+        ("3", "CON", "Your payouts"),
+        ("4", "CON", "What damaged your crop?"),
+        ("1*0", "CON", "1. My cover"),          # back to the menu
         ("4*0", "CON", "1. My cover"),
-        ("0", "END", "Thank you"),
+        ("0", "END", "Thank you for using"),
+        ("5", "CON", "Ubwishingizi bwanjye"),   # Kinyarwanda
+        ("5*0", "END", "Murakoze"),             # exit from the Kinyarwanda menu
+        ("5*5", "CON", "1. My cover"),          # and back to English
     ],
 )
-def test_ussd_menu(text, starts, contains):
-    r = client.post("/api/ussd", data={"sessionId": "s1", "serviceCode": "*384*1#", "phoneNumber": "+250700000000", "text": text})
-    assert r.status_code == 200 and r.text.startswith(starts) and contains in r.text
+def test_ussd_menu(demo_phone, text, starts, contains):
+    reply = ussd(text)
+    assert reply.startswith(starts) and contains in reply
 
 
-def test_ussd_report_is_saved(report_db):
-    r = client.post("/api/ussd", data={"sessionId": "s2", "text": "4*1"})
-    assert r.text.startswith("END Thank you") and "1 report(s) for Rwamagana" in r.text
+def test_ussd_screens_fit_a_phone(demo_phone):
+    for text in ["", "1", "2", "3", "4", "5", "5*1", "5*2", "5*3", "5*4"]:
+        assert len(ussd(text)) <= 182, text
+
+
+def test_ussd_unknown_number_has_no_policy(demo_phone):
+    assert ussd("", phone="+250788000000").startswith("END No RDI policy")
+
+
+def test_ussd_sends_a_screen_by_sms(demo_phone):
+    assert ussd("1*1") == "END Sent. Check your SMS messages."
+    assert "Insured value RWF" in demo_phone[0] and "\n" not in demo_phone[0]
+
+
+def test_ussd_report_saves_the_cause(report_db, demo_phone):
+    reply = ussd("4*2")
+    assert reply.startswith("END Thank you") and "(pests or disease)" in reply and "1 report(s) for Rwamagana" in reply
+    assert ussd("4*1").startswith("END You have already reported")
     season = client.get("/api/current-season").json()["season"]
-    assert client.get("/api/loss-reports/summary").json() == [{"district": "Rwamagana", "season": season, "reports": 1}]
+    assert client.get("/api/loss-reports/summary").json() == [
+        {"district": "Rwamagana", "season": season, "reports": 1, "causes": {"pests": 1}}]
+
+
+def test_reset_removes_reports(report_db):
+    from app import reports
+
+    reports.add("RDI-RWA-1233", "Rwamagana", 2019, "drought")
+    assert reports.clear() == 1 and reports.summary() == []
 
 
 def test_sms_status_hides_the_key():

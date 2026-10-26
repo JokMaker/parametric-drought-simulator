@@ -178,7 +178,7 @@ def report_loss(body: LossReportIn) -> LossReportOut:
 @app.get("/api/loss-reports/summary", response_model=list[ReportCount])
 def loss_report_summary() -> list[ReportCount]:
     """Crop-loss reports on file, per district-season."""
-    return [ReportCount(district=d, season=s, reports=n) for d, s, n in reports.summary()]
+    return [ReportCount(district=d, season=s, reports=n, causes=reports.causes(d, s)) for d, s, n in reports.summary()]
 
 
 @app.get("/api/plot-losses", response_model=list[PlotLoss])
@@ -214,7 +214,7 @@ async def ussd_callback(request: Request) -> str:
     The form (sessionId, serviceCode, phoneNumber, text) is parsed with the standard
     library, so the backend needs no extra form-parsing package."""
     form = parse_qs((await request.body()).decode(), keep_blank_values=True)
-    return ussd.respond(form.get("text", [""])[0])
+    return ussd.respond(form.get("text", [""])[0], form.get("phoneNumber", [""])[0])
 
 
 @app.get("/api/geo/districts")

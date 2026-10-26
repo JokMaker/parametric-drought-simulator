@@ -91,7 +91,12 @@ export type CurrentSeason = {
 export type PlotLoss = { district: string; season: number; plots: number; severeLossShare: number };
 
 /** Crop-loss reports on file for a district-season. */
-export type ReportCount = { district: string; season: number; reports: number };
+export type ReportCount = {
+  district: string;
+  season: number;
+  reports: number;
+  causes: Partial<Record<"drought" | "pests" | "flood" | "other", number>>; // reports that gave a cause
+};
 
 /** Whether SMS through Africa's Talking is set up; the phone is masked. */
 export type SmsStatus = { configured: boolean; sandbox: boolean; phone: string };

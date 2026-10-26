@@ -91,6 +91,7 @@ class ReportCount(CamelModel):
     district: str
     season: int
     reports: int
+    causes: dict[str, int] = {}  # drought / pests / flood / other, for reports that gave one
 
 
 class PlotLoss(CamelModel):
