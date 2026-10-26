@@ -106,9 +106,11 @@ source .venv/bin/activate
 python -m pytest
 ```
 
-The 13 tests check the API against the notebook: the index formula on all 175 district-seasons,
+The 48 tests check the API against the notebook (the index formula on all 175 district-seasons,
 the leave-one-out results, the hit and false payout rates, the drought-year totals (34/63 against
-26/112) and basis risk for every district.
+26/112), basis risk and the pricing inputs) and test each building block on its own: the report
+store, the SMS gateways (sandbox and live limits, sender ID, rejected messages, through a recording
+transport so nothing is sent), the USSD session and every menu screen, and invalid input.
 
 ### SMS and USSD (Africa's Talking)
 
@@ -392,22 +394,58 @@ phase below.
 ```
 parametric-drought-simulator/
 ├── backend/
-│   ├── app/            FastAPI app: routes (main.py), data loading, model formula, schemas
-│   ├── data/           Notebook export: model.json, calibration.csv, seasons.csv
-│   ├── tests/          API tests against the notebook results
+│   ├── app/
+│   │   ├── main.py          Assembles the FastAPI app from the three routers
+│   │   ├── routers/         index.py (model, seasons, history, season monitor),
+│   │   │                    farmers.py (loss reports), messaging.py (SMS, USSD)
+│   │   ├── dependencies.py  Builds the shared objects and injects them into routes
+│   │   ├── model.py         IndexModel: the saved Ridge formula and payout rule
+│   │   ├── data.py          Dataset: loads the notebook export; per-season results,
+│   │   │                    payout rate, basis risk, season monitor
+│   │   ├── policies.py      DemoPolicy, PolicyBook, CoverQuote (pricing a policy)
+│   │   ├── reports.py       ReportStore: the SQLite reports and SMS log
+│   │   ├── messaging.py     SmsSettings and the SmsGateway classes (Africa's Talking)
+│   │   ├── ussd.py          Session and UssdMenu: the farmer's USSD menu
+│   │   └── schemas.py       Pydantic request and response models
+│   ├── data/                Notebook export: model.json, calibration.csv, seasons.csv,
+│   │                        plot_losses.csv, current_season.json, district shapes
+│   ├── scripts/             export_mock.py (offline dashboard data), reset_reports.py
+│   ├── tests/               pytest: API, model, store, gateways, USSD menu
+│   ├── .env.example         Africa's Talking settings template (copy to .env)
 │   └── Dockerfile
 ├── frontend/
-│   ├── app/            Pages: overview, explorer, history, basis-risk
-│   ├── components/     Top navigation, payout cards, charts, shared UI
-│   ├── lib/            API client, types, payout logic, constants
+│   ├── app/                 Pages: overview, this season, map, explorer, history, basis
+│   │                        risk, field checks, pricing, farmer view, term sheet, USSD
+│   ├── components/          Top navigation, payout cards, charts, shared UI
+│   ├── lib/                 API client, types, payout, pricing, SMS length, constants
 │   └── Dockerfile
-├── notebook/           Calibration notebook: data extraction, the 2024 reconstruction, EDA,
-│                       model comparison, trigger and exit, drought-year check, export
-├── data/               Cached satellite extracts and district yields (raw NISR files in
-│                       data/nisr/ are git-ignored)
-├── docs/screenshots/   Interface screenshots used above
+├── notebook/                Calibration notebook (data extraction, yields 2017–2025, EDA,
+│                            model comparison, trigger and exit, backtest, pricing inputs,
+│                            export) and update_current_season.py (season monitor)
+├── data/                    Cached satellite extracts and district yields (raw NISR files
+│                            in data/nisr/ are git-ignored)
+├── docs/screenshots/        Interface screenshots used above
 └── docker-compose.yml
 ```
+
+## Code design
+
+The backend is organised as small classes with one job each, wired together by FastAPI's
+dependency injection:
+
+| Principle | Where it shows |
+|---|---|
+| **Single responsibility** | `ReportStore` is the only code that runs SQL; `Dataset` the only code that reads the notebook export; `IndexModel` holds the formula and payout rule; each router covers one area of the API |
+| **Encapsulation** | Callers use methods such as `store.add()`, `dataset.result()` or `gateway.send()` and never see SQL, file layouts or HTTP details |
+| **Abstraction and polymorphism** | `SmsGateway` is an abstract base class with `UnconfiguredGateway`, `SandboxGateway` and `LiveGateway`: the API and the USSD menu call `send()` without knowing which one they have. The live gateway adds its own checks (one SMS per message, daily limit, sender ID) by overriding `check()` and `fields()` |
+| **Inheritance** | `SandboxGateway` and `LiveGateway` share the Africa's Talking request in `AfricasTalkingGateway`; the API schemas share camelCase output through `CamelModel` |
+| **Dependency inversion** | Routes receive the dataset, store, gateway and menu from `dependencies.py` rather than creating them, and the gateway takes its HTTP transport as a parameter. Tests replace each of them (a temporary store, a recording gateway or transport) without touching real data, `.env` or Africa's Talking |
+| **Immutable value objects** | `SeasonResult`, `DemoPolicy`, `CoverQuote`, `SmsSettings` and `Session` are frozen dataclasses |
+
+The frontend follows React's composition model: pages are built from reusable components
+(`Card`, `StatStrip`, `NumberInput`, `DistrictMap`, the chart components), and calculations
+(payout, pricing, SMS length, field-check rule) live in plain functions under `lib/`, separate from
+the components that display them.
 
 ## Data and privacy
 

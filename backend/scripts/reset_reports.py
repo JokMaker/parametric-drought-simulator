@@ -7,8 +7,8 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from app import reports  # noqa: E402
+from app.reports import default_store  # noqa: E402
 
 if "--yes" not in sys.argv:
-    sys.exit("This deletes every crop-loss report in " + str(reports.DB_PATH) + ". Run again with --yes to confirm.")
-print(f"Deleted {reports.clear()} report(s) from {reports.DB_PATH}")
+    sys.exit(f"This deletes every crop-loss report in {default_store().path}. Run again with --yes to confirm.")
+print(f"Deleted {default_store().clear()} report(s) from {default_store().path}")
