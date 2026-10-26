@@ -1,0 +1,783 @@
+{
+  "base": "http://localhost:3000",
+  "date": "2026-10-26T03:51:28.024Z",
+  "chrome": "Chrome/156.0.8078.47",
+  "layout": [
+    {
+      "page": "/",
+      "viewport": "phone",
+      "theme": "light",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/season",
+      "viewport": "phone",
+      "theme": "light",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/map",
+      "viewport": "phone",
+      "theme": "light",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/explorer",
+      "viewport": "phone",
+      "theme": "light",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/history",
+      "viewport": "phone",
+      "theme": "light",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/basis-risk",
+      "viewport": "phone",
+      "theme": "light",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/field-checks",
+      "viewport": "phone",
+      "theme": "light",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/pricing",
+      "viewport": "phone",
+      "theme": "light",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/farmer",
+      "viewport": "phone",
+      "theme": "light",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/term-sheet",
+      "viewport": "phone",
+      "theme": "light",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/ussd",
+      "viewport": "phone",
+      "theme": "light",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/",
+      "viewport": "phone",
+      "theme": "dark",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/season",
+      "viewport": "phone",
+      "theme": "dark",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/map",
+      "viewport": "phone",
+      "theme": "dark",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/explorer",
+      "viewport": "phone",
+      "theme": "dark",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/history",
+      "viewport": "phone",
+      "theme": "dark",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/basis-risk",
+      "viewport": "phone",
+      "theme": "dark",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/field-checks",
+      "viewport": "phone",
+      "theme": "dark",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/pricing",
+      "viewport": "phone",
+      "theme": "dark",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/farmer",
+      "viewport": "phone",
+      "theme": "dark",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/term-sheet",
+      "viewport": "phone",
+      "theme": "dark",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/ussd",
+      "viewport": "phone",
+      "theme": "dark",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/",
+      "viewport": "tablet",
+      "theme": "light",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/season",
+      "viewport": "tablet",
+      "theme": "light",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/map",
+      "viewport": "tablet",
+      "theme": "light",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/explorer",
+      "viewport": "tablet",
+      "theme": "light",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/history",
+      "viewport": "tablet",
+      "theme": "light",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/basis-risk",
+      "viewport": "tablet",
+      "theme": "light",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/field-checks",
+      "viewport": "tablet",
+      "theme": "light",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/pricing",
+      "viewport": "tablet",
+      "theme": "light",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/farmer",
+      "viewport": "tablet",
+      "theme": "light",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/term-sheet",
+      "viewport": "tablet",
+      "theme": "light",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/ussd",
+      "viewport": "tablet",
+      "theme": "light",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/",
+      "viewport": "tablet",
+      "theme": "dark",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/season",
+      "viewport": "tablet",
+      "theme": "dark",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/map",
+      "viewport": "tablet",
+      "theme": "dark",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/explorer",
+      "viewport": "tablet",
+      "theme": "dark",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/history",
+      "viewport": "tablet",
+      "theme": "dark",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/basis-risk",
+      "viewport": "tablet",
+      "theme": "dark",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/field-checks",
+      "viewport": "tablet",
+      "theme": "dark",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/pricing",
+      "viewport": "tablet",
+      "theme": "dark",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/farmer",
+      "viewport": "tablet",
+      "theme": "dark",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/term-sheet",
+      "viewport": "tablet",
+      "theme": "dark",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/ussd",
+      "viewport": "tablet",
+      "theme": "dark",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/",
+      "viewport": "desktop",
+      "theme": "light",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/season",
+      "viewport": "desktop",
+      "theme": "light",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/map",
+      "viewport": "desktop",
+      "theme": "light",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/explorer",
+      "viewport": "desktop",
+      "theme": "light",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/history",
+      "viewport": "desktop",
+      "theme": "light",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/basis-risk",
+      "viewport": "desktop",
+      "theme": "light",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/field-checks",
+      "viewport": "desktop",
+      "theme": "light",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/pricing",
+      "viewport": "desktop",
+      "theme": "light",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/farmer",
+      "viewport": "desktop",
+      "theme": "light",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/term-sheet",
+      "viewport": "desktop",
+      "theme": "light",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/ussd",
+      "viewport": "desktop",
+      "theme": "light",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/",
+      "viewport": "desktop",
+      "theme": "dark",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/season",
+      "viewport": "desktop",
+      "theme": "dark",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/map",
+      "viewport": "desktop",
+      "theme": "dark",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/explorer",
+      "viewport": "desktop",
+      "theme": "dark",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/history",
+      "viewport": "desktop",
+      "theme": "dark",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/basis-risk",
+      "viewport": "desktop",
+      "theme": "dark",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/field-checks",
+      "viewport": "desktop",
+      "theme": "dark",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/pricing",
+      "viewport": "desktop",
+      "theme": "dark",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/farmer",
+      "viewport": "desktop",
+      "theme": "dark",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/term-sheet",
+      "viewport": "desktop",
+      "theme": "dark",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/ussd",
+      "viewport": "desktop",
+      "theme": "dark",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    }
+  ],
+  "flows": [
+    {
+      "name": "Farmer View: look up a policy by number, any case",
+      "ok": true
+    },
+    {
+      "name": "Farmer View: unknown policy number shows a message",
+      "ok": true
+    },
+    {
+      "name": "Farmer View: area accepts typing and clamps on blur",
+      "ok": true
+    },
+    {
+      "name": "Farmer View: the payout SMS is one SMS in English and Kinyarwanda",
+      "ok": true
+    },
+    {
+      "name": "USSD: dial, open each screen, go back, switch language",
+      "ok": true
+    },
+    {
+      "name": "Pricing: all seven districts priced",
+      "ok": true
+    }
+  ],
+  "timings": [
+    {
+      "profile": "desktop, no throttling",
+      "page": "/",
+      "ttfb": 4,
+      "fcp": 28,
+      "lcp": 28,
+      "domContentLoaded": 12,
+      "load": 29,
+      "kb": 475
+    },
+    {
+      "profile": "desktop, no throttling",
+      "page": "/season",
+      "ttfb": 3,
+      "fcp": 44,
+      "lcp": 64,
+      "domContentLoaded": 13,
+      "load": 24,
+      "kb": 475
+    },
+    {
+      "profile": "desktop, no throttling",
+      "page": "/map",
+      "ttfb": 3,
+      "fcp": 24,
+      "lcp": 24,
+      "domContentLoaded": 12,
+      "load": 27,
+      "kb": 475
+    },
+    {
+      "profile": "desktop, no throttling",
+      "page": "/explorer",
+      "ttfb": 2,
+      "fcp": 24,
+      "lcp": 24,
+      "domContentLoaded": 12,
+      "load": 26,
+      "kb": 475
+    },
+    {
+      "profile": "desktop, no throttling",
+      "page": "/history",
+      "ttfb": 3,
+      "fcp": 24,
+      "lcp": 76,
+      "domContentLoaded": 16,
+      "load": 30,
+      "kb": 475
+    },
+    {
+      "profile": "desktop, no throttling",
+      "page": "/basis-risk",
+      "ttfb": 2,
+      "fcp": 32,
+      "lcp": 52,
+      "domContentLoaded": 11,
+      "load": 29,
+      "kb": 475
+    },
+    {
+      "profile": "desktop, no throttling",
+      "page": "/field-checks",
+      "ttfb": 4,
+      "fcp": 28,
+      "lcp": 60,
+      "domContentLoaded": 21,
+      "load": 31,
+      "kb": 475
+    },
+    {
+      "profile": "desktop, no throttling",
+      "page": "/pricing",
+      "ttfb": 2,
+      "fcp": 20,
+      "lcp": 80,
+      "domContentLoaded": 9,
+      "load": 26,
+      "kb": 484
+    },
+    {
+      "profile": "desktop, no throttling",
+      "page": "/farmer",
+      "ttfb": 6,
+      "fcp": 36,
+      "lcp": 68,
+      "domContentLoaded": 17,
+      "load": 34,
+      "kb": 483
+    },
+    {
+      "profile": "desktop, no throttling",
+      "page": "/term-sheet",
+      "ttfb": 3,
+      "fcp": 24,
+      "lcp": 56,
+      "domContentLoaded": 11,
+      "load": 23,
+      "kb": 481
+    },
+    {
+      "profile": "desktop, no throttling",
+      "page": "/ussd",
+      "ttfb": 2,
+      "fcp": 28,
+      "lcp": 28,
+      "domContentLoaded": 11,
+      "load": 24,
+      "kb": 480
+    },
+    {
+      "profile": "phone, Slow 4G, 4x CPU",
+      "page": "/",
+      "ttfb": 3,
+      "fcp": 672,
+      "lcp": 672,
+      "domContentLoaded": 561,
+      "load": 2054,
+      "kb": 400
+    },
+    {
+      "profile": "phone, Slow 4G, 4x CPU",
+      "page": "/season",
+      "ttfb": 2,
+      "fcp": 704,
+      "lcp": 2252,
+      "domContentLoaded": 584,
+      "load": 1486,
+      "kb": 291
+    },
+    {
+      "profile": "phone, Slow 4G, 4x CPU",
+      "page": "/map",
+      "ttfb": 2,
+      "fcp": 684,
+      "lcp": 684,
+      "domContentLoaded": 579,
+      "load": 1488,
+      "kb": 400
+    },
+    {
+      "profile": "phone, Slow 4G, 4x CPU",
+      "page": "/explorer",
+      "ttfb": 2,
+      "fcp": 684,
+      "lcp": 684,
+      "domContentLoaded": 578,
+      "load": 2070,
+      "kb": 400
+    },
+    {
+      "profile": "phone, Slow 4G, 4x CPU",
+      "page": "/history",
+      "ttfb": 3,
+      "fcp": 720,
+      "lcp": 2436,
+      "domContentLoaded": 604,
+      "load": 2045,
+      "kb": 417
+    },
+    {
+      "profile": "phone, Slow 4G, 4x CPU",
+      "page": "/basis-risk",
+      "ttfb": 3,
+      "fcp": 688,
+      "lcp": 2372,
+      "domContentLoaded": 579,
+      "load": 2062,
+      "kb": 385
+    },
+    {
+      "profile": "phone, Slow 4G, 4x CPU",
+      "page": "/field-checks",
+      "ttfb": 2,
+      "fcp": 696,
+      "lcp": 1760,
+      "domContentLoaded": 589,
+      "load": 1442,
+      "kb": 297
+    },
+    {
+      "profile": "phone, Slow 4G, 4x CPU",
+      "page": "/pricing",
+      "ttfb": 2,
+      "fcp": 656,
+      "lcp": 2488,
+      "domContentLoaded": 544,
+      "load": 2013,
+      "kb": 416
+    },
+    {
+      "profile": "phone, Slow 4G, 4x CPU",
+      "page": "/farmer",
+      "ttfb": 2,
+      "fcp": 688,
+      "lcp": 688,
+      "domContentLoaded": 578,
+      "load": 1444,
+      "kb": 309
+    },
+    {
+      "profile": "phone, Slow 4G, 4x CPU",
+      "page": "/term-sheet",
+      "ttfb": 2,
+      "fcp": 696,
+      "lcp": 1996,
+      "domContentLoaded": 581,
+      "load": 1497,
+      "kb": 298
+    },
+    {
+      "profile": "phone, Slow 4G, 4x CPU",
+      "page": "/ussd",
+      "ttfb": 2,
+      "fcp": 664,
+      "lcp": 664,
+      "domContentLoaded": 555,
+      "load": 1427,
+      "kb": 229
+    }
+  ]
+}
