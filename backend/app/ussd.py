@@ -125,11 +125,14 @@ def _replay(text: str) -> tuple[str, list[str]]:
     return lang, path
 
 
-def respond(text: str, phone: str = "") -> str:
+def respond(text: str, phone: str = "", policy_id: str | None = None) -> str:
+    """The next screen. Africa's Talking identifies the farmer by phone; the dashboard's
+    preview passes a demo policy directly."""
     lang, path = _replay(text)
     t = T[lang]
 
-    policy_id = policy_for(phone)
+    if policy_id is None:
+        policy_id = policy_for(phone)
     if policy_id is None:
         return "END " + t["no_policy"]
 
