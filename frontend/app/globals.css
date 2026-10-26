@@ -8,7 +8,7 @@
   --surface-2: #f1f0eb;
   --ink: #1c2420;
   --muted: #59625d;
-  --faint: #8a918c;
+  --faint: #686f6a;
   --line: #e0ded6;
   --grid: #ebe9e2;
   --header: #17392d;
@@ -19,10 +19,10 @@
   --accent-soft: #e2efe8;
 
   /* Chart series (validated for colour-blind separation in both modes). */
-  --drought: #e34948;
+  --drought: #c4302f;
   --drought-soft: #fdecec;
   /* Green = normal (validated against --drought for colour-blind separation; use with labels). */
-  --other: #008300;
+  --other: #007a00;
   --other-soft: #e3f3e3;
   --div-mid: #ecebe7; /* neutral midpoint of the drought scale (no anomaly) */
   --pay: #eb6834;
@@ -51,7 +51,7 @@
     --surface-2: #232322;
     --ink: #f3f4f6;
     --muted: #a8adb6;
-    --faint: #7c828d;
+    --faint: #8a909a;
     --line: #2d2e30;
     --grid: #262729;
     --accent: #34b58c;
@@ -59,7 +59,7 @@
     --accent-soft: #15302a;
     --drought: #e66767;
     --drought-soft: #3a1f1f;
-    --other: #1e9a3a;
+    --other: #25a842;
     --other-soft: #15301a;
     --div-mid: #3a3a37;
     --pay: #d95926;
@@ -81,7 +81,7 @@
   --surface-2: #232322;
   --ink: #f3f4f6;
   --muted: #a8adb6;
-  --faint: #7c828d;
+  --faint: #8a909a;
   --line: #2d2e30;
   --grid: #262729;
   --accent: #34b58c;
@@ -89,7 +89,7 @@
   --accent-soft: #15302a;
   --drought: #e66767;
   --drought-soft: #3a1f1f;
-  --other: #1e9a3a;
+  --other: #25a842;
   --other-soft: #15301a;
   --div-mid: #3a3a37;
   --pay: #d95926;
