@@ -112,6 +112,17 @@ the leave-one-out results, the hit and false payout rates, the drought-year tota
 store, the SMS gateways (sandbox and live limits, sender ID, rejected messages, through a recording
 transport so nothing is sent), the USSD session and every menu screen, and invalid input.
 
+```bash
+cd frontend
+npm test                          # 33 unit tests: pricing, payouts, field checks, SMS length
+node tests/browser/check.mjs      # every page at phone, tablet and desktop size, light and dark, plus the main flows
+```
+
+The frontend tests use Node's built-in test runner and drive Chrome through its DevTools
+protocol, so they need no extra packages. Results, the browser and device coverage, and the
+performance measurements (API load test, page loads on a throttled phone) are in
+[docs/testing.md](docs/testing.md).
+
 ### SMS and USSD (Africa's Talking)
 
 The Farmer View can send the payout SMS, and farmers can use the cover from a basic phone by
@@ -409,7 +420,8 @@ parametric-drought-simulator/
 │   │   └── schemas.py       Pydantic request and response models
 │   ├── data/                Notebook export: model.json, calibration.csv, seasons.csv,
 │   │                        plot_losses.csv, current_season.json, district shapes
-│   ├── scripts/             export_mock.py (offline dashboard data), reset_reports.py
+│   ├── scripts/             export_mock.py (offline dashboard data), reset_reports.py,
+│   │                        benchmark.py (API response times and load test)
 │   ├── tests/               pytest: API, model, store, gateways, USSD menu
 │   ├── .env.example         Africa's Talking settings template (copy to .env)
 │   └── Dockerfile
@@ -418,6 +430,7 @@ parametric-drought-simulator/
 │   │                        risk, field checks, pricing, farmer view, term sheet, USSD
 │   ├── components/          Top navigation, payout cards, charts, shared UI
 │   ├── lib/                 API client, types, payout, pricing, SMS length, constants
+│   ├── tests/               Unit tests (node --test); browser/ checks in Chrome and Safari
 │   └── Dockerfile
 ├── notebook/                Calibration notebook (data extraction, yields 2017–2025, EDA,
 │                            model comparison, trigger and exit, backtest, pricing inputs,
