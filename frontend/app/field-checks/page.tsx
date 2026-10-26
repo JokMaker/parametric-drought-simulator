@@ -12,7 +12,7 @@ import { useApi } from "@/lib/useApi";
 
 const TONE: Record<CheckStatus, string> = {
   paid: "border-other/50 text-ink",
-  check: "border-drought bg-drought text-white",
+  check: "border-drought bg-drought text-surface",
   watch: "border-sev-moderate text-ink",
   clear: "border-line text-muted",
 };

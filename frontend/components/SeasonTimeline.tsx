@@ -17,6 +17,16 @@ export default function SeasonTimeline({ season, onSelect }: { season: number; o
     });
     mounted.current = true;
   }, [season]);
+  useEffect(() => {
+    // Keep the season centred when the strip changes width (rotating a phone).
+    const strip = selected.current?.parentElement;
+    if (!strip) return;
+    const observer = new ResizeObserver(() =>
+      selected.current?.scrollIntoView({ inline: "center", block: "nearest", behavior: "instant" }),
+    );
+    observer.observe(strip);
+    return () => observer.disconnect();
+  }, []);
 
   const step = (d: number) => onSelect(Math.min(LAST_SEASON, Math.max(FIRST_SEASON, season + d)));
 

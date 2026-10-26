@@ -11,8 +11,8 @@ export default function InfluenceChart({ rain, ndvi }: { rain: number; ndvi: num
       {rows.map(({ label, coef }) => {
         const share = total ? Math.abs(coef) / total : 0;
         return (
-          <div key={label} className="grid grid-cols-[170px_1fr_150px] items-center gap-4 text-sm">
-            <span>{label}</span>
+          <div key={label} className="grid grid-cols-[1fr_150px] items-center gap-x-4 gap-y-1 text-sm sm:grid-cols-[170px_1fr_150px]">
+            <span className="col-span-2 sm:col-span-1">{label}</span>
             <div className="h-3 bg-surface-2">
               <div className="h-full bg-accent" style={{ width: `${share * 100}%` }} />
             </div>
