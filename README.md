@@ -28,7 +28,7 @@ Kirehe, Ngoma, Nyagatare, Rwamagana), backtested from 2001 to 2025.
 | **Basis Risk** | A "what if" simulator: move the trigger and exit and see how many poor harvests are paid, how many are missed, the false payouts and the basis risk change live. Then basis risk per district (Nyagatare 33% highest, Kayonza 18% lowest) and a season-by-season table filterable by outcome (missed, false payout, paid correctly) | FR10 |
 | **Field Checks** | The safety net for losses the index misses. A district needs a field check when the index paid under 25% but there is evidence of loss: at least 3 farmer reports (saved by the API in SQLite), or at least 45% of NISR-surveyed farms harvesting under half the expected yield. Season A 2019 flags all seven districts. Thresholds are editable | FR10 |
 | **Pricing** | Prices the cover from what the maize is worth: maize area × expected yield × price (RWF 200/kg, the NISR farm-gate median). Set the cover level, loading, subsidy and share of the 118,687 ha insured; see the premium per hectare and for a median farm in each district, premiums against expected payouts, the 1-in-10 season, the reserve needed for the worst season (2006), and a loss ratio for every season since 2001 | — |
-| **Farmer View** | Look up a synthetic demo policy, enter the maize area, and see the crop's value, the cover, the premium and the payout for any season, with the SMS the farmer would receive in English or Kinyarwanda (draft). When the district is not paid, the farmer can report a crop loss, the route for losses the satellites miss; reports go to Field Checks. A USSD page shows the same cover on a basic phone (`*xxx#` menu: my cover, this season, last result, report a loss) | — |
+| **Farmer View** | Look up a synthetic demo policy, enter the maize area, and see the crop's value, the cover, the premium and the payout for any season, with the SMS the farmer would receive in English or Kinyarwanda (draft). When the district is not paid, the farmer can report a crop loss, the route for losses the satellites miss; reports go to Field Checks. Press **Send this SMS** to deliver it through Africa's Talking. The USSD Menu page runs the real `*384*16779#` menu (cover, this season, payouts, report a loss with its cause, Kinyarwanda) | — |
 | **Term sheet** | A printable one-page contract summary per district (cover, index formula, accuracy, payout schedule, settlement, field-check clause, 2001–2025 record), downloadable as PDF; linked from Pricing | — |
 
 ## Machine learning model
@@ -109,6 +109,48 @@ python -m pytest
 The 13 tests check the API against the notebook: the index formula on all 175 district-seasons,
 the leave-one-out results, the hit and false payout rates, the drought-year totals (34/63 against
 26/112) and basis risk for every district.
+
+### SMS and USSD (Africa's Talking)
+
+The Farmer View can send the payout SMS, and farmers can use the cover from a basic phone by
+dialling a USSD code. Both run through [Africa's Talking](https://africastalking.com). The free
+**sandbox** delivers to their [phone simulator](https://developers.africastalking.com/simulator)
+instead of real phones, which is enough for a demo.
+
+1. **Account and key.** Sign up at [account.africastalking.com](https://account.africastalking.com),
+   open the **Sandbox** app, and under **Settings → API Key** generate a key. A new key can take
+   10 to 30 minutes before it is accepted, so generate it well before a demo.
+2. **Credentials.** Copy `backend/.env.example` to `backend/.env` (git-ignored) and fill in:
+   ```
+   AT_USERNAME=sandbox
+   AT_API_KEY=<sandbox key>
+   AT_PHONE=+2507XXXXXXXX
+   ```
+   `AT_PHONE` receives the SMS and holds the demo policy on USSD. The backend re-reads `.env` on
+   every send, so no restart is needed. `GET /api/sms/status` shows whether SMS is set up without
+   revealing the key.
+3. **SMS.** Log in to the simulator with the `AT_PHONE` number, then press **Send this SMS** in the
+   Farmer View. Each payout message fits one SMS (at most 160 plain characters).
+4. **USSD.** Africa's Talking must reach the backend from the internet. Run a tunnel such as
+   [ngrok](https://ngrok.com) (`ngrok http 8000`), then in the Sandbox app open **USSD → Create
+   Channel**, pick the shared code `*384#` and a channel number, and set the callback URL to the
+   tunnel address plus `/api/ussd`. Dial the code on the simulator (this project's channel is
+   `*384*16779#`; set `NEXT_PUBLIC_USSD_CODE` if yours differs). The menu offers the farmer's cover,
+   this season's provisional index, past payouts, a crop-loss report with its cause, an SMS copy of
+   any screen, and a draft Kinyarwanda version. The dashboard's **USSD Menu** page runs the same
+   menu through `/api/ussd/preview`.
+5. **Reset before a demo.** Each policy can report a loss once per season. To start from zero:
+   ```bash
+   cd backend && .venv/bin/python scripts/reset_reports.py --yes
+   ```
+
+**Live phones.** With a live app's username and key in `.env`, messages go to real phones and cost
+credit (about RWF 12 to 14 each in testing). In live mode the backend only sends single-SMS
+messages, stops at `AT_DAILY_LIMIT` (20 a day by default) and only ever sends to `AT_PHONE`.
+In Rwanda the networks reject messages from the shared sender name, so live SMS needs an
+approved sender ID (`AT_SENDER_ID`). Africa's Talking asks for a national ID or passport and an
+RRA tax number (TIN) for that, and the same documents for airtime, short codes and a dedicated
+USSD code. A tested message from the shared sender was rejected by MTN Rwanda on 26 October 2026.
 
 ### Run the notebook
 
@@ -245,7 +287,7 @@ flowchart LR
     direction TB
     FILES[("backend/data/<br/>model.json · calibration.csv · seasons.csv<br/>plot_losses.csv · current_season.json · districts")]
     API["FastAPI backend<br/>applies the saved model and payout rule"]
-    DB[("SQLite<br/>crop-loss reports")]
+    DB[("SQLite<br/>crop-loss reports, SMS log")]
     WEB["Next.js dashboard"]
   end
 
@@ -258,12 +300,15 @@ flowchart LR
   API <--> DB
   WEB -- "JSON over HTTP" --> API
   WEB --> U1["Analyst, insurer,<br/>programme officer"]
-  WEB --> U2["Farmer view, SMS and<br/>USSD previews (demo)"]
+  WEB --> U2["Farmer view and<br/>USSD menu (demo)"]
+  AT["Africa's Talking<br/>SMS and USSD (sandbox)"] -- "USSD callback via tunnel" --> API
+  API -- "send SMS" --> AT
+  AT --> PH["Farmer's phone<br/>(sandbox simulator)"]
 
   subgraph Future["Future deployment (not built)"]
     direction TB
     F1["PostgreSQL, accounts and roles"]
-    F2["SMS / USSD gateway"]
+    F2["Live SMS sender ID and<br/>USSD short code (needs TIN)"]
     F3["Mobile Money payouts"]
   end
   API -.-> Future
@@ -286,7 +331,11 @@ formula. This keeps every request fast (NFR1) and the thresholds reproducible (N
 | `GET /api/current-season` | The Season A window in progress: provisional index per district from near-real-time data, and how far an early read can be trusted |
 | `GET /api/plot-losses` | Share of NISR-surveyed farms that lost more than half their expected harvest, per district-season |
 | `POST /api/loss-reports` | A farmer reports a crop loss (one report per policy per season counts) |
-| `GET /api/loss-reports/summary` | Crop-loss reports on file, per district-season |
+| `GET /api/loss-reports/summary` | Crop-loss reports on file, per district-season, with their causes |
+| `POST /api/sms` | Send a payout SMS to the demo phone through Africa's Talking |
+| `GET /api/sms/status` | Whether SMS is set up (sandbox or live, masked phone), without the key |
+| `POST /api/ussd` | The USSD callback Africa's Talking calls on every key press; replies with the next screen |
+| `POST /api/ussd/preview` | The same USSD menu for a chosen demo policy, for the dashboard's phone |
 | `GET /api/health` | Service status |
 
 ### Index formula

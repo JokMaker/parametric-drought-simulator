@@ -5,6 +5,10 @@ services:
       - "8000:8000"
     environment:
       CORS_ORIGINS: http://localhost:3000
+    # Africa's Talking credentials for SMS and USSD (optional; see backend/.env.example).
+    env_file:
+      - path: ./backend/.env
+        required: false
 
   frontend:
     build:
