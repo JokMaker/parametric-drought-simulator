@@ -6,21 +6,21 @@ MacBook Pro (Apple M1 Pro, 32 GB, macOS 26.6.2).
 
 | Strategy | What it checks | How to run | Result |
 | --- | --- | --- | --- |
-| Backend unit and API tests | Model maths, payouts, every endpoint, loss reports, USSD screens, SMS gateways | `cd backend && pytest` | 48 passed |
+| Backend unit and API tests | Model maths, payouts, every endpoint, loss reports, USSD screens, SMS gateways | `cd backend && pytest` | 52 passed |
 | Frontend unit tests | Pricing, payout curve, uncertainty, field-check rule, SMS length, colour classes | `cd frontend && npm test` | 33 passed |
 | Browser tests (functional and compatibility) | 11 pages × 3 screen sizes × light/dark, plus 6 user flows, in headless Chrome; 11 pages × 3 widths plus 2 flows in Safari | `node frontend/tests/browser/check.mjs`, `node frontend/tests/browser/safari.mjs` | Chrome 66/66 checks, 6/6 flows; Safari 33/33, 2/2 |
 | Performance | API latency and load, page loads on desktop and on a throttled phone | `python backend/scripts/benchmark.py`, `THROTTLE=1 node frontend/tests/browser/check.mjs` | below |
 
 ## 1. Unit and API tests
 
-**Backend (pytest, 48 tests).** The tests replace the database with a temporary
+**Backend (pytest, 52 tests).** The tests replace the database with a temporary
 one and the SMS provider with a fake that records messages (FastAPI dependency
 overrides), so they never send a real SMS. They cover:
 
 - the index model: prediction from rain and NDVI z-scores, the linear payout between the −2% trigger and the −22% exit;
 - every API endpoint, including errors (unknown district → 404, bad policy number → 422, SMS not set up → 503);
 - loss reports: one report per policy and season, causes, the summary;
-- the USSD menu: every screen in both languages, going back with 0, the language switch, and every screen fits the 182-character USSD limit;
+- the USSD menu: every screen in both languages (it opens in Kinyarwanda), going back with 0, the language switch, and every screen fits the 182-character USSD limit;
 - the SMS gateways: sandbox and live hosts, the live daily limit, single-SMS rule, sender ID, rejected messages.
 
 **Frontend (Node's built-in test runner, 33 tests)**, on the same data the dashboard shows:
@@ -55,7 +55,7 @@ User flows, at phone size:
 | Unknown policy | `RDI-XXX-0000` | "No policy RDI-XXX-0000" message |
 | Area field | `1` while typing, then `1250`, then `10` | `1` not clamped mid-typing; 1250 kept; 10 raised to the 50 m² minimum on leaving the box |
 | Payout SMS | English and Kinyarwanda | 1 SMS in each language |
-| USSD menu | dial, 1, 0, 3, 0, 5, 2 | Menu, cover, back, payouts, back, Kinyarwanda menu, season screen |
+| USSD menu | dial, 1, 0, 5, 3, 0, 5, 2 | Kinyarwanda menu, cover, back, English menu, payouts, back, Kinyarwanda menu, season screen |
 | Pricing | open page | All seven districts priced |
 
 **Problems found and fixed.**
@@ -155,7 +155,7 @@ production build.
 
 ```bash
 # from the repository root
-(cd backend && pytest)                                  # 48 tests
+(cd backend && pytest)                                  # 52 tests
 (cd frontend && npm test)                               # 33 tests
 
 # browser checks, with the backend on :8000 and the frontend on :3000

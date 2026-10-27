@@ -105,9 +105,9 @@ await flow("USSD menu", async () => {
     await sleep(1200);
     return run("return document.querySelector('[aria-live]').innerText");
   };
-  expect((await reply("*384*16779#")).includes("1. My cover"), "no main menu");
-  expect((await reply("1")).includes("Insured value"), "no cover screen");
-  expect((await reply("0")).includes("2. This season"), "0 did not go back");
+  expect((await reply("*384*44698#")).includes("1. Ubwishingizi bwanjye"), "no Kinyarwanda main menu");
+  expect((await reply("1")).includes("Agaciro kishingiwe"), "no cover screen");
+  expect((await reply("0")).includes("2. Iki gihembwe"), "0 did not go back");
 });
 
 await call("DELETE", s);

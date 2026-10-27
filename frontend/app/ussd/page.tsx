@@ -17,7 +17,7 @@ export default function UssdPage() {
   const [policy, setPolicy] = useState<Policy>(DEMO_POLICIES[12]);
   // The answers so far, joined by "*" as Africa's Talking sends them; null when no session is open.
   const [session, setSession] = useState<string | null>(null);
-  const [screen, setScreen] = useState(`Dial ${USSD_CODE} to open\nRDI Maize Insurance`);
+  const [screen, setScreen] = useState(`Kanda ${USSD_CODE}\nRDI Ubwishingizi bw'ibigori`);
   const [typed, setTyped] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -40,7 +40,7 @@ export default function UssdPage() {
     setTyped("");
     if (session === null) {
       if (input === USSD_CODE) void ask("");
-      else setScreen(`Unknown code. Dial ${USSD_CODE}.`);
+      else setScreen(`Kode ntizwi. Kanda ${USSD_CODE}.`);
       return;
     }
     if (input) void ask(session ? `${session}*${input}` : input);
@@ -62,7 +62,7 @@ export default function UssdPage() {
               onChange={(e) => {
                 setPolicy(DEMO_POLICIES.find((p) => p.id === e.target.value)!);
                 setSession(null);
-                setScreen(`Dial ${USSD_CODE} to open\nRDI Maize Insurance`);
+                setScreen(`Kanda ${USSD_CODE}\nRDI Ubwishingizi bw'ibigori`);
               }}
               className="ml-1 max-w-full rounded-sm border border-line bg-surface px-2 py-1 text-sm text-ink"
             >
@@ -75,7 +75,7 @@ export default function UssdPage() {
           </label>
           <ol className="mt-4 space-y-1.5 text-sm text-muted">
             <li><span className="font-medium text-ink">1.</span> Type <span className="tabular font-medium text-ink">{USSD_CODE}</span> and press Send.</li>
-            <li><span className="font-medium text-ink">2.</span> Answer with a number: 1 your cover, 2 this season, 3 your payouts, 4 report a crop loss, 5 Kinyarwanda.</li>
+            <li><span className="font-medium text-ink">2.</span> Answer with a number: 1 your cover, 2 this season, 3 your payouts, 4 report a crop loss, 5 English. The menu opens in Kinyarwanda.</li>
             <li><span className="font-medium text-ink">3.</span> 0 goes back; on the main menu it exits.</li>
           </ol>
           {USE_MOCK && (

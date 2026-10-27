@@ -7,8 +7,8 @@ close the session. Each screen stays under 160 characters.
 
 The farmer is identified by the phone number they dial from: the demo phone
 (AT_PHONE in backend/.env) holds the demo policy AT_POLICY (RDI-RWA-1233 by
-default). Other numbers have no policy. The Kinyarwanda text is a draft for a
-native speaker to check.
+default). Other numbers have no policy. The menu opens in Kinyarwanda, with 5 for
+English; the Kinyarwanda text is a draft for a native speaker to check.
 """
 
 from dataclasses import dataclass
@@ -79,18 +79,18 @@ def same_number(a: str, b: str) -> bool:
 @dataclass(frozen=True)
 class Session:
     """Where a USSD session is, replayed from Africa's Talking's `text`: the language and
-    the path of choices. On the main menu "5" switches language; elsewhere "0" goes back
-    a screen and anything else goes forward."""
+    the path of choices. Sessions start in Kinyarwanda; on the main menu "5" switches
+    language, elsewhere "0" goes back a screen and anything else goes forward."""
 
     lang: str
     path: tuple[str, ...]
 
     @classmethod
     def replay(cls, text: str) -> "Session":
-        lang, path = "en", []
+        lang, path = "rw", []
         for answer in text.split("*") if text else []:
             if not path and answer == "5":
-                lang = "rw" if lang == "en" else "en"
+                lang = "en" if lang == "rw" else "rw"
             elif answer == "0" and path:
                 path.pop()
             else:
