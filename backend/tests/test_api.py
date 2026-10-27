@@ -240,17 +240,21 @@ def ussd(text, phone=DEMO_PHONE):
 @pytest.mark.parametrize(
     "text,starts,contains",
     [
-        ("", "CON", "1. My cover"),
-        ("1", "CON", "Insured value RWF"),
-        ("2", "CON", "Rain so far"),
-        ("3", "CON", "Your payouts"),
-        ("4", "CON", "What damaged your crop?"),
-        ("1*0", "CON", "1. My cover"),          # back to the menu
-        ("4*0", "CON", "1. My cover"),
-        ("0", "END", "Thank you for using"),
-        ("5", "CON", "Ubwishingizi bwanjye"),   # Kinyarwanda
-        ("5*0", "END", "Murakoze"),             # exit from the Kinyarwanda menu
-        ("5*5", "CON", "1. My cover"),          # and back to English
+        ("", "CON", "1. Ubwishingizi bwanjye"),  # opens in Kinyarwanda
+        ("1", "CON", "Agaciro kishingiwe RWF"),
+        ("2", "CON", "Imvura:"),
+        ("3", "CON", "Ingurane wahawe"),
+        ("4", "CON", "Ni iki cyangije imyaka?"),
+        ("1*0", "CON", "1. Ubwishingizi bwanjye"),  # back to the menu
+        ("0", "END", "Murakoze"),
+        ("5", "CON", "1. My cover"),             # English
+        ("5*1", "CON", "Insured value RWF"),
+        ("5*2", "CON", "Rain so far"),
+        ("5*3", "CON", "Your payouts"),
+        ("5*4", "CON", "What damaged your crop?"),
+        ("5*4*0", "CON", "1. My cover"),
+        ("5*0", "END", "Thank you for using"),   # exit from the English menu
+        ("5*5", "CON", "1. Ubwishingizi bwanjye"),  # and back to Kinyarwanda
     ],
 )
 def test_ussd_menu(demo_phone, text, starts, contains):
@@ -264,22 +268,22 @@ def test_ussd_screens_fit_a_phone(demo_phone):
 
 
 def test_ussd_unknown_number_has_no_policy(demo_phone):
-    assert ussd("", phone="+250788000000").startswith("END No RDI policy")
+    assert ussd("", phone="+250788000000").startswith("END Nta bwishingizi")
 
 
 def test_ussd_matches_the_number_in_any_format(demo_phone):
-    assert ussd("", phone="0700000001").startswith("CON RDI Maize Insurance")
+    assert ussd("", phone="0700000001").startswith("CON RDI Ubwishingizi")
 
 
 def test_ussd_sends_a_screen_by_sms(demo_phone):
-    assert ussd("1*1") == "END Sent. Check your SMS messages."
+    assert ussd("5*1*1") == "END Sent. Check your SMS messages."
     assert "Insured value RWF" in demo_phone[0] and "\n" not in demo_phone[0]
 
 
 def test_ussd_report_saves_the_cause(demo_phone):
-    reply = ussd("4*2")
+    reply = ussd("5*4*2")
     assert reply.startswith("END Thank you") and "(pests or disease)" in reply and "1 report(s) for Rwamagana" in reply
-    assert ussd("4*1").startswith("END You have already reported")
+    assert ussd("5*4*1").startswith("END You have already reported")
     season = client.get("/api/current-season").json()["season"]
     assert client.get("/api/loss-reports/summary").json() == [
         {"district": "Rwamagana", "season": season, "reports": 1, "causes": {"pests": 1}}]
@@ -289,17 +293,17 @@ def test_ussd_preview_runs_the_same_menu(report_db):
     def preview(text, policy="RDI-KAY-1085"):
         return client.post("/api/ussd/preview", json={"text": text, "policyId": policy})
 
-    assert preview("").json()["reply"].startswith("CON RDI Maize Insurance\nKayonza RDI-KAY-1085")
-    assert "Your payouts" in preview("3").json()["reply"]
-    assert preview("4*1").json()["reply"].startswith("END Thank you. Report received (drought)")
+    assert preview("").json()["reply"].startswith("CON RDI Ubwishingizi bw'ibigori\nKayonza RDI-KAY-1085")
+    assert "Your payouts" in preview("5*3").json()["reply"]
+    assert preview("5*4*1").json()["reply"].startswith("END Thank you. Report received (drought)")
     assert preview("", policy="RDI-XXX-0000").status_code == 422
 
 
 def test_session_replays_back_and_language():
-    assert Session.replay("") == Session("en", ())
-    assert Session.replay("1*0*3") == Session("en", ("3",))
-    assert Session.replay("5*2") == Session("rw", ("2",))
-    assert Session.replay("5*5") == Session("en", ())
+    assert Session.replay("") == Session("rw", ())
+    assert Session.replay("1*0*3") == Session("rw", ("3",))
+    assert Session.replay("5*2") == Session("en", ("2",))
+    assert Session.replay("5*5") == Session("rw", ())
 
 
 def test_store_reset_and_causes(tmp_path):

@@ -37,4 +37,4 @@ export const isDroughtSeason = (season: number) => DROUGHT_YEARS.includes(window
 
 // The USSD code farmers dial: the Africa's Talking sandbox channel on the shared
 // *384# code. A live scheme would use a code allocated through the operators.
-export const USSD_CODE = process.env.NEXT_PUBLIC_USSD_CODE ?? "*384*16779#";
+export const USSD_CODE = process.env.NEXT_PUBLIC_USSD_CODE ?? "*384*44698#";

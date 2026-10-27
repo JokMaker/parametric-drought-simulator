@@ -38,7 +38,7 @@ function Phone({ text, lang, onLang }: { text: string; lang: Lang; onLang: (l: L
   return (
     <div className="mx-auto w-full max-w-[290px]">
       <div className="mb-2 flex justify-center gap-1 text-xs" role="group" aria-label="SMS language">
-        {(["en", "rw"] as const).map((l) => (
+        {(["rw", "en"] as const).map((l) => (
           <button
             key={l}
             onClick={() => onLang(l)}
@@ -121,7 +121,7 @@ export default function FarmerPage() {
   const [policy, setPolicy] = useState<Policy>(DEFAULT_POLICY);
   const [areaM2, setAreaM2] = useState(DEFAULT_POLICY.areaM2);
   const [season, setSeason] = useState(2023);
-  const [lang, setLang] = useState<Lang>("en");
+  const [lang, setLang] = useState<Lang>("rw");
   // The latest report sent, keyed by policy and season so it clears when either changes.
   const [reported, setReported] = useState<{ key: string; text: string; ok: boolean } | null>(null);
   const error = history.error ?? seasons.error ?? model.error;

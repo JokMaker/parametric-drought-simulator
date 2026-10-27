@@ -28,7 +28,7 @@ Kirehe, Ngoma, Nyagatare, Rwamagana), backtested from 2001 to 2025.
 | **Basis Risk** | A "what if" simulator: move the trigger and exit and see how many poor harvests are paid, how many are missed, the false payouts and the basis risk change live. Then basis risk per district (Nyagatare 33% highest, Kayonza 18% lowest) and a season-by-season table filterable by outcome (missed, false payout, paid correctly) | FR10 |
 | **Field Checks** | The safety net for losses the index misses. A district needs a field check when the index paid under 25% but there is evidence of loss: at least 3 farmer reports (saved by the API in SQLite), or at least 45% of NISR-surveyed farms harvesting under half the expected yield. Season A 2019 flags all seven districts. Thresholds are editable | FR10 |
 | **Pricing** | Prices the cover from what the maize is worth: maize area × expected yield × price (RWF 200/kg, the NISR farm-gate median). Set the cover level, loading, subsidy and share of the 118,687 ha insured; see the premium per hectare and for a median farm in each district, premiums against expected payouts, the 1-in-10 season, the reserve needed for the worst season (2006), and a loss ratio for every season since 2001 | — |
-| **Farmer View** | Look up a synthetic demo policy, enter the maize area, and see the crop's value, the cover, the premium and the payout for any season, with the SMS the farmer would receive in English or Kinyarwanda (draft). When the district is not paid, the farmer can report a crop loss, the route for losses the satellites miss; reports go to Field Checks. Press **Send this SMS** to deliver it through Africa's Talking. The USSD Menu page runs the real `*384*16779#` menu (cover, this season, payouts, report a loss with its cause, Kinyarwanda) | — |
+| **Farmer View** | Look up a synthetic demo policy, enter the maize area, and see the crop's value, the cover, the premium and the payout for any season, with the SMS the farmer would receive in English or Kinyarwanda (draft). When the district is not paid, the farmer can report a crop loss, the route for losses the satellites miss; reports go to Field Checks. Press **Send this SMS** to deliver it through Africa's Talking. The USSD Menu page runs the real `*384*44698#` menu (cover, this season, payouts, report a loss with its cause, Kinyarwanda) | — |
 | **Term sheet** | A printable one-page contract summary per district (cover, index formula, accuracy, payout schedule, settlement, field-check clause, 2001–2025 record), downloadable as PDF; linked from Pricing | — |
 
 ## Machine learning model
@@ -106,7 +106,7 @@ source .venv/bin/activate
 python -m pytest
 ```
 
-The 48 tests check the API against the notebook (the index formula on all 175 district-seasons,
+The 52 tests check the API against the notebook (the index formula on all 175 district-seasons,
 the leave-one-out results, the hit and false payout rates, the drought-year totals (34/63 against
 26/112), basis risk and the pricing inputs) and test each building block on its own: the report
 store, the SMS gateways (sandbox and live limits, sender ID, rejected messages, through a recording
@@ -148,9 +148,9 @@ instead of real phones, which is enough for a demo.
    [ngrok](https://ngrok.com) (`ngrok http 8000`), then in the Sandbox app open **USSD → Create
    Channel**, pick the shared code `*384#` and a channel number, and set the callback URL to the
    tunnel address plus `/api/ussd`. Dial the code on the simulator (this project's channel is
-   `*384*16779#`; set `NEXT_PUBLIC_USSD_CODE` if yours differs). The menu offers the farmer's cover,
+   `*384*44698#`; set `NEXT_PUBLIC_USSD_CODE` if yours differs). The menu offers the farmer's cover,
    this season's provisional index, past payouts, a crop-loss report with its cause, an SMS copy of
-   any screen, and a draft Kinyarwanda version. The dashboard's **USSD Menu** page runs the same
+   any screen. It opens in Kinyarwanda (a draft), with English as option 5. The dashboard's **USSD Menu** page runs the same
    menu through `/api/ussd/preview`.
 5. **Reset before a demo.** Each policy can report a loss once per season. To start from zero:
    ```bash

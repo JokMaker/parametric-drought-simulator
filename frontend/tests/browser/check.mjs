@@ -217,12 +217,13 @@ await flow("USSD: dial, open each screen, go back, switch language", async () =>
     }
     return screen();
   };
-  expect((await reply("*384*16779#")).includes("1. My cover"), "main menu not shown after dialling");
-  expect((await reply("1")).includes("Insured value"), "cover screen missing");
-  expect((await reply("0")).includes("2. This season"), "0 did not go back to the menu");
+  expect((await reply("*384*44698#")).includes("1. Ubwishingizi bwanjye"), "Kinyarwanda menu not shown after dialling");
+  expect((await reply("1")).includes("Agaciro kishingiwe"), "cover screen missing");
+  expect((await reply("0")).includes("2. Iki gihembwe"), "0 did not go back to the menu");
+  expect((await reply("5")).includes("1. My cover"), "5 did not switch to English");
   expect((await reply("3")).includes("Your payouts"), "payouts screen missing");
   expect((await reply("0")).includes("4. Report a crop loss"), "0 did not go back from payouts");
-  expect((await reply("5")).includes("Ubwishingizi bwanjye"), "5 did not switch to Kinyarwanda");
+  expect((await reply("5")).includes("Ubwishingizi bwanjye"), "5 did not switch back to Kinyarwanda");
   expect((await reply("2")).includes("Igihembwe A"), "season screen missing in Kinyarwanda");
 });
 
