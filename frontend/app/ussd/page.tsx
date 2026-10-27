@@ -49,7 +49,7 @@ export default function UssdPage() {
   return (
     <>
       <PageHeader title="USSD Menu" />
-      <div className="grid gap-5 md:grid-cols-[1fr_320px] md:items-start">
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-[minmax(0,1fr)_320px] md:items-start">
         <Card
           label="How a farmer on a basic phone reaches the cover"
           title="Dial a short code, answer with numbers: no smartphone, app or data bundle needed"
@@ -64,7 +64,7 @@ export default function UssdPage() {
                 setSession(null);
                 setScreen(`Dial ${USSD_CODE} to open\nRDI Maize Insurance`);
               }}
-              className="ml-1 rounded-sm border border-line bg-surface px-2 py-1 text-sm text-ink"
+              className="ml-1 max-w-full rounded-sm border border-line bg-surface px-2 py-1 text-sm text-ink"
             >
               {DEMO_POLICIES.map((p) => (
                 <option key={p.id} value={p.id}>
