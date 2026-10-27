@@ -126,13 +126,16 @@
   --color-header: var(--header);
   --color-header-ink: var(--header-ink);
 
-  --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-josefin-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-plex-mono), ui-monospace, monospace;
 }
 
 body {
   background: var(--canvas);
   color: var(--ink);
+  /* Josefin Sans has short lowercase letters (x-height 0.41 of the size), so every
+     size reads small; render every font at a 0.47 x-height instead (about 14% larger). */
+  font-size-adjust: 0.47;
 }
 
 .tabular {
