@@ -316,9 +316,10 @@ def test_ussd_sign_up_saves_the_policy_and_texts_the_caller(gateway, report_db):
     quote = ussd("5*1*3*1250", phone=NEW_PHONE)
     reply = ussd("5*1*3*1250*1", phone=NEW_PHONE)
     assert reply == "END Done. Your policy number is RDI-KAY-5001. We sent it to you by SMS."
-    # The confirmation goes to the farmer's own number, as one SMS.
-    assert gateway.recipients == [NEW_PHONE]
+    # The confirmation goes to the farmer's own number, as one SMS; the insurer (AT_PHONE) hears of it too.
+    assert gateway.recipients == [NEW_PHONE, DEMO_PHONE]
     assert "RDI-KAY-5001" in gateway.sent[0] and sms_parts(gateway.sent[0]) == 1
+    assert gateway.sent[1] == "RDI: new policy RDI-KAY-5001, Kayonza, 1,250 m2, premium RWF 749 a season."
     [saved] = client.get("/api/policies").json()
     assert saved["policyId"] == "RDI-KAY-5001" and saved["district"] == "Kayonza" and saved["areaM2"] == 1250
     assert saved["phone"] == "+250••••000"  # masked in the API

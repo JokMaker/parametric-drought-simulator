@@ -21,6 +21,7 @@ from .policies import DISTRICT_CODES, MAX_AREA_M2, MIN_AREA_M2, CoverQuote, Poli
 from .reports import ReportStore
 
 CAUSE_KEYS = {"1": "drought", "2": "pests", "3": "flood", "4": "other"}
+INSURER_ALERT = "RDI: new policy {policy}, {district}, {area} m2, premium {premium} a season."
 DISTRICTS = list(DISTRICT_CODES)
 DISTRICT_LINES = "\n".join(f"{i}. {d}" for i, d in enumerate(DISTRICTS, 1))
 
@@ -190,9 +191,20 @@ class UssdMenu:
                                      season=season, premium=rwf(premium))
         try:
             self.gateway.send(sms, to=phone)
-            return "END " + t["joined"].format(policy=policy.id)
+            reply = "END " + t["joined"].format(policy=policy.id)
         except SmsError:
-            return "END " + t["joined_no_sms"].format(policy=policy.id)
+            reply = "END " + t["joined_no_sms"].format(policy=policy.id)
+        self._tell_insurer(policy, premium)
+        return reply
+
+    def _tell_insurer(self, policy: Policy, premium: float) -> None:
+        """Let the insurer (the AT_PHONE number) know about a new policy. Best effort:
+        the farmer is covered whether or not this message goes out."""
+        try:
+            self.gateway.send(INSURER_ALERT.format(policy=policy.id, district=policy.district,
+                                                   area=f"{policy.area_m2:,}", premium=rwf(premium)))
+        except SmsError:
+            pass
 
     def _with_sms(self, t: dict, body: str, rest: tuple[str, ...], phone: str) -> str:
         """A screen that offers to send itself by SMS; answering 1 sends it to the caller
