@@ -12,6 +12,9 @@ Kirehe, Ngoma, Nyagatare, Rwamagana), backtested from 2001 to 2025.
 
 ## Links
 
+- **Live dashboard:** https://rdi-maize-insurance.vercel.app
+- **Live API:** https://rdi-drought-api.onrender.com (interactive docs at [/docs](https://rdi-drought-api.onrender.com/docs))
+- **USSD:** dial `*384*44698#` in the [Africa's Talking simulator](https://developers.africastalking.com/simulator) (sandbox)
 - **GitHub repository:** https://github.com/JokMaker/parametric-drought-simulator
 - **Video demo:** [Watch the demo video](https://drive.google.com/drive/folders/1JapZ7DmX66B_u9T2FLEXRqJZKYc-LBBm?usp=drive_link)
 - **Figma designs:** [Open the Figma file](https://www.figma.com/design/b7m0ZzV4ZXdzikU7GOhHUG/Drought-Index-Simulator-%E2%80%93-Designs?node-id=0-1)
@@ -26,7 +29,7 @@ Kirehe, Ngoma, Nyagatare, Rwamagana), backtested from 2001 to 2025.
 | **District Explorer** | Pick a district and season; see rainfall and vegetation anomalies, a payout gauge with the index's likely range (± the model's leave-one-out error) and the chance the harvest really fell past the trigger, where the index sits between trigger and exit, and the reason for the payout. For 2018–2025 the index and payout are shown side by side with the actual harvest | FR1, FR3, FR5, FR6, FR7, FR9 |
 | **Drought History** | The index and payout for every year since 2000, with documented drought years (2003–2006, 2013–2017) shaded, and a district-by-year heatmap: payouts in 54% of drought-year seasons against 23% of other years | FR9 |
 | **Basis Risk** | A "what if" simulator: move the trigger and exit and see how many poor harvests are paid, how many are missed, the false payouts and the basis risk change live. Then basis risk per district (Nyagatare 33% highest, Kayonza 18% lowest) and a season-by-season table filterable by outcome (missed, false payout, paid correctly) | FR10 |
-| **Field Checks** | The safety net for losses the index misses. A district needs a field check when the index paid under 25% but there is evidence of loss: at least 3 farmer reports (saved by the API in SQLite), or at least 45% of NISR-surveyed farms harvesting under half the expected yield. Season A 2019 flags all seven districts. Thresholds are editable | FR10 |
+| **Field Checks** | The safety net for losses the index misses. A district needs a field check when the index paid under 25% but there is evidence of loss: at least 3 farmer reports (saved by the API in the database), or at least 45% of NISR-surveyed farms harvesting under half the expected yield. Season A 2019 flags all seven districts. Thresholds are editable | FR10 |
 | **Pricing** | Prices the cover from what the maize is worth: maize area × expected yield × price (RWF 200/kg, the NISR farm-gate median). Set the cover level, loading, subsidy and share of the 118,687 ha insured; see the premium per hectare and for a median farm in each district, premiums against expected payouts, the 1-in-10 season, the reserve needed for the worst season (2006), and a loss ratio for every season since 2001 | — |
 | **Farmer View** | Look up a synthetic demo policy, enter the maize area, and see the crop's value, the cover, the premium and the payout for any season, with the SMS the farmer would receive in English or Kinyarwanda (draft). When the district is not paid, the farmer can report a crop loss, the route for losses the satellites miss; reports go to Field Checks. Press **Send this SMS** to deliver it through Africa's Talking. The USSD Menu page runs the real `*384*44698#` menu (cover, this season, payouts, report a loss with its cause, Kinyarwanda) | — |
 | **Term sheet** | A printable one-page contract summary per district (cover, index formula, accuracy, payout schedule, settlement, field-check clause, 2001–2025 record), downloadable as PDF; linked from Pricing | — |
@@ -52,7 +55,8 @@ The model is built in [notebook/drought_index.ipynb](notebook/drought_index.ipyn
 | Frontend | Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4, Recharts, d3-geo (map), lucide-react |
 | Backend | Python 3.12, FastAPI, Pydantic, Uvicorn, pytest |
 | Model and data | scikit-learn Ridge regression (trained in the project notebook), Google Earth Engine (CHIRPS, MODIS), NISR Seasonal Agricultural Survey |
-| Deployment | Docker, Docker Compose |
+| Database | PostgreSQL on Neon (deployed), SQLite (local and tests), psycopg 3 |
+| Deployment | Vercel (dashboard), Render (API, Docker), UptimeRobot (uptime checks); Docker Compose locally |
 
 ## Set up and run
 
@@ -320,7 +324,7 @@ flowchart LR
     direction TB
     FILES[("backend/data/<br/>model.json · calibration.csv · seasons.csv<br/>plot_losses.csv · current_season.json · districts")]
     API["FastAPI backend<br/>applies the saved model and payout rule"]
-    DB[("SQLite<br/>crop-loss reports, SMS log")]
+    DB[("Postgres (Neon) or SQLite<br/>policies, crop-loss reports, SMS log")]
     WEB["Next.js dashboard"]
   end
 
@@ -408,18 +412,21 @@ payout_simulation   (simulation_id PK, district_id FK, season, index_value, payo
 ```
 
 With 56 calibration rows and 175 history rows, in-memory files meet the performance and
-reproducibility requirements for the prototype; the database is introduced in the deployment
-phase below.
+reproducibility requirements; the database holds only what farmers create (policies, loss
+reports) and the SMS log, described under [Database](#database).
 
-## Deployment plan
+## Deployment
 
-| Stage | Plan |
-|---|---|
-| **Now (local)** | Both services run with `docker compose up --build`, or separately for development. |
-| **Backend hosting** | Deploy `backend/Dockerfile` to a container host with a free tier (Render or Railway). Set `CORS_ORIGINS` to the dashboard's URL. |
-| **Frontend hosting** | Deploy `frontend/` to Vercel. Set `NEXT_PUBLIC_API_URL` to the backend URL and `NEXT_PUBLIC_USE_MOCK=false` at build time. |
-| **Database** | Add a managed PostgreSQL instance (Render, Railway or Supabase free tier) with the schema above, loaded from the notebook export by a one-off script. |
-| **Updates** | Re-running the notebook writes the three files into `backend/data/`; then run `python backend/scripts/export_mock.py` to refresh the dashboard's offline data, update the tests' expected values, and redeploy. |
+Live since 28 October 2026. Every push to `main` redeploys both services.
+
+| Part | Where | Settings |
+|---|---|---|
+| **Dashboard** | [Vercel](https://vercel.com), root directory `frontend/`: https://rdi-maize-insurance.vercel.app | `NEXT_PUBLIC_API_URL=https://rdi-drought-api.onrender.com`, `NEXT_PUBLIC_USE_MOCK=false` (read at build time) |
+| **API** | [Render](https://render.com), free web service in Frankfurt, built from `backend/Dockerfile` as described in `render.yaml`: https://rdi-drought-api.onrender.com | `DATABASE_URL`, `CORS_ORIGINS` (the dashboard's address), `AT_USERNAME`, `AT_API_KEY`, `AT_PHONE`, entered in Render, never in the repo |
+| **Database** | [Neon](https://neon.tech) Postgres, Frankfurt, next to the API | Tables created by the API on first start |
+| **USSD** | Africa's Talking sandbox channel `*384*44698#`, callback `https://rdi-drought-api.onrender.com/api/ussd` | |
+| **Uptime** | [UptimeRobot](https://uptimerobot.com) checks `/api/health` every 5 minutes and emails on failure | Also keeps the free Render service awake: it sleeps after 15 idle minutes and takes about 50 s to wake, longer than a USSD session waits |
+| **Updates** | Re-running the notebook writes the files into `backend/data/`; run `python backend/scripts/export_mock.py` to refresh the dashboard's offline data, update the tests' expected values, and push. | |
 
 ## Project structure
 
@@ -427,15 +434,18 @@ phase below.
 parametric-drought-simulator/
 ├── backend/
 │   ├── app/
-│   │   ├── main.py          Assembles the FastAPI app from the three routers
+│   │   ├── main.py          Assembles the FastAPI app from the four routers
 │   │   ├── routers/         index.py (model, seasons, history, season monitor),
-│   │   │                    farmers.py (loss reports), messaging.py (SMS, USSD)
+│   │   │                    farmers.py (loss reports), policies.py (sign-ups),
+│   │   │                    messaging.py (SMS, USSD)
 │   │   ├── dependencies.py  Builds the shared objects and injects them into routes
 │   │   ├── model.py         IndexModel: the saved Ridge formula and payout rule
 │   │   ├── data.py          Dataset: loads the notebook export; per-season results,
 │   │   │                    payout rate, basis risk, season monitor
-│   │   ├── policies.py      DemoPolicy, PolicyBook, CoverQuote (pricing a policy)
-│   │   ├── reports.py       ReportStore: the SQLite reports and SMS log
+│   │   ├── policies.py      Policy, PolicyBook (demo policies), CoverQuote (pricing a policy)
+│   │   ├── reports.py       ReportStore with SqliteStore and PostgresStore: policies,
+│   │   │                    loss reports and the SMS log
+│   │   ├── env.py           Settings from backend/.env or the environment
 │   │   ├── messaging.py     SmsSettings and the SmsGateway classes (Africa's Talking)
 │   │   ├── ussd.py          Session and UssdMenu: the farmer's USSD menu
 │   │   └── schemas.py       Pydantic request and response models
@@ -471,10 +481,10 @@ dependency injection:
 |---|---|
 | **Single responsibility** | `ReportStore` is the only code that runs SQL; `Dataset` the only code that reads the notebook export; `IndexModel` holds the formula and payout rule; each router covers one area of the API |
 | **Encapsulation** | Callers use methods such as `store.add()`, `dataset.result()` or `gateway.send()` and never see SQL, file layouts or HTTP details |
-| **Abstraction and polymorphism** | `SmsGateway` is an abstract base class with `UnconfiguredGateway`, `SandboxGateway` and `LiveGateway`: the API and the USSD menu call `send()` without knowing which one they have. The live gateway adds its own checks (one SMS per message, daily limit, sender ID) by overriding `check()` and `fields()` |
+| **Abstraction and polymorphism** | `SmsGateway` is an abstract base class with `UnconfiguredGateway`, `SandboxGateway` and `LiveGateway`: the API and the USSD menu call `send()` without knowing which one they have. The live gateway adds its own checks (one SMS per message, daily limit, sender ID) by overriding `check()` and `fields()`. In the same way `ReportStore` is an abstract base with `SqliteStore` and `PostgresStore`: every query is written once in the base class, and each subclass only says how to connect |
 | **Inheritance** | `SandboxGateway` and `LiveGateway` share the Africa's Talking request in `AfricasTalkingGateway`; the API schemas share camelCase output through `CamelModel` |
 | **Dependency inversion** | Routes receive the dataset, store, gateway and menu from `dependencies.py` rather than creating them, and the gateway takes its HTTP transport as a parameter. Tests replace each of them (a temporary store, a recording gateway or transport) without touching real data, `.env` or Africa's Talking |
-| **Immutable value objects** | `SeasonResult`, `DemoPolicy`, `CoverQuote`, `SmsSettings` and `Session` are frozen dataclasses |
+| **Immutable value objects** | `SeasonResult`, `Policy`, `CoverQuote`, `SmsSettings` and `Session` are frozen dataclasses |
 
 The frontend follows React's composition model: pages are built from reusable components
 (`Card`, `StatStrip`, `NumberInput`, `DistrictMap`, the chart components), and calculations
