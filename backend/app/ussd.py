@@ -143,7 +143,7 @@ class UssdMenu:
             return "END " + t["exit"]
         if path[0] not in screens:
             return "CON " + t["menu"].format(district=policy.district, policy=policy.id)
-        return screens[path[0]](t, policy, path[1:])
+        return screens[path[0]](t, policy, path[1:], phone)
 
     def _season(self) -> int:
         """The season a policy covers: the one in progress, or else the next."""
@@ -194,23 +194,24 @@ class UssdMenu:
         except SmsError:
             return "END " + t["joined_no_sms"].format(policy=policy.id)
 
-    def _with_sms(self, t: dict, body: str, rest: tuple[str, ...]) -> str:
-        """A screen that offers to send itself by SMS; answering 1 sends it."""
+    def _with_sms(self, t: dict, body: str, rest: tuple[str, ...], phone: str) -> str:
+        """A screen that offers to send itself by SMS; answering 1 sends it to the caller
+        (to the demo phone when there is no caller, as in the dashboard preview)."""
         if rest and rest[0] == "1":
             try:
-                self.gateway.send(body.replace("\n", ". "))
+                self.gateway.send(body.replace("\n", ". "), to=phone)
                 return "END " + t["sent"]
             except SmsError:
                 return "END " + t["not_sent"]
         return "CON " + body + t["sms_option"]
 
-    def cover(self, t: dict, policy: Policy, rest: tuple[str, ...]) -> str:
+    def cover(self, t: dict, policy: Policy, rest: tuple[str, ...], phone: str = "") -> str:
         quote = CoverQuote.for_policy(self.ds, policy)
         body = t["cover"].format(season=self._season(), area=f"{policy.area_m2:,}", district=policy.district,
                                  cover=rwf(quote.cover), premium=rwf(quote.premium), trigger=f"{self.ds.model.trigger:.0f}")
-        return self._with_sms(t, body, rest)
+        return self._with_sms(t, body, rest, phone)
 
-    def this_season(self, t: dict, policy: Policy, rest: tuple[str, ...]) -> str:
+    def this_season(self, t: dict, policy: Policy, rest: tuple[str, ...], phone: str = "") -> str:
         current = self.ds.current_season
         if not current:
             return "END " + t["no_season"]
@@ -219,9 +220,9 @@ class UssdMenu:
         state = "trigger" if d["payout"] > 0 else "watch" if d["rainZ"] <= -0.5 or d["ndviZ"] <= -0.5 else "normal"
         body = t["season"].format(season=current["season"], day=current["daysElapsed"], days=current["windowDays"],
                                   rain=rain, index=signed(d["index"]), state=t["states"][state])
-        return self._with_sms(t, body, rest)
+        return self._with_sms(t, body, rest, phone)
 
-    def payouts(self, t: dict, policy: Policy, rest: tuple[str, ...]) -> str:
+    def payouts(self, t: dict, policy: Policy, rest: tuple[str, ...], phone: str = "") -> str:
         cover = CoverQuote.for_policy(self.ds, policy).cover
         seasons = sorted((s for (d, s) in self.ds.calibration if d == policy.district), reverse=True)[:3]
         lines = []
@@ -229,9 +230,9 @@ class UssdMenu:
             share = self.ds.calibration[(policy.district, s)].payout
             lines.append(t["paid"].format(season=s, amount=rwf(share * cover), share=f"{share:.0%}")
                          if share > 0 else t["none"].format(season=s))
-        return self._with_sms(t, t["payouts"].format(lines="\n".join(lines)), rest)
+        return self._with_sms(t, t["payouts"].format(lines="\n".join(lines)), rest, phone)
 
-    def report_loss(self, t: dict, policy: Policy, rest: tuple[str, ...]) -> str:
+    def report_loss(self, t: dict, policy: Policy, rest: tuple[str, ...], phone: str = "") -> str:
         current = self.ds.current_season
         if not current:
             return "END " + t["no_season"]

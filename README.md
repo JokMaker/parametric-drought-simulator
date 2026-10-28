@@ -178,8 +178,8 @@ tests on Postgres as well, set `TEST_DATABASE_URL`; each run works in a throwawa
 **Live phones.** With a live app's username and key in `.env`, messages go to real phones and cost
 credit (about RWF 12 to 14 each in testing). In live mode the backend only sends single-SMS
 messages and stops at `AT_DAILY_LIMIT` (20 a day by default). The dashboard's SMS button only
-sends to `AT_PHONE`; the only other number a message goes to is a USSD caller's own, for their
-sign-up confirmation.
+sends to `AT_PHONE`; on USSD, messages (the sign-up confirmation, or a screen the farmer asks to
+receive) go to the number that dialled.
 In Rwanda the networks reject messages from the shared sender name, so live SMS needs an
 approved sender ID (`AT_SENDER_ID`). Africa's Talking asks for a national ID or passport and an
 RRA tax number (TIN) for that, and the same documents for airtime, short codes and a dedicated

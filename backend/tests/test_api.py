@@ -326,6 +326,9 @@ def test_ussd_sign_up_saves_the_policy_and_texts_the_caller(gateway, report_db):
     # Dialling again from the same number (in any format) opens the farmer's own menu.
     assert ussd("", phone="0788000000").startswith("CON RDI Ubwishingizi bw'ibigori\nKayonza RDI-KAY-5001")
     assert "Maize 1,250 m2 in Kayonza" in ussd("5*1", phone=NEW_PHONE)
+    # A screen sent by SMS goes to the farmer who asked for it, not the demo phone.
+    assert ussd("5*3*1", phone=NEW_PHONE) == "END Sent. Check your SMS messages."
+    assert gateway.recipients[-1] == NEW_PHONE and "Your payouts" in gateway.sent[-1]
     assert ussd("5*4*1", phone=NEW_PHONE).startswith("END Thank you. Report received (drought)")
 
 
