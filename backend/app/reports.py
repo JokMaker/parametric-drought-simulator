@@ -215,7 +215,10 @@ class PostgresStore(ReportStore):
         from psycopg_pool import ConnectionPool  # only needed when Postgres is used
 
         self.url = url
-        self.pool = ConnectionPool(url, min_size=1, max_size=5, open=True, check=ConnectionPool.check_connection)
+        # Give up after a few seconds rather than the default 30: Africa's Talking drops a
+        # USSD session that waits about 10 seconds for a reply.
+        self.pool = ConnectionPool(url, min_size=1, max_size=5, open=True, timeout=8,
+                                   kwargs={"connect_timeout": 5}, check=ConnectionPool.check_connection)
         with self.pool.connection() as con:
             for statement in SCHEMA.format(id="BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY").split(";"):
                 con.execute(statement)
