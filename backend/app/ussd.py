@@ -5,20 +5,24 @@ joined by "*" ("" on the first screen, "1" after choosing 1, "1*0" after going
 back). The reply starts with "CON " to wait for another answer or "END " to
 close the session. Each screen stays under 160 characters.
 
-The farmer is identified by the phone number they dial from: the demo phone
-(AT_PHONE in backend/.env) holds the demo policy AT_POLICY (RDI-RWA-1233 by
-default). Other numbers have no policy. The menu opens in Kinyarwanda, with 5 for
-English; the Kinyarwanda text is a draft for a native speaker to check.
+The farmer is identified by the phone number they dial from (Africa's Talking
+sends it with every key press): the demo phone (AT_PHONE in backend/.env) holds
+the demo policy AT_POLICY (RDI-RWA-1233 by default); any other number either has
+a policy it signed up for, or gets the sign-up menu. The menu opens in
+Kinyarwanda, with 5 for English; the Kinyarwanda text is a draft for a native
+speaker to check.
 """
 
 from dataclasses import dataclass
 
 from .data import Dataset
 from .messaging import SmsError, SmsGateway
-from .policies import CoverQuote, DemoPolicy, PolicyBook
+from .policies import DISTRICT_CODES, MAX_AREA_M2, MIN_AREA_M2, CoverQuote, Policy, PolicyBook, phone_key
 from .reports import ReportStore
 
 CAUSE_KEYS = {"1": "drought", "2": "pests", "3": "flood", "4": "other"}
+DISTRICTS = list(DISTRICT_CODES)
+DISTRICT_LINES = "\n".join(f"{i}. {d}" for i, d in enumerate(DISTRICTS, 1))
 
 T = {
     "en": {
@@ -39,6 +43,14 @@ T = {
         "exit": "Thank you for using RDI Maize Insurance.",
         "no_policy": "No RDI policy is registered to this number.",
         "states": {"watch": "watch", "trigger": "past trigger", "normal": "normal"},
+        "join": "RDI Maize Insurance\nNo policy on this number yet.\n1. Buy cover\n5. Ikinyarwanda\n0. Exit",
+        "districts": "Choose your district:\n" + DISTRICT_LINES + "\n0. Back",
+        "area": "{district}\nEnter your maize field size in m2 ({min} to {max}):",
+        "invalid": "Invalid answer.\n",
+        "confirm": "{district}, {area} m2\nInsured value {cover}\nPremium {premium}/season\n1. Confirm\n0. Back",
+        "joined": "Done. Your policy number is {policy}. We sent it to you by SMS.",
+        "joined_no_sms": "Done. Your policy number is {policy}.",
+        "joined_sms": "RDI Maize Insurance: your policy is {policy}. {district}, {area} m2, Season A {season}. Premium {premium}. Dial again to see your cover.",
     },
     "rw": {
         "menu": "RDI Ubwishingizi bw'ibigori\n{district} {policy}\n1. Ubwishingizi bwanjye\n2. Iki gihembwe\n3. Ingurane nahawe\n4. Menyesha igihombo\n5. English\n0. Sohoka",
@@ -58,6 +70,14 @@ T = {
         "exit": "Murakoze gukoresha RDI.",
         "no_policy": "Nta bwishingizi bwa RDI bubaruye kuri iyi nimero.",
         "states": {"watch": "kurikirana", "trigger": "kirenze urugero", "normal": "bisanzwe"},
+        "join": "RDI Ubwishingizi bw'ibigori\nNta bwishingizi kuri iyi nimero.\n1. Gura ubwishingizi\n5. English\n0. Sohoka",
+        "districts": "Hitamo akarere kawe:\n" + DISTRICT_LINES + "\n0. Subira inyuma",
+        "area": "{district}\nAndika ubuso bw'umurima w'ibigori muri m2 ({min} kugeza {max}):",
+        "invalid": "Igisubizo ntikemewe.\n",
+        "confirm": "{district}, {area} m2\nAgaciro kishingiwe {cover}\nUmusanzu {premium}/igihembwe\n1. Emeza\n0. Subira inyuma",
+        "joined": "Byakozwe. Nimero y'ubwishingizi bwawe ni {policy}. Twayikoherereje kuri SMS.",
+        "joined_no_sms": "Byakozwe. Nimero y'ubwishingizi bwawe ni {policy}.",
+        "joined_sms": "RDI Ubwishingizi: nimero yawe ni {policy}. {district}, {area} m2, Igihembwe A {season}. Umusanzu {premium}. Ongera ukande kode urebe ubwishingizi.",
     },
 }
 
@@ -72,8 +92,7 @@ def signed(v: float) -> str:
 
 def same_number(a: str, b: str) -> bool:
     """Compare phone numbers by their last nine digits (+250788... and 0788... match)."""
-    digits = lambda s: "".join(c for c in s if c.isdigit())[-9:]  # noqa: E731
-    return bool(a and b) and digits(a) == digits(b)
+    return bool(a and b) and phone_key(a) == phone_key(b)
 
 
 @dataclass(frozen=True)
@@ -109,12 +128,14 @@ class UssdMenu:
         self.gateway = gateway
         self.policies = policies
 
-    def respond(self, text: str, policy: DemoPolicy | None) -> str:
+    def respond(self, text: str, policy: Policy | None, phone: str = "") -> str:
+        """The next screen. A caller without a policy gets the sign-up menu (or, when
+        there is no number to sign up, as in the dashboard preview, a closing message)."""
         session = Session.replay(text)
         t = T[session.lang]
-        if policy is None:
-            return "END " + t["no_policy"]
         path = session.path
+        if policy is None:
+            return self.sign_up(t, phone, path) if phone else "END " + t["no_policy"]
         if not path:
             return "CON " + t["menu"].format(district=policy.district, policy=policy.id)
         screens = {"1": self.cover, "2": self.this_season, "3": self.payouts, "4": self.report_loss}
@@ -123,6 +144,55 @@ class UssdMenu:
         if path[0] not in screens:
             return "CON " + t["menu"].format(district=policy.district, policy=policy.id)
         return screens[path[0]](t, policy, path[1:])
+
+    def _season(self) -> int:
+        """The season a policy covers: the one in progress, or else the next."""
+        current = self.ds.current_season
+        return current["season"] if current else max(s for (_, s) in self.ds.seasons) + 1
+
+    def sign_up(self, t: dict, phone: str, path: tuple[str, ...]) -> str:
+        """Buy cover: district, field size, confirm. A wrong answer repeats the question,
+        so the answers are read in order and an invalid one is skipped."""
+        if not path:
+            return "CON " + t["join"]
+        if path[0] == "0":
+            return "END " + t["exit"]
+        if path[0] != "1":
+            return "CON " + t["join"]
+        district, area, invalid = None, None, False
+        for answer in path[1:]:
+            if district is None:
+                ok = answer.isdigit() and 1 <= int(answer) <= len(DISTRICTS)
+                district = DISTRICTS[int(answer) - 1] if ok else None
+            elif area is None:
+                size = answer.replace(",", "").replace(" ", "")  # "1,250" as the screen writes it
+                ok = size.isdigit() and MIN_AREA_M2 <= int(size) <= MAX_AREA_M2
+                area = int(size) if ok else None
+            else:
+                ok = answer == "1"
+                if ok:
+                    return self._register(t, phone, district, area)
+            invalid = not ok
+        prefix = t["invalid"] if invalid else ""
+        if district is None:
+            return "CON " + prefix + t["districts"]
+        if area is None:
+            return "CON " + prefix + t["area"].format(district=district, min=MIN_AREA_M2, max=f"{MAX_AREA_M2:,}")
+        quote = CoverQuote.for_policy(self.ds, Policy("", district, area))
+        return "CON " + prefix + t["confirm"].format(district=district, area=f"{area:,}",
+                                                     cover=rwf(quote.cover), premium=rwf(quote.premium))
+
+    def _register(self, t: dict, phone: str, district: str, area: int) -> str:
+        season = self._season()
+        premium = CoverQuote.for_policy(self.ds, Policy("", district, area)).premium
+        policy, _ = self.store.register(phone, district, area, season, premium)
+        sms = t["joined_sms"].format(policy=policy.id, district=district, area=f"{area:,}",
+                                     season=season, premium=rwf(premium))
+        try:
+            self.gateway.send(sms, to=phone)
+            return "END " + t["joined"].format(policy=policy.id)
+        except SmsError:
+            return "END " + t["joined_no_sms"].format(policy=policy.id)
 
     def _with_sms(self, t: dict, body: str, rest: tuple[str, ...]) -> str:
         """A screen that offers to send itself by SMS; answering 1 sends it."""
@@ -134,15 +204,13 @@ class UssdMenu:
                 return "END " + t["not_sent"]
         return "CON " + body + t["sms_option"]
 
-    def cover(self, t: dict, policy: DemoPolicy, rest: tuple[str, ...]) -> str:
+    def cover(self, t: dict, policy: Policy, rest: tuple[str, ...]) -> str:
         quote = CoverQuote.for_policy(self.ds, policy)
-        current = self.ds.current_season
-        season = current["season"] if current else max(s for (_, s) in self.ds.seasons) + 1
-        body = t["cover"].format(season=season, area=f"{policy.area_m2:,}", district=policy.district,
+        body = t["cover"].format(season=self._season(), area=f"{policy.area_m2:,}", district=policy.district,
                                  cover=rwf(quote.cover), premium=rwf(quote.premium), trigger=f"{self.ds.model.trigger:.0f}")
         return self._with_sms(t, body, rest)
 
-    def this_season(self, t: dict, policy: DemoPolicy, rest: tuple[str, ...]) -> str:
+    def this_season(self, t: dict, policy: Policy, rest: tuple[str, ...]) -> str:
         current = self.ds.current_season
         if not current:
             return "END " + t["no_season"]
@@ -153,7 +221,7 @@ class UssdMenu:
                                   rain=rain, index=signed(d["index"]), state=t["states"][state])
         return self._with_sms(t, body, rest)
 
-    def payouts(self, t: dict, policy: DemoPolicy, rest: tuple[str, ...]) -> str:
+    def payouts(self, t: dict, policy: Policy, rest: tuple[str, ...]) -> str:
         cover = CoverQuote.for_policy(self.ds, policy).cover
         seasons = sorted((s for (d, s) in self.ds.calibration if d == policy.district), reverse=True)[:3]
         lines = []
@@ -163,7 +231,7 @@ class UssdMenu:
                          if share > 0 else t["none"].format(season=s))
         return self._with_sms(t, t["payouts"].format(lines="\n".join(lines)), rest)
 
-    def report_loss(self, t: dict, policy: DemoPolicy, rest: tuple[str, ...]) -> str:
+    def report_loss(self, t: dict, policy: Policy, rest: tuple[str, ...]) -> str:
         current = self.ds.current_season
         if not current:
             return "END " + t["no_season"]

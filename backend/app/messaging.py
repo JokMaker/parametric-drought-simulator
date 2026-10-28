@@ -12,7 +12,9 @@ Which gateway sends depends on the settings: the sandbox delivers to Africa's
 Talking's phone simulator; a live username delivers to the real phone and costs
 credit, so the live gateway only sends single-SMS messages and stops at the daily
 limit (the API is reachable from the internet through the tunnel, and it must not
-be possible to drain the account). Every gateway only ever sends to AT_PHONE.
+be possible to drain the account). Messages go to AT_PHONE unless the USSD menu
+names the caller's own number (a farmer's sign-up confirmation); the dashboard's
+SMS button can only reach AT_PHONE.
 """
 
 import json
@@ -25,9 +27,10 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
+from .env import ENV_FILE, read_env_file
+from .policies import mask_phone
 from .reports import ReportStore
 
-ENV_FILE = Path(__file__).resolve().parent.parent / ".env"
 KEYS = ("AT_USERNAME", "AT_API_KEY", "AT_PHONE", "AT_DAILY_LIMIT", "AT_SENDER_ID", "AT_POLICY")
 
 
@@ -46,15 +49,8 @@ class SmsSettings:
 
     @classmethod
     def load(cls, env_file: Path = ENV_FILE) -> "SmsSettings":
-        """Environment variables win over backend/.env. The file is read on every call,
-        so a new key works without restarting the server."""
-        file: dict[str, str] = {}
-        if env_file.exists():
-            for line in env_file.read_text().splitlines():
-                line = line.strip()
-                if line and not line.startswith("#") and "=" in line:
-                    key, value = line.split("=", 1)
-                    file[key.strip()] = value.strip().strip('"').strip("'")
+        """Environment variables win over backend/.env (see env.py)."""
+        file = read_env_file(env_file)
         v = {k: os.environ.get(k) or file.get(k, "") for k in KEYS}
         try:
             limit = int(v["AT_DAILY_LIMIT"] or 20)
@@ -73,7 +69,7 @@ class SmsSettings:
 
     @property
     def masked_phone(self) -> str:
-        return f"{self.phone[:4]}••••{self.phone[-3:]}" if len(self.phone) > 7 else ""
+        return mask_phone(self.phone)
 
 
 GSM_BASIC = set("@£$¥èéùìòÇ\nØø\rÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ !\"#¤%&'()*+,-./0123456789:;<=>?¡"
@@ -108,8 +104,8 @@ def http_post(url: str, fields: dict[str, str], headers: dict[str, str]) -> dict
 
 
 class SmsGateway(ABC):
-    """Anything that can send the demo phone a message. Callers only use send(), so
-    the sandbox, live and unconfigured cases are interchangeable."""
+    """Anything that can send a message. Callers only use send(), so the sandbox,
+    live and unconfigured cases are interchangeable."""
 
     live: bool = False
 
@@ -117,14 +113,14 @@ class SmsGateway(ABC):
         self.settings = settings
 
     @abstractmethod
-    def send(self, message: str) -> dict:
-        """Send one message to the demo phone; raises SmsError if it was not sent."""
+    def send(self, message: str, to: str = "") -> dict:
+        """Send one message to `to` (the demo phone by default); raises SmsError if it was not sent."""
 
 
 class UnconfiguredGateway(SmsGateway):
     """Stands in when backend/.env has no credentials, so callers need no special case."""
 
-    def send(self, message: str) -> dict:
+    def send(self, message: str, to: str = "") -> dict:
         raise SmsError("SMS is not set up: add AT_USERNAME, AT_API_KEY and AT_PHONE to backend/.env")
 
 
@@ -141,15 +137,15 @@ class AfricasTalkingGateway(SmsGateway):
     def check(self, parts: int) -> None:
         """Refuse a message before anything is sent. Nothing to check by default."""
 
-    def fields(self, message: str) -> dict[str, str]:
-        return {"username": self.settings.username, "to": self.settings.phone, "message": message}
+    def fields(self, message: str, to: str) -> dict[str, str]:
+        return {"username": self.settings.username, "to": to or self.settings.phone, "message": message}
 
-    def send(self, message: str) -> dict:
+    def send(self, message: str, to: str = "") -> dict:
         parts = sms_parts(message)
         self.check(parts)
         reply = self.transport(
             f"https://{self.host}/version1/messaging",
-            self.fields(message),
+            self.fields(message, to),
             {"apiKey": self.settings.api_key, "Accept": "application/json",
              "Content-Type": "application/x-www-form-urlencoded"},
         )
@@ -181,8 +177,8 @@ class LiveGateway(AfricasTalkingGateway):
         if self.store.live_sms_today() + parts > self.settings.daily_limit:
             raise SmsError(f"Not sent: the daily limit of {self.settings.daily_limit} live SMS is reached (AT_DAILY_LIMIT in backend/.env)")
 
-    def fields(self, message: str) -> dict[str, str]:
-        fields = super().fields(message)
+    def fields(self, message: str, to: str) -> dict[str, str]:
+        fields = super().fields(message, to)
         if self.settings.sender_id:
             fields["from"] = self.settings.sender_id
         return fields

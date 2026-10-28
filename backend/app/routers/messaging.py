@@ -42,16 +42,22 @@ async def ussd_callback(
 
     The form (sessionId, serviceCode, phoneNumber, text) is parsed with the standard
     library, so the backend needs no extra form-parsing package. The demo phone
-    (AT_PHONE) holds the demo policy AT_POLICY; other numbers have none."""
+    (AT_PHONE) holds the demo policy AT_POLICY; another number has the policy it
+    signed up for, or is offered the sign-up menu."""
     form = parse_qs((await request.body()).decode(), keep_blank_values=True)
     phone = form.get("phoneNumber", [""])[0]
-    policy = menu.policies.get(settings.demo_policy) if same_number(phone, settings.phone) else None
-    return menu.respond(form.get("text", [""])[0], policy)
+    if same_number(phone, settings.phone):
+        policy = menu.policies.get(settings.demo_policy)
+    else:
+        policy = menu.store.policy_for_phone(phone) if phone else None
+    return menu.respond(form.get("text", [""])[0], policy, phone)
 
 
 @router.post("/ussd/preview", response_model=UssdPreviewOut)
 def ussd_preview(body: UssdPreviewIn, menu: UssdMenu = Depends(get_menu), policies: PolicyBook = Depends(get_policies)) -> UssdPreviewOut:
-    """The same USSD menu for a chosen demo policy, for the dashboard's phone screen."""
-    if body.policy_id not in policies:
-        raise HTTPException(422, f"Unknown demo policy: {body.policy_id}")
-    return UssdPreviewOut(reply=menu.respond(body.text, policies.get(body.policy_id)))
+    """The same USSD menu for a chosen policy (a demo one or one a farmer signed up for),
+    for the dashboard's phone screen."""
+    policy = policies.get(body.policy_id) if body.policy_id in policies else menu.store.policy(body.policy_id)
+    if policy is None:
+        raise HTTPException(422, f"Unknown policy: {body.policy_id}")
+    return UssdPreviewOut(reply=menu.respond(body.text, policy))

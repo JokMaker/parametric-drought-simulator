@@ -106,10 +106,10 @@ source .venv/bin/activate
 python -m pytest
 ```
 
-The 52 tests check the API against the notebook (the index formula on all 175 district-seasons,
+The 67 tests (65 without a test Postgres database) check the API against the notebook (the index formula on all 175 district-seasons,
 the leave-one-out results, the hit and false payout rates, the drought-year totals (34/63 against
 26/112), basis risk and the pricing inputs) and test each building block on its own: the report
-store, the SMS gateways (sandbox and live limits, sender ID, rejected messages, through a recording
+store, USSD sign-up (saving the policy, one per number, the SMS to the caller), the SMS gateways (sandbox and live limits, sender ID, rejected messages, through a recording
 transport so nothing is sent), the USSD session and every menu screen, and invalid input.
 
 ```bash
@@ -139,7 +139,7 @@ instead of real phones, which is enough for a demo.
    AT_API_KEY=<sandbox key>
    AT_PHONE=+2507XXXXXXXX
    ```
-   `AT_PHONE` receives the SMS and holds the demo policy on USSD. The backend re-reads `.env` on
+   `AT_PHONE` receives the dashboard's SMS and holds the demo policy on USSD. The backend re-reads `.env` on
    every send, so no restart is needed. `GET /api/sms/status` shows whether SMS is set up without
    revealing the key.
 3. **SMS.** Log in to the simulator with the `AT_PHONE` number, then press **Send this SMS** in the
@@ -152,14 +152,34 @@ instead of real phones, which is enough for a demo.
    this season's provisional index, past payouts, a crop-loss report with its cause, an SMS copy of
    any screen. It opens in Kinyarwanda (a draft), with English as option 5. The dashboard's **USSD Menu** page runs the same
    menu through `/api/ussd/preview`.
+
+   **Signing up.** Any other number is offered cover instead: the farmer picks their district,
+   enters their maize field size in m², sees the insured value and premium, and confirms. The
+   policy (numbered `RDI-KAY-5001`, ...) is saved in the database against the phone number, the
+   farmer gets an SMS with the policy number, and dialling again opens their own menu. To try it,
+   dial from a simulator number other than `AT_PHONE`. `GET /api/policies` lists sign-ups with the
+   phone numbers masked.
 5. **Reset before a demo.** Each policy can report a loss once per season. To start from zero:
    ```bash
    cd backend && .venv/bin/python scripts/reset_reports.py --yes
    ```
 
+### Database
+
+Policies, crop-loss reports and the SMS log live in one database, in three tables (`policies`,
+`loss_reports`, `sms_log`). Locally that is a SQLite file, `backend/var/loss_reports.sqlite3`,
+created on first use and git-ignored, so phone numbers never reach the repository. The deployed
+backend uses Postgres on [Neon](https://neon.tech), because the host wipes its disk on every
+restart: set `DATABASE_URL` (in `backend/.env` or the host's environment) to the Neon connection
+string and the tables are created on the first start. The same queries run on both
+(`backend/app/reports.py`: `SqliteStore` and `PostgresStore` share every method). To run the store
+tests on Postgres as well, set `TEST_DATABASE_URL`; each run works in a throwaway schema.
+
 **Live phones.** With a live app's username and key in `.env`, messages go to real phones and cost
 credit (about RWF 12 to 14 each in testing). In live mode the backend only sends single-SMS
-messages, stops at `AT_DAILY_LIMIT` (20 a day by default) and only ever sends to `AT_PHONE`.
+messages and stops at `AT_DAILY_LIMIT` (20 a day by default). The dashboard's SMS button only
+sends to `AT_PHONE`; the only other number a message goes to is a USSD caller's own, for their
+sign-up confirmation.
 In Rwanda the networks reject messages from the shared sender name, so live SMS needs an
 approved sender ID (`AT_SENDER_ID`). Africa's Talking asks for a national ID or passport and an
 RRA tax number (TIN) for that, and the same documents for airtime, short codes and a dedicated
@@ -348,7 +368,8 @@ formula. This keeps every request fast (NFR1) and the thresholds reproducible (N
 | `POST /api/sms` | Send a payout SMS to the demo phone through Africa's Talking |
 | `GET /api/sms/status` | Whether SMS is set up (sandbox or live, masked phone), without the key |
 | `POST /api/ussd` | The USSD callback Africa's Talking calls on every key press; replies with the next screen |
-| `POST /api/ussd/preview` | The same USSD menu for a chosen demo policy, for the dashboard's phone |
+| `POST /api/ussd/preview` | The same USSD menu for a chosen policy, for the dashboard's phone |
+| `GET /api/policies` | Policies farmers signed up for over USSD, newest first, phone numbers masked |
 | `GET /api/health` | Service status |
 
 ### Index formula
