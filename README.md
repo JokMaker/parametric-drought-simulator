@@ -32,7 +32,7 @@ Kirehe, Ngoma, Nyagatare, Rwamagana), backtested from 2001 to 2025.
 | **Field Checks** | The safety net for losses the index misses. A district needs a field check when the index paid under 25% but there is evidence of loss: at least 3 farmer reports (saved by the API in the database), or at least 45% of NISR-surveyed farms harvesting under half the expected yield. Season A 2019 flags all seven districts. Thresholds are editable | FR10 |
 | **Pricing** | Prices the cover from what the maize is worth: maize area × expected yield × price (RWF 200/kg, the NISR farm-gate median). Set the cover level, loading, subsidy and share of the 118,687 ha insured; see the premium per hectare and for a median farm in each district, premiums against expected payouts, the 1-in-10 season, the reserve needed for the worst season (2006), and a loss ratio for every season since 2001 | — |
 | **Policies** | Every policy farmers have signed up for over USSD (dial `*384*44698#` from a number with no policy): policy number, district, field size, premium, season, masked phone and sign-up time, with totals (farmers, hectares, premiums a season) and a count per district. The insurer's phone also gets an SMS for each new policy | — |
-| **Farmer View** | Look up a synthetic demo policy, enter the maize area, and see the crop's value, the cover, the premium and the payout for any season, with the SMS the farmer would receive in English or Kinyarwanda (draft). When the district is not paid, the farmer can report a crop loss, the route for losses the satellites miss; reports go to Field Checks. Press **Send this SMS** to deliver it through Africa's Talking. The USSD Menu page runs the real `*384*44698#` menu (cover, this season, payouts, report a loss with its cause, Kinyarwanda) | — |
+| **Farmer View** | Look up a synthetic demo policy, enter the maize area, and see the crop's value, the cover, the premium and the payout for any season, with the SMS the farmer would receive in English or Kinyarwanda (draft). When the district is not paid, the farmer can report a crop loss, the route for losses the satellites miss; reports go to Field Checks. Press **Send this SMS** to deliver it through Africa's Talking. The USSD Menu page runs the real `*384*44698#` menu (cover, this season, payouts, report a loss with its cause, Kinyarwanda); choose **A new farmer** to sign up in the browser with a demo number (`+2507000…`, no SMS sent), and the policy appears on the Policies page as a web demo | — |
 | **Term sheet** | A printable one-page contract summary per district (cover, index formula, accuracy, payout schedule, settlement, field-check clause, 2001–2025 record), downloadable as PDF; linked from Pricing | — |
 
 ## Machine learning model
@@ -162,8 +162,9 @@ instead of real phones, which is enough for a demo.
    enters their maize field size in m², sees the insured value and premium, and confirms. The
    policy (numbered `RDI-KAY-5001`, ...) is saved in the database against the phone number, the
    farmer gets an SMS with the policy number, and dialling again opens their own menu. To try it,
-   dial from a simulator number other than `AT_PHONE`. `GET /api/policies` lists sign-ups with the
-   phone numbers masked.
+   dial from a simulator number other than `AT_PHONE`, or choose **A new farmer** on the dashboard's
+   USSD Menu page (it signs up with a demo number in the reserved `+2507000…` range and texts no one).
+   `GET /api/policies` lists sign-ups with the phone numbers masked and marks web demos.
 5. **Reset before a demo.** Each policy can report a loss once per season. To start from zero:
    ```bash
    cd backend && .venv/bin/python scripts/reset_reports.py --yes

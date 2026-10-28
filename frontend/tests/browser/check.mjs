@@ -205,18 +205,20 @@ await flow("Farmer View: the payout SMS is one SMS in English and Kinyarwanda", 
   }
 });
 
+// The on-screen phone: type an answer, press Send, wait for the backend's reply.
+const ussdReply = async (input) => {
+  await type('[aria-label="Phone input"]', input);
+  await click("Send");
+  for (let i = 0; i < 20; i++) {
+    await sleep(200);
+    if (!(await evaluate("document.querySelector('button[disabled]') !== null"))) break;
+  }
+  return evaluate("document.querySelector('[aria-live]').innerText");
+};
+
 await flow("USSD: dial, open each screen, go back, switch language", async () => {
   await open("/ussd");
-  const screen = () => evaluate("document.querySelector('[aria-live]').innerText");
-  const reply = async (input) => {
-    await type('[aria-label="Phone input"]', input);
-    await click("Send");
-    for (let i = 0; i < 20; i++) {
-      await sleep(200);
-      if (!(await evaluate("document.querySelector('button[disabled]') !== null"))) break;
-    }
-    return screen();
-  };
+  const reply = ussdReply;
   expect((await reply("*384*44698#")).includes("1. Ubwishingizi bwanjye"), "Kinyarwanda menu not shown after dialling");
   expect((await reply("1")).includes("Agaciro kishingiwe"), "cover screen missing");
   expect((await reply("0")).includes("2. Iki gihembwe"), "0 did not go back to the menu");
@@ -225,6 +227,27 @@ await flow("USSD: dial, open each screen, go back, switch language", async () =>
   expect((await reply("0")).includes("4. Report a crop loss"), "0 did not go back from payouts");
   expect((await reply("5")).includes("Ubwishingizi bwanjye"), "5 did not switch back to Kinyarwanda");
   expect((await reply("2")).includes("Igihembwe A"), "season screen missing in Kinyarwanda");
+});
+
+await flow("USSD sign-up: new farmer, a wrong answer, then the quote (not confirmed)", async () => {
+  await open("/ussd");
+  // Choose "A new farmer" (React listens for the change event), then a fresh demo number.
+  await evaluate(`(() => {
+    const select = document.querySelector('select');
+    Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value').set.call(select, 'new');
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+  })()`);
+  await sleep(200);
+  await click("Use a new number");
+  await sleep(200);
+  expect((await ussdReply("*384*44698#")).includes("1. Gura ubwishingizi"), "sign-up menu not shown for a new number");
+  expect((await ussdReply("1")).includes("7. Rwamagana"), "district list missing");
+  expect((await ussdReply("9")).includes("Igisubizo ntikemewe"), "district 9 was not rejected");
+  expect((await ussdReply("3")).includes("Kayonza"), "Kayonza not chosen after the wrong answer");
+  const quote = await ussdReply("1250");
+  expect(quote.includes("Kayonza, 1,250 m2") && quote.includes("Umusanzu RWF"), "no premium quote");
+  // Stop here: confirming would save a policy in the real database.
+  expect((await ussdReply("0")).includes("Andika ubuso"), "0 did not go back from the quote");
 });
 
 await flow("Pricing: all seven districts priced", async () => {

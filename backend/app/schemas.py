@@ -3,6 +3,8 @@
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 
+from .policies import WEB_DEMO_PHONE
+
 
 class CamelModel(BaseModel):
     model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
@@ -80,6 +82,7 @@ class LossReportOut(CamelModel):
 class RegisteredPolicy(CamelModel):
     policy_id: str
     phone: str  # masked: +250••••456
+    channel: str  # "ussd" (a real dial) or "web" (the dashboard's on-screen phone)
     district: str
     area_m2: int
     season: int
@@ -89,7 +92,8 @@ class RegisteredPolicy(CamelModel):
 
 class UssdPreviewIn(CamelModel):
     text: str = Field("", max_length=100)  # the answers so far, joined by "*"
-    policy_id: str
+    policy_id: str | None = None  # a policy to run the menu as, or
+    phone: str | None = Field(None, pattern=WEB_DEMO_PHONE)  # a web demo number (sign-up when it has no policy)
 
 
 class UssdPreviewOut(CamelModel):

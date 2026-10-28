@@ -21,6 +21,15 @@ MIN_AREA_M2 = 50  # the smallest plot the dashboard prices
 MAX_AREA_M2 = 100_000  # 10 ha, far above any smallholder plot
 
 
+# Numbers the dashboard's on-screen phone signs up with (+2507000 and five digits): not real
+# phones, so nothing is texted to them, and the Policies page labels them as web demos.
+WEB_DEMO_PHONE = r"^\+2507000\d{5}$"
+
+
+def is_web_demo(phone: str) -> bool:
+    return phone.startswith("+2507000")
+
+
 def phone_key(phone: str) -> str:
     """The last nine digits, so +250788... and 0788... are the same number."""
     return "".join(c for c in phone if c.isdigit())[-9:]

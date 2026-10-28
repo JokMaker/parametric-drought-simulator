@@ -322,7 +322,7 @@ def test_ussd_sign_up_saves_the_policy_and_texts_the_caller(gateway, report_db):
     assert gateway.sent[1] == "RDI: new policy RDI-KAY-5001, Kayonza, 1,250 m2, premium RWF 749 a season."
     [saved] = client.get("/api/policies").json()
     assert saved["policyId"] == "RDI-KAY-5001" and saved["district"] == "Kayonza" and saved["areaM2"] == 1250
-    assert saved["phone"] == "+250••••000"  # masked in the API
+    assert saved["phone"] == "+250••••000" and saved["channel"] == "ussd"  # masked in the API
     assert f"RWF {round(saved['premium']):,}" in quote  # the premium quoted is the premium stored
     # Dialling again from the same number (in any format) opens the farmer's own menu.
     assert ussd("", phone="0788000000").startswith("CON RDI Ubwishingizi bw'ibigori\nKayonza RDI-KAY-5001")
@@ -387,6 +387,22 @@ def test_ussd_preview_runs_the_same_menu(report_db):
     # A policy a farmer signed up for can be previewed too.
     report_db.register("+250788000000", "Ngoma", 900, 2026, 400.0)
     assert preview("", policy="RDI-NGO-5001").json()["reply"].startswith("CON RDI Ubwishingizi bw'ibigori\nNgoma RDI-NGO-5001")
+
+
+def test_web_demo_phone_signs_up_without_sms(gateway, report_db):
+    def preview(text, phone="+250700012345"):
+        return client.post("/api/ussd/preview", json={"text": text, "phone": phone})
+
+    assert preview("").json()["reply"].startswith("CON RDI Ubwishingizi bw'ibigori\nNta bwishingizi")
+    assert preview("5*1*2*900*1").json()["reply"] == "END Done. Your policy number is RDI-GAT-5001."
+    assert gateway.sent == []  # not a real phone: no SMS to it, and no alert to the insurer
+    # The same browser number now has a policy, so it opens that farmer's menu.
+    assert preview("").json()["reply"].startswith("CON RDI Ubwishingizi bw'ibigori\nGatsibo RDI-GAT-5001")
+    [saved] = client.get("/api/policies").json()
+    assert saved["channel"] == "web" and saved["phone"] == "+250••••345"
+    # Only the reserved demo range is accepted, and a request must say who is dialling.
+    assert preview("", phone="+250788123456").status_code == 422
+    assert client.post("/api/ussd/preview", json={"text": ""}).status_code == 422
 
 
 def test_session_replays_back_and_language():

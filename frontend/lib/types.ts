@@ -107,6 +107,7 @@ export type LossReportResult = { created: boolean; reports: number };
 export type RegisteredPolicy = {
   policyId: string;
   phone: string;
+  channel: "ussd" | "web"; // a real dial, or the dashboard's on-screen phone
   district: string;
   areaM2: number;
   season: number;

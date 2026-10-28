@@ -57,7 +57,7 @@ export default function PoliciesPage() {
           <Card
             label="Policies · newest first"
             title={rows.length ? `${rows.length} farmer${rows.length === 1 ? "" : "s"} signed up over USSD` : "No farmer has signed up yet"}
-            source={`Farmers sign up by dialling ${USSD_CODE} from a number with no policy: they pick their district, enter their maize field size, see the insured value and premium, and confirm. The policy is stored against the phone number, the farmer gets an SMS with the policy number, and the insurer's phone gets an alert. Phone numbers are masked here; the full number stays in the database. The premium is the one quoted at sign-up, priced like the Pricing page's default terms.`}
+            source={`Farmers sign up by dialling ${USSD_CODE} from a number with no policy: they pick their district, enter their maize field size, see the insured value and premium, and confirm. The policy is stored against the phone number, the farmer gets an SMS with the policy number, and the insurer's phone gets an alert. Sign-ups from the USSD Menu page's on-screen phone use a demo number, get no SMS and are marked "web demo". Phone numbers are masked here; the full number stays in the database. The premium is the one quoted at sign-up, priced like the Pricing page's default terms.`}
           >
             {rows.length === 0 ? (
               <p className="text-sm text-muted">
@@ -87,7 +87,7 @@ export default function PoliciesPage() {
                         <td className="px-2 py-2.5 text-right">{p.areaM2.toLocaleString("en-US")} m²</td>
                         <td className="px-2 py-2.5 text-right">{rwf(p.premium)}</td>
                         <td className="px-2 py-2.5">Season A {p.season}</td>
-                        <td className="px-2 py-2.5 text-muted">{p.phone}</td>
+                        <td className="px-2 py-2.5 text-muted">{p.channel === "web" ? "web demo" : p.phone}</td>
                         <td className="px-2 py-2.5 text-muted">{signedUp(p.createdAt)}</td>
                       </tr>
                     ))}
