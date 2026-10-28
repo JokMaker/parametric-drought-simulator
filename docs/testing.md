@@ -167,6 +167,21 @@ largest element painted within 0.8 s (desktop, no throttling; time to first byte
 | First request after the database has slept (Neon pauses after 5 idle minutes) | about 2 s |
 | First request after the free Render service has slept (15 idle minutes) | about 50 s, avoided by an uptime check every 5 minutes |
 
+**Resource usage** (28 October 2026).
+
+| What | Measured | How |
+| --- | ---: | --- |
+| API memory, idle | 37 MiB | `docker stats` on the `backend/Dockerfile` image |
+| API memory, peak under 100 concurrent clients (3,000 requests, 0 errors) | 45 MiB | the same, during `benchmark.py --users 100` |
+| API CPU, peak under that load | 1.2 cores | the same |
+| Throughput inside Docker (one worker) | 1,163 requests/s, p95 109 ms | `benchmark.py --base http://localhost:10001` |
+| JavaScript per page, pages without charts (Season, Map, Field Checks, Farmer View, Policies, Term Sheet, USSD) | 187–198 KB compressed (586–617 KB unpacked) | sum of each page's `/_next/static` scripts on https://rdi-maize-insurance.vercel.app, Brotli |
+| JavaScript per page, chart pages (Overview, Explorer, History, Basis Risk, Pricing) | 305–316 KB compressed (about 1 MB unpacked) | the same; the chart library adds about 120 KB |
+
+The API needs under a tenth of the 512 MB a free Render instance provides. On the throttled
+phone profile (1.6 Mbit/s) the heaviest page's scripts take about 1.6 s to download, which is
+within the measured LCP of under 2.5 s.
+
 ## Reproducing
 
 ```bash

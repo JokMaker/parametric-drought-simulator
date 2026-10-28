@@ -304,6 +304,7 @@ def test_ussd_unknown_number_is_offered_cover(demo_phone):
         ("5*1*3*1,250", "Kayonza, 1,250 m2"),                    # written as the screen writes it
         ("5*1*3*1250*0", "Kayonza\nEnter"),                     # back from the confirmation
         ("1*3*1250", "Umusanzu RWF"),
+        ("5*1*3*1250", "We keep your number for this cover.\n1. Confirm"),  # consent before saving
     ],
 )
 def test_ussd_sign_up_screens(gateway, report_db, text, contains):
