@@ -8,7 +8,7 @@ MacBook Pro (Apple M1 Pro, 32 GB, macOS 26.6.2).
 | --- | --- | --- | --- |
 | Backend unit and API tests | Model maths, payouts, every endpoint, loss reports, USSD screens, SMS gateways | `cd backend && pytest` | 67 passed (SQLite and Postgres) |
 | Frontend unit tests | Pricing, payout curve, uncertainty, field-check rule, SMS length, colour classes | `cd frontend && npm test` | 33 passed |
-| Browser tests (functional and compatibility) | 12 pages × 3 screen sizes × light/dark, plus 7 user flows, in headless Chrome; 11 pages × 3 widths plus 2 flows in Safari | `node frontend/tests/browser/check.mjs`, `node frontend/tests/browser/safari.mjs` | Chrome 72/72 checks, 7/7 flows; Safari 33/33, 2/2 |
+| Browser tests (functional and compatibility) | 12 pages × 3 screen sizes × light/dark, plus 7 user flows, in headless Chrome; the pages at 3 widths plus 2 flows in Firefox and Safari | `node frontend/tests/browser/check.mjs`, `node frontend/tests/browser/webdriver.mjs` (`BROWSER=firefox` for Firefox) | Chrome 72/72 checks, 7/7 flows; Firefox 36/36, 2/2; Safari 33/33, 2/2 |
 | Performance | API latency and load, page loads on desktop and on a throttled phone | `python backend/scripts/benchmark.py`, `THROTTLE=1 node frontend/tests/browser/check.mjs` | below |
 
 ## 1. Unit and API tests
@@ -68,7 +68,7 @@ User flows, at phone size:
 - **Some text was too faint to read easily** (found by Lighthouse's accessibility audit, then checked on every page in both themes). Grey notes and table headings, red "drought" text, the green "normal" figures and the white text on the red "Field check needed" badge were below the WCAG AA contrast ratio of 4.5:1, some at 2.8:1. The grey, red and green colours were darkened in light mode (grey and green lightened in dark mode), and the badge text now follows the theme. Every text element now passes 4.5:1 (`app/globals.css`).
 - **A false failure in the test itself.** The area-field test failed because a headless window never has focus, so blur events did not fire. The test now turns on focus emulation; the field itself was correct.
 
-**Safari (WebKit).** `frontend/tests/browser/safari.mjs` drives Safari 26.6.2
+**Safari (WebKit).** `frontend/tests/browser/webdriver.mjs` drives Safari 26.6.2
 through `safaridriver`, which ships with macOS (it needs "Allow remote automation"
 switched on once in Safari's Developer settings). Safari cannot emulate a phone,
 and its window could not be resized because it opened full screen, so the tablet
@@ -79,9 +79,14 @@ View lookup with the area field and the USSD menu (dial, 1, 0).
 Result, on the production build: **33/33 page-width checks clean, 2/2 flows passed.** (This ran
 on 26 October, before the Policies page existed.)
 
-Chrome and Safari cover the two engines behind almost all phone browsers in
-Rwanda (Chrome, Samsung Internet, Opera and Edge use Chromium; every iPhone
-browser uses WebKit). Firefox was not tested because it is not installed.
+**Firefox (Gecko).** The same script with `BROWSER=firefox` drives headless Firefox 159
+through Mozilla's geckodriver 0.37 (`brew install --cask firefox geckodriver`). Run on 28
+October against the live site (https://rdi-maize-insurance.vercel.app), all 12 pages at full
+width (1280 px), 768 px and 390 px: **36/36 page-width checks clean, 2/2 flows passed.**
+
+Chrome, Firefox and Safari cover all three browser engines; Chromium and WebKit are behind
+almost all phone browsers in Rwanda (Chrome, Samsung Internet, Opera and Edge use Chromium;
+every iPhone browser uses WebKit).
 
 ## 3. Performance
 
@@ -191,7 +196,8 @@ within the measured LCP of under 2.5 s.
 
 # browser checks, with the backend on :8000 and the frontend on :3000
 node frontend/tests/browser/check.mjs                   # layout, flows, desktop timings
-node frontend/tests/browser/safari.mjs                  # Safari, after enabling remote automation
+node frontend/tests/browser/webdriver.mjs               # Safari, after enabling remote automation
+BROWSER=firefox node frontend/tests/browser/webdriver.mjs   # Firefox, with geckodriver installed
 
 # performance, on a production build with its own backend
 (cd backend && CORS_ORIGINS=http://localhost:3100 uvicorn app.main:app --port 8001) &

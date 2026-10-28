@@ -1,20 +1,33 @@
-// The same pages and flows in Safari (WebKit), through safaridriver, which ships with
-// macOS. One-time setup: Safari > Settings > Advanced > "Show features for web
-// developers", then Developer > "Allow remote automation".
-//   node tests/browser/safari.mjs                    # against http://localhost:3000
-// Safari cannot emulate a phone, and its window cannot be resized when it opens full
-// screen, so narrower widths load the page in a same-origin frame of that width: CSS
-// breakpoints follow the frame, as they would a phone screen.
+// The same pages and flows in Safari (WebKit) or Firefox (Gecko), through the W3C
+// WebDriver protocol that both browsers' drivers speak.
+//   node tests/browser/webdriver.mjs                    # Safari, against http://localhost:3000
+//   BROWSER=firefox node tests/browser/webdriver.mjs    # Firefox, headless
+// Safari: safaridriver ships with macOS. One-time setup: Safari > Settings > Advanced >
+// "Show features for web developers", then Developer > "Allow remote automation".
+// Firefox: needs geckodriver (brew install geckodriver).
+// Neither driver emulates a phone, and Safari's window cannot be resized when it opens
+// full screen, so narrower widths load the page in a same-origin frame of that width:
+// CSS breakpoints follow the frame, as they would a phone screen.
 
 import { spawn } from "node:child_process";
 
 const BASE = process.env.BASE ?? "http://localhost:3000";
+const BROWSER = process.env.BROWSER ?? "safari";
 const PORT = 4460 + Math.floor(Math.random() * 100);
 const PAGES = ["/", "/season", "/map", "/explorer", "/history", "/basis-risk", "/field-checks", "/pricing", "/farmer", "/policies", "/term-sheet", "/ussd"];
 const WIDTHS = [null, 768, 390]; // null: the full window
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const driver = spawn("safaridriver", ["-p", String(PORT)], { stdio: "ignore" });
+const DRIVERS = {
+  safari: { command: "safaridriver", args: ["-p", String(PORT)], capabilities: { browserName: "safari" } },
+  firefox: {
+    command: "geckodriver",
+    args: ["--port", String(PORT)],
+    capabilities: { browserName: "firefox", "moz:firefoxOptions": { args: ["-headless", "-width=1280", "-height=900"] } },
+  },
+};
+const { command, args, capabilities: wanted } = DRIVERS[BROWSER];
+const driver = spawn(command, args, { stdio: "ignore" });
 await sleep(1000);
 
 async function call(method, path, body) {
@@ -24,11 +37,11 @@ async function call(method, path, body) {
   return json.value;
 }
 
-const { sessionId, capabilities } = await call("POST", "/session", { capabilities: { alwaysMatch: { browserName: "safari" } } });
+const { sessionId, capabilities } = await call("POST", "/session", { capabilities: { alwaysMatch: wanted } });
 const s = `/session/${sessionId}`;
 const run = (script, ...args) => call("POST", `${s}/execute/sync`, { script, args });
 
-// Errors thrown after the page script starts; Safari's WebDriver has no console log.
+// Errors thrown after the page script starts; WebDriver has no portable console log.
 const CATCH = "window.__errors = window.__errors || []; if (!window.__hooked) { window.__hooked = true; addEventListener('error', (e) => __errors.push(e.message)); addEventListener('unhandledrejection', (e) => __errors.push(String(e.reason))); }";
 
 // The document the checks run in: the page itself, or the page inside the frame.
@@ -112,7 +125,7 @@ await flow("USSD menu", async () => {
 
 await call("DELETE", s);
 driver.kill();
-console.log(`Safari ${capabilities.browserVersion}, ${BASE}`);
+console.log(`${capabilities.browserName} ${capabilities.browserVersion}, ${BASE}`);
 console.log(`Layout: ${checks - failures.filter((f) => !f.startsWith("flow")).length}/${checks} page-width checks clean`);
 console.log(`Flows: ${flows.length}/2 passed`);
 if (failures.length) console.log("Failures:\n" + failures.map((f) => `- ${f}`).join("\n"));
