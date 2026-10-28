@@ -136,6 +136,11 @@ def test_history_has_anomalies_for_tooltips():
     assert {"rainZ", "ndviZ", "index", "payout"} <= p.keys()
 
 
+def test_health_answers_uptime_monitors():
+    assert client.get("/api/health").json()["status"] == "ok"
+    assert client.head("/api/health").status_code == 200
+
+
 def test_cors_allows_frontend():
     r = client.get("/api/model", headers={"Origin": "http://localhost:3000"})
     assert r.headers["access-control-allow-origin"] == "http://localhost:3000"

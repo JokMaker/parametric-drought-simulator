@@ -26,7 +26,7 @@ def _simulation(r: data.SeasonResult) -> Simulation:
     )
 
 
-@router.get("/health")
+@router.api_route("/health", methods=["GET", "HEAD"])  # uptime monitors check with HEAD
 def health(ds: data.Dataset = Depends(get_dataset)) -> dict:
     return {"status": "ok", "seasons": len(ds.seasons), "calibration": len(ds.calibration)}
 
