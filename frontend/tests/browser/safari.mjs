@@ -10,7 +10,7 @@ import { spawn } from "node:child_process";
 
 const BASE = process.env.BASE ?? "http://localhost:3000";
 const PORT = 4460 + Math.floor(Math.random() * 100);
-const PAGES = ["/", "/season", "/map", "/explorer", "/history", "/basis-risk", "/field-checks", "/pricing", "/farmer", "/term-sheet", "/ussd"];
+const PAGES = ["/", "/season", "/map", "/explorer", "/history", "/basis-risk", "/field-checks", "/pricing", "/farmer", "/policies", "/term-sheet", "/ussd"];
 const WIDTHS = [null, 768, 390]; // null: the full window
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));

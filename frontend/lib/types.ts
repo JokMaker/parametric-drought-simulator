@@ -103,6 +103,17 @@ export type SmsStatus = { configured: boolean; sandbox: boolean; phone: string }
 
 export type LossReportResult = { created: boolean; reports: number };
 
+/** A policy a farmer signed up for over USSD; the phone is masked. */
+export type RegisteredPolicy = {
+  policyId: string;
+  phone: string;
+  district: string;
+  areaM2: number;
+  season: number;
+  premium: number; // RWF per season, as quoted at sign-up
+  createdAt: string; // ISO time, UTC
+};
+
 export type BasisRisk = { district: string; basisRisk: number };
 
 /** District boundaries (GeoJSON FeatureCollection, property `district`). */

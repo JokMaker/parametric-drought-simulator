@@ -19,6 +19,7 @@ import type {
   LossReportResult,
   ModelSummary,
   PlotLoss,
+  RegisteredPolicy,
   ReportCount,
   Simulation,
   SmsStatus,
@@ -86,6 +87,12 @@ export async function getPlotLosses(): Promise<PlotLoss[]> {
 export async function getReportCounts(): Promise<ReportCount[]> {
   if (USE_MOCK) return [];
   return get("/api/loss-reports/summary", "loss reports");
+}
+
+/** Policies farmers signed up for over USSD, newest first. Saved results have none. */
+export async function getPolicies(): Promise<RegisteredPolicy[]> {
+  if (USE_MOCK) return [];
+  return get("/api/policies", "policies");
 }
 
 /** A farmer reports a crop loss for a district-season. */

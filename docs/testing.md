@@ -8,7 +8,7 @@ MacBook Pro (Apple M1 Pro, 32 GB, macOS 26.6.2).
 | --- | --- | --- | --- |
 | Backend unit and API tests | Model maths, payouts, every endpoint, loss reports, USSD screens, SMS gateways | `cd backend && pytest` | 67 passed (SQLite and Postgres) |
 | Frontend unit tests | Pricing, payout curve, uncertainty, field-check rule, SMS length, colour classes | `cd frontend && npm test` | 33 passed |
-| Browser tests (functional and compatibility) | 11 pages × 3 screen sizes × light/dark, plus 6 user flows, in headless Chrome; 11 pages × 3 widths plus 2 flows in Safari | `node frontend/tests/browser/check.mjs`, `node frontend/tests/browser/safari.mjs` | Chrome 66/66 checks, 6/6 flows; Safari 33/33, 2/2 |
+| Browser tests (functional and compatibility) | 12 pages × 3 screen sizes × light/dark, plus 6 user flows, in headless Chrome; 11 pages × 3 widths plus 2 flows in Safari | `node frontend/tests/browser/check.mjs`, `node frontend/tests/browser/safari.mjs` | Chrome 72/72 checks, 6/6 flows; Safari 33/33, 2/2 |
 | Performance | API latency and load, page loads on desktop and on a throttled phone | `python backend/scripts/benchmark.py`, `THROTTLE=1 node frontend/tests/browser/check.mjs` | below |
 
 ## 1. Unit and API tests
@@ -40,7 +40,7 @@ overrides), so they never send a real SMS. They cover:
 
 `frontend/tests/browser/check.mjs` drives headless Chrome 156 over the DevTools
 protocol. Every page is opened at three sizes, each in light and dark mode
-(11 × 3 × 2 = 66 checks). A check fails on a console error, an uncaught
+(12 × 3 × 2 = 72 checks; 66 before the Policies page was added on 28 October). A check fails on a console error, an uncaught
 exception, an empty page, or content wider than the screen (sideways scrolling).
 
 | Size | Viewport | Emulates |
@@ -75,7 +75,8 @@ and phone widths load each page inside a frame 768 px and 390 px wide (an iPhone
 is 390 px); the page's breakpoints follow the frame as they would a phone screen.
 The same checks as in Chrome run on all 11 pages at each width, plus the Farmer
 View lookup with the area field and the USSD menu (dial, 1, 0).
-Result, on the production build: **33/33 page-width checks clean, 2/2 flows passed.**
+Result, on the production build: **33/33 page-width checks clean, 2/2 flows passed.** (This ran
+on 26 October, before the Policies page existed.)
 
 Chrome and Safari cover the two engines behind almost all phone browsers in
 Rwanda (Chrome, Samsung Internet, Opera and Edge use Chromium; every iPhone
@@ -152,6 +153,18 @@ contrast problem described above.
 In development mode (`next dev`) the same pages transfer 0.9–1.2 MB and take up to
 7 s to settle on the throttled phone, so these figures are only meaningful for the
 production build.
+
+**The live deployment** (28 October 2026: dashboard on Vercel, API on Render in Frankfurt,
+database on Neon in Frankfurt, measured from Kigali). The same Chrome checks against
+https://rdi-maize-insurance.vercel.app: **66/66 page checks clean, 6/6 flows passed**, every page's
+largest element painted within 0.8 s (desktop, no throttling; time to first byte 110–210 ms).
+
+| From Kigali to the live API | Time |
+| --- | ---: |
+| USSD screen, each (Rwanda → Frankfurt and back; the database query itself is a few ms) | 0.43 s |
+| USSD screen from the local backend talking to Neon in Frankfurt, before deploying | 0.72 s |
+| First request after the database has slept (Neon pauses after 5 idle minutes) | about 2 s |
+| First request after the free Render service has slept (15 idle minutes) | about 50 s, avoided by an uptime check every 5 minutes |
 
 ## Reproducing
 

@@ -21,7 +21,7 @@ const SHOTS = process.env.SHOTS;
 const CHROME = process.env.CHROME ?? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 const PORT = 9400 + Math.floor(Math.random() * 500);
 
-const PAGES = ["/", "/season", "/map", "/explorer", "/history", "/basis-risk", "/field-checks", "/pricing", "/farmer", "/term-sheet", "/ussd"];
+const PAGES = ["/", "/season", "/map", "/explorer", "/history", "/basis-risk", "/field-checks", "/pricing", "/farmer", "/policies", "/term-sheet", "/ussd"];
 const VIEWPORTS = [
   { name: "phone", width: 360, height: 780, mobile: true, scale: 3 },
   { name: "tablet", width: 768, height: 1024, mobile: true, scale: 2 },
