@@ -1,0 +1,23 @@
+# Render Blueprint for the backend (https://render.com/docs/blueprint-spec).
+# Secrets are marked sync: false, so Render asks for them and they never live in the repo.
+services:
+  - type: web
+    name: rdi-drought-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    region: frankfurt   # next to the Neon database
+    plan: free
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: CORS_ORIGINS   # the Vercel address of the dashboard
+        sync: false
+      - key: AT_USERNAME
+        sync: false
+      - key: AT_API_KEY
+        sync: false
+      - key: AT_PHONE
+        sync: false
