@@ -19,4 +19,5 @@ def read_env_file(path: Path = ENV_FILE) -> dict[str, str]:
 
 
 def setting(key: str, env_file: Path = ENV_FILE) -> str:
-    return os.environ.get(key) or read_env_file(env_file).get(key, "")
+    # Strip, because a value pasted into a host's settings box can end in a line break.
+    return (os.environ.get(key) or read_env_file(env_file).get(key, "")).strip()
