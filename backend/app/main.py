@@ -1,4 +1,4 @@
-"""The API: one FastAPI app assembled from three routers (index, farmers, messaging)."""
+"""The API: one FastAPI app assembled from four routers (index, farmers, policies, messaging)."""
 
 import os
 
@@ -6,7 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 
-from .routers import farmers, index, messaging
+from .routers import farmers, index, messaging, policies
 
 app = FastAPI(
     title="Drought Index Simulator API",
@@ -22,6 +22,7 @@ app.add_middleware(
 
 app.include_router(index.router)
 app.include_router(farmers.router)
+app.include_router(policies.router)
 app.include_router(messaging.router)
 
 

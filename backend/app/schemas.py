@@ -77,6 +77,16 @@ class LossReportOut(CamelModel):
     reports: int  # reports now on file for the district-season
 
 
+class RegisteredPolicy(CamelModel):
+    policy_id: str
+    phone: str  # masked: +250••••456
+    district: str
+    area_m2: int
+    season: int
+    premium: float  # RWF per season, as quoted at sign-up
+    created_at: str
+
+
 class UssdPreviewIn(CamelModel):
     text: str = Field("", max_length=100)  # the answers so far, joined by "*"
     policy_id: str

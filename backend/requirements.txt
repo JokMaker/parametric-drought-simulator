@@ -1,1 +1,2 @@
 fastapi[standard]>=0.115
+psycopg[binary,pool]>=3.2
