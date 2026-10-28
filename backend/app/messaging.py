@@ -51,7 +51,7 @@ class SmsSettings:
     def load(cls, env_file: Path = ENV_FILE) -> "SmsSettings":
         """Environment variables win over backend/.env (see env.py)."""
         file = read_env_file(env_file)
-        v = {k: os.environ.get(k) or file.get(k, "") for k in KEYS}
+        v = {k: (os.environ.get(k) or file.get(k, "")).strip() for k in KEYS}
         try:
             limit = int(v["AT_DAILY_LIMIT"] or 20)
         except ValueError:
