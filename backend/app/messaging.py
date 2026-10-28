@@ -13,8 +13,8 @@ Talking's phone simulator; a live username delivers to the real phone and costs
 credit, so the live gateway only sends single-SMS messages and stops at the daily
 limit (the API is reachable from the internet through the tunnel, and it must not
 be possible to drain the account). Messages go to AT_PHONE unless the USSD menu
-names the caller's own number (a farmer's sign-up confirmation); the dashboard's
-SMS button can only reach AT_PHONE.
+names the caller's own number (their sign-up confirmation, or a screen they asked
+to receive); the dashboard's SMS button can only reach AT_PHONE.
 """
 
 import json
