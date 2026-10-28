@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import PlainTextResponse
 
 from ..dependencies import get_gateway, get_menu, get_policies, get_sms_settings
-from ..messaging import SmsError, SmsGateway, SmsSettings
+from ..messaging import SmsError, SmsGateway, SmsSettings, UnconfiguredGateway
 from ..policies import PolicyBook
 from ..schemas import SmsIn, SmsStatus, UssdPreviewIn, UssdPreviewOut
 from ..ussd import UssdMenu, same_number
@@ -55,8 +55,14 @@ async def ussd_callback(
 
 @router.post("/ussd/preview", response_model=UssdPreviewOut)
 def ussd_preview(body: UssdPreviewIn, menu: UssdMenu = Depends(get_menu), policies: PolicyBook = Depends(get_policies)) -> UssdPreviewOut:
-    """The same USSD menu for a chosen policy (a demo one or one a farmer signed up for),
-    for the dashboard's phone screen."""
+    """The same USSD menu for the dashboard's phone screen, run either as a chosen policy
+    (a demo one or one a farmer signed up for) or as a web demo number, which signs up
+    like a new caller. Web demo numbers are not real phones, so nothing is texted."""
+    if body.phone:
+        silent = UssdMenu(menu.ds, menu.store, UnconfiguredGateway(menu.gateway.settings), menu.policies)
+        return UssdPreviewOut(reply=silent.respond(body.text, menu.store.policy_for_phone(body.phone), body.phone))
+    if not body.policy_id:
+        raise HTTPException(422, "Give a policyId or a web demo phone")
     policy = policies.get(body.policy_id) if body.policy_id in policies else menu.store.policy(body.policy_id)
     if policy is None:
         raise HTTPException(422, f"Unknown policy: {body.policy_id}")

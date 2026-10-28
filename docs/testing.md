@@ -8,7 +8,7 @@ MacBook Pro (Apple M1 Pro, 32 GB, macOS 26.6.2).
 | --- | --- | --- | --- |
 | Backend unit and API tests | Model maths, payouts, every endpoint, loss reports, USSD screens, SMS gateways | `cd backend && pytest` | 67 passed (SQLite and Postgres) |
 | Frontend unit tests | Pricing, payout curve, uncertainty, field-check rule, SMS length, colour classes | `cd frontend && npm test` | 33 passed |
-| Browser tests (functional and compatibility) | 12 pages × 3 screen sizes × light/dark, plus 6 user flows, in headless Chrome; 11 pages × 3 widths plus 2 flows in Safari | `node frontend/tests/browser/check.mjs`, `node frontend/tests/browser/safari.mjs` | Chrome 72/72 checks, 6/6 flows; Safari 33/33, 2/2 |
+| Browser tests (functional and compatibility) | 12 pages × 3 screen sizes × light/dark, plus 7 user flows, in headless Chrome; 11 pages × 3 widths plus 2 flows in Safari | `node frontend/tests/browser/check.mjs`, `node frontend/tests/browser/safari.mjs` | Chrome 72/72 checks, 7/7 flows; Safari 33/33, 2/2 |
 | Performance | API latency and load, page loads on desktop and on a throttled phone | `python backend/scripts/benchmark.py`, `THROTTLE=1 node frontend/tests/browser/check.mjs` | below |
 
 ## 1. Unit and API tests
@@ -58,6 +58,7 @@ User flows, at phone size:
 | Area field | `1` while typing, then `1250`, then `10` | `1` not clamped mid-typing; 1250 kept; 10 raised to the 50 m² minimum on leaving the box |
 | Payout SMS | English and Kinyarwanda | 1 SMS in each language |
 | USSD menu | dial, 1, 0, 5, 3, 0, 5, 2 | Kinyarwanda menu, cover, back, English menu, payouts, back, Kinyarwanda menu, season screen |
+| USSD sign-up (web) | "A new farmer", new demo number, dial, 1, 9, 3, 1250, 0 | Sign-up menu, district list, district 9 rejected and asked again, Kayonza, premium quote, back to field size. It stops before confirming, so no test policy is saved in the real database |
 | Pricing | open page | All seven districts priced |
 
 **Problems found and fixed.**
@@ -156,7 +157,7 @@ production build.
 
 **The live deployment** (28 October 2026: dashboard on Vercel, API on Render in Frankfurt,
 database on Neon in Frankfurt, measured from Kigali). The same Chrome checks against
-https://rdi-maize-insurance.vercel.app: **66/66 page checks clean, 6/6 flows passed**, every page's
+https://rdi-maize-insurance.vercel.app: **66/66 page checks clean, 6/6 flows passed** (before the Policies page and the web sign-up flow were added), every page's
 largest element painted within 0.8 s (desktop, no throttling; time to first byte 110–210 ms).
 
 | From Kigali to the live API | Time |

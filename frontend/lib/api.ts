@@ -125,12 +125,15 @@ export async function sendSms(message: string): Promise<{ status: string; phone:
   return body;
 }
 
-/** The USSD menu's next screen for a demo policy, from the same backend menu Africa's Talking calls. */
-export async function ussdPreview(text: string, policyId: string): Promise<string> {
+/**
+ * The USSD menu's next screen, from the same backend menu Africa's Talking calls: run as a
+ * policy, or as a web demo number (+2507000…), which signs up like a new caller.
+ */
+export async function ussdPreview(text: string, caller: { policyId: string } | { phone: string }): Promise<string> {
   const res = await fetch(`${API}/api/ussd/preview`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text, policyId }),
+    body: JSON.stringify({ text, ...caller }),
   });
   if (!res.ok) throw new Error("Could not reach the USSD menu");
   return ((await res.json()) as { reply: string }).reply;
