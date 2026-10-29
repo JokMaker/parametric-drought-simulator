@@ -6,14 +6,14 @@ MacBook Pro (Apple M1 Pro, 32 GB, macOS 26.6.2).
 
 | Strategy | What it checks | How to run | Result |
 | --- | --- | --- | --- |
-| Backend unit and API tests | Model maths, payouts, every endpoint, loss reports, USSD screens, SMS gateways | `cd backend && pytest` | 67 passed (SQLite and Postgres) |
+| Backend unit and API tests | Model maths, payouts, every endpoint, loss reports, USSD screens, SMS gateways | `cd backend && pytest` | 70 passed (SQLite and Postgres) |
 | Frontend unit tests | Pricing, payout curve, uncertainty, field-check rule, SMS length, colour classes | `cd frontend && npm test` | 33 passed |
 | Browser tests (functional and compatibility) | 12 pages × 3 screen sizes × light/dark, plus 7 user flows, in headless Chrome; the pages at 3 widths plus 2 flows in Firefox and Safari | `node frontend/tests/browser/check.mjs`, `node frontend/tests/browser/webdriver.mjs` (`BROWSER=firefox` for Firefox) | Chrome 72/72 checks, 7/7 flows; Firefox 36/36, 2/2; Safari 33/33, 2/2 |
 | Performance | API latency and load, page loads on desktop and on a throttled phone | `python backend/scripts/benchmark.py`, `THROTTLE=1 node frontend/tests/browser/check.mjs` | below |
 
 ## 1. Unit and API tests
 
-**Backend (pytest, 67 tests).** The tests replace the database with a temporary
+**Backend (pytest, 70 tests).** The tests replace the database with a temporary
 one and the SMS provider with a fake that records messages (FastAPI dependency
 overrides), so they never send a real SMS. They cover:
 
@@ -191,7 +191,7 @@ within the measured LCP of under 2.5 s.
 
 ```bash
 # from the repository root
-(cd backend && pytest)                                  # 67 tests (2 skipped without TEST_DATABASE_URL)
+(cd backend && pytest)                                  # 70 tests (2 skipped without TEST_DATABASE_URL)
 (cd frontend && npm test)                               # 33 tests
 
 # browser checks, with the backend on :8000 and the frontend on :3000
