@@ -17,6 +17,7 @@ Kirehe, Ngoma, Nyagatare, Rwamagana), backtested from 2001 to 2025.
 - **USSD:** dial `*384*44698#` in the [Africa's Talking simulator](https://developers.africastalking.com/simulator) (sandbox)
 - **GitHub repository:** https://github.com/JokMaker/parametric-drought-simulator
 - **Video demo:** [Watch the demo video](https://drive.google.com/drive/folders/1JapZ7DmX66B_u9T2FLEXRqJZKYc-LBBm?usp=drive_link)
+- **Technical report (PDF):** [Read the technical report](docs/RDI_Technical_Report.pdf)
 - **Figma designs:** [Open the Figma file](https://www.figma.com/design/b7m0ZzV4ZXdzikU7GOhHUG/Drought-Index-Simulator-%E2%80%93-Designs?node-id=0-1)
 
 ## Features
@@ -61,11 +62,23 @@ The model is built in [notebook/drought_index.ipynb](notebook/drought_index.ipyn
 
 ## Set up and run
 
-### Prerequisites
+### Technical requirements
 
-- Node.js 20 or later and npm
-- Python 3.12 or later
-- Docker Desktop (only for the Docker option)
+Versions the project is built and tested with. Newer minor versions should work.
+
+| Part | Requirement | Tested with |
+|---|---|---|
+| Frontend | Node.js 20 or later, npm | Node.js 22.21, npm 10.9 |
+| | Next.js, React, TypeScript, Tailwind CSS, Recharts | Next.js 16.3.6, React 19.2.8, TypeScript 5.9, Tailwind CSS 4.3, Recharts 3.10 |
+| Backend | Python 3.12 or later | Python 3.12.13 (also the Docker image, `python:3.12-slim`) |
+| | FastAPI, Pydantic, Uvicorn, psycopg (from `backend/requirements.txt`) | FastAPI 0.141, Pydantic 2.13, Uvicorn 0.54, psycopg 3.3 |
+| | pytest (from `backend/requirements-dev.txt`) | pytest 9.1 |
+| Notebook | Python 3.12 or later with `notebook/requirements.txt`; a Google Earth Engine account only to re-extract the satellite data | Python 3.14, scikit-learn 1.9, pandas 2.3, NumPy 2.5 |
+| Database | None needed locally (SQLite is built into Python); PostgreSQL 16 or later when `DATABASE_URL` is set | Neon Postgres 18.6 (deployed), Postgres.app 18 (local tests) |
+| Docker (optional) | Docker Desktop with Compose | Docker 29.3 |
+| SMS and USSD (optional) | An Africa's Talking account (the free sandbox is enough) | Sandbox |
+| Browser tests (optional) | Google Chrome; Firefox with geckodriver, or Safari with `safaridriver --enable`, for `webdriver.mjs` | Chrome 156, Firefox 159 (geckodriver 0.37), Safari 26.6 |
+| Hardware | Any laptop that runs a modern browser; about 1 GB of disk for the dependencies. The dashboard also runs on phones | MacBook Pro M1 Pro, 32 GB (macOS 26.6); phone and tablet sizes emulated in Chrome |
 
 ### Option 1: Docker (one command)
 
@@ -111,7 +124,7 @@ source .venv/bin/activate
 python -m pytest
 ```
 
-The 67 tests (65 without a test Postgres database) check the API against the notebook (the index formula on all 175 district-seasons,
+The 70 tests (68 without a test Postgres database) check the API against the notebook (the index formula on all 175 district-seasons,
 the leave-one-out results, the hit and false payout rates, the drought-year totals (34/63 against
 26/112), basis risk and the pricing inputs) and test each building block on its own: the report
 store, USSD sign-up (saving the policy, one per number, the SMS to the caller), the SMS gateways (sandbox and live limits, sender ID, rejected messages, through a recording
