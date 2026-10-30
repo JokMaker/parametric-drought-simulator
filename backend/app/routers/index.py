@@ -26,12 +26,16 @@ def _simulation(r: data.SeasonResult) -> Simulation:
     )
 
 
-@router.api_route("/health", methods=["GET", "HEAD"])  # uptime monitors check with HEAD
+@router.get("/health", tags=["Service"], summary="Check the API is up")
 def health(ds: data.Dataset = Depends(get_dataset)) -> dict:
     return {"status": "ok", "seasons": len(ds.seasons), "calibration": len(ds.calibration)}
 
 
-@router.get("/model", response_model=ModelSummary)
+# Uptime monitors check with HEAD; kept out of the docs so it is not listed twice.
+router.add_api_route("/health", health, methods=["HEAD"], include_in_schema=False)
+
+
+@router.get("/model", tags=["Index and payouts"], response_model=ModelSummary, summary="The calibrated model, trigger, exit and validation")
 def get_model(ds: data.Dataset = Depends(get_dataset)) -> ModelSummary:
     meta = ds.meta
     rain, ndvi = ds.model.coefficients
@@ -51,7 +55,7 @@ def get_model(ds: data.Dataset = Depends(get_dataset)) -> ModelSummary:
     )
 
 
-@router.get("/simulate", response_model=Simulation)
+@router.get("/simulate", tags=["Index and payouts"], response_model=Simulation, summary="Index and payout for one district and season")
 def simulate(district: str = Query(...), season: int = Query(...), ds: data.Dataset = Depends(get_dataset)) -> Simulation:
     name = ds.district_named(district)
     if name is None:
@@ -62,14 +66,14 @@ def simulate(district: str = Query(...), season: int = Query(...), ds: data.Data
     return _simulation(result)
 
 
-@router.get("/seasons", response_model=list[Simulation])
+@router.get("/seasons", tags=["Index and payouts"], response_model=list[Simulation], summary="Every season with harvest data (2018 to 2025)")
 def seasons(ds: data.Dataset = Depends(get_dataset)) -> list[Simulation]:
     """The district-seasons with harvest data, with the leave-one-out index."""
     keys = sorted(ds.calibration, key=lambda k: (k[1], k[0]))
     return [_simulation(ds.result(d, s)) for d, s in keys]
 
 
-@router.get("/history", response_model=list[HistoryPoint])
+@router.get("/history", tags=["Index and payouts"], response_model=list[HistoryPoint], summary="Backtest of every season since 2001")
 def history(ds: data.Dataset = Depends(get_dataset)) -> list[HistoryPoint]:
     """Backtest on satellite data alone, with the model fitted on all observations for
     every year (as in the notebook's drought-year check)."""
@@ -83,12 +87,12 @@ def history(ds: data.Dataset = Depends(get_dataset)) -> list[HistoryPoint]:
     return points
 
 
-@router.get("/basis-risk", response_model=list[BasisRisk])
+@router.get("/basis-risk", tags=["Index and payouts"], response_model=list[BasisRisk], summary="Basis risk per district")
 def basis_risk(ds: data.Dataset = Depends(get_dataset)) -> list[BasisRisk]:
     return [BasisRisk(district=d, basis_risk=r) for d, r in ds.basis_risk().items()]
 
 
-@router.get("/plot-losses", response_model=list[PlotLoss])
+@router.get("/plot-losses", tags=["Index and payouts"], response_model=list[PlotLoss], summary="Share of surveyed farms with a severe loss")
 def plot_losses(ds: data.Dataset = Depends(get_dataset)) -> list[PlotLoss]:
     """Share of NISR-surveyed farms that lost more than half their expected maize harvest."""
     return [
@@ -97,7 +101,7 @@ def plot_losses(ds: data.Dataset = Depends(get_dataset)) -> list[PlotLoss]:
     ]
 
 
-@router.get("/current-season")
+@router.get("/current-season", tags=["Season monitor"], summary="The season in progress: provisional index")
 def current_season() -> FileResponse:
     """The Season A window in progress: a provisional index from near-real-time data
     (notebook/update_current_season.py), and how far such an early read can be trusted."""
@@ -107,7 +111,7 @@ def current_season() -> FileResponse:
     return FileResponse(path, media_type="application/json")
 
 
-@router.get("/geo/districts")
+@router.get("/geo/districts", tags=["Map"], summary="District boundaries (GeoJSON)")
 def district_shapes() -> FileResponse:
     """District boundaries (FAO GAUL 2025, simplified) for the dashboard map."""
     path = data.DATA_DIR / "eastern_districts.geojson"

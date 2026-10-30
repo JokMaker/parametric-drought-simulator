@@ -10,7 +10,24 @@ from .routers import farmers, index, messaging, policies
 
 app = FastAPI(
     title="Drought Index Simulator API",
-    description="Parametric drought-index insurance simulator, Season A maize, Eastern Rwanda.",
+    version="1.0.0",
+    description=(
+        "Parametric drought-index insurance for Season A maize in Eastern Rwanda's seven districts. "
+        "Satellite rainfall (CHIRPS) and crop greenness (MODIS NDVI) give a predicted yield change; "
+        "a payout starts at -2% and is full at -22%.\n\n"
+        "Dashboard: [rdi-maize-insurance.vercel.app](https://rdi-maize-insurance.vercel.app) · "
+        "Source: [GitHub](https://github.com/JokMaker/parametric-drought-simulator) · "
+        "USSD: `*384*44698#` (Africa's Talking sandbox)"
+    ),
+    openapi_tags=[
+        {"name": "Index and payouts", "description": "The model, its payouts and how well they match real harvests"},
+        {"name": "Season monitor", "description": "The Season A window in progress"},
+        {"name": "Policies", "description": "Farmers who signed up over USSD (phone numbers masked)"},
+        {"name": "Loss reports", "description": "Crop losses reported by farmers, which feed field checks"},
+        {"name": "SMS and USSD", "description": "The farmer's phone channel through Africa's Talking"},
+        {"name": "Map", "description": "District shapes for the dashboard map"},
+        {"name": "Service", "description": "Health check for uptime monitoring"},
+    ],
 )
 
 app.add_middleware(

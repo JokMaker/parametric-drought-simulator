@@ -7,10 +7,10 @@ from ..policies import is_web_demo, mask_phone
 from ..reports import ReportStore
 from ..schemas import RegisteredPolicy
 
-router = APIRouter(prefix="/api/policies")
+router = APIRouter(prefix="/api/policies", tags=["Policies"])
 
 
-@router.get("", response_model=list[RegisteredPolicy])
+@router.get("", response_model=list[RegisteredPolicy], summary="Policies farmers have signed up for")
 def registered(store: ReportStore = Depends(get_store)) -> list[RegisteredPolicy]:
     """Every policy a farmer has signed up for, newest first. Phone numbers are masked."""
     return [

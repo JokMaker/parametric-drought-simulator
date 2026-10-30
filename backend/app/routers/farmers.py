@@ -7,10 +7,10 @@ from ..dependencies import get_dataset, get_store
 from ..reports import ReportStore
 from ..schemas import LossReportIn, LossReportOut, ReportCount
 
-router = APIRouter(prefix="/api/loss-reports")
+router = APIRouter(prefix="/api/loss-reports", tags=["Loss reports"])
 
 
-@router.post("", response_model=LossReportOut, status_code=201)
+@router.post("", response_model=LossReportOut, status_code=201, summary="Report a crop loss")
 def report_loss(body: LossReportIn, ds: data.Dataset = Depends(get_dataset), store: ReportStore = Depends(get_store)) -> LossReportOut:
     """A farmer reports a crop loss. Reports count towards a field check for the district-season."""
     if body.district not in ds.districts:
@@ -22,7 +22,7 @@ def report_loss(body: LossReportIn, ds: data.Dataset = Depends(get_dataset), sto
     return LossReportOut(created=created, reports=store.count(body.district, body.season))
 
 
-@router.get("/summary", response_model=list[ReportCount])
+@router.get("/summary", response_model=list[ReportCount], summary="Loss reports per district and season")
 def summary(store: ReportStore = Depends(get_store)) -> list[ReportCount]:
     """Crop-loss reports on file, per district-season, with their causes."""
     return [ReportCount(district=d, season=s, reports=n, causes=store.causes(d, s)) for d, s, n in store.summary()]
