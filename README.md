@@ -16,7 +16,7 @@ Kirehe, Ngoma, Nyagatare, Rwamagana), backtested from 2001 to 2025.
 - **Live API:** https://rdi-drought-api.onrender.com (interactive docs at [/docs](https://rdi-drought-api.onrender.com/docs))
 - **USSD:** dial `*384*44698#` in the [Africa's Talking simulator](https://developers.africastalking.com/simulator) (sandbox)
 - **GitHub repository:** https://github.com/JokMaker/parametric-drought-simulator
-- **Video demo:** [Watch the demo video](https://drive.google.com/drive/folders/1JapZ7DmX66B_u9T2FLEXRqJZKYc-LBBm?usp=drive_link)
+- **Video demo:** [Watch the demo video](https://drive.google.com/drive/folders/1dPZbokrtjRAwl817-qMKtASJvdUOcN2X?usp=sharing)
 - **Technical report (PDF):** [Read the technical report](docs/RDI_Technical_Report.pdf)
 - **Figma designs:** [Open the Figma file](https://www.figma.com/design/b7m0ZzV4ZXdzikU7GOhHUG/Drought-Index-Simulator-%E2%80%93-Designs?node-id=0-1)
 

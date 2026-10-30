@@ -1,7 +1,7 @@
 {
-  "base": "http://localhost:3000",
-  "date": "2026-10-26T03:51:28.024Z",
-  "chrome": "Chrome/156.0.8078.47",
+  "base": "https://rdi-maize-insurance.vercel.app",
+  "date": "2026-10-30T16:20:04.356Z",
+  "chrome": "Chrome/156.0.8078.74",
   "layout": [
     {
       "page": "/",
@@ -76,6 +76,14 @@
       "empty": false
     },
     {
+      "page": "/policies",
+      "viewport": "phone",
+      "theme": "light",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
       "page": "/term-sheet",
       "viewport": "phone",
       "theme": "light",
@@ -164,6 +172,14 @@
       "empty": false
     },
     {
+      "page": "/policies",
+      "viewport": "phone",
+      "theme": "dark",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
       "page": "/term-sheet",
       "viewport": "phone",
       "theme": "dark",
@@ -252,6 +268,14 @@
       "empty": false
     },
     {
+      "page": "/policies",
+      "viewport": "tablet",
+      "theme": "light",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
       "page": "/term-sheet",
       "viewport": "tablet",
       "theme": "light",
@@ -340,6 +364,14 @@
       "empty": false
     },
     {
+      "page": "/policies",
+      "viewport": "tablet",
+      "theme": "dark",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
       "page": "/term-sheet",
       "viewport": "tablet",
       "theme": "dark",
@@ -428,6 +460,14 @@
       "empty": false
     },
     {
+      "page": "/policies",
+      "viewport": "desktop",
+      "theme": "light",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
       "page": "/term-sheet",
       "viewport": "desktop",
       "theme": "light",
@@ -509,6 +549,14 @@
     },
     {
       "page": "/farmer",
+      "viewport": "desktop",
+      "theme": "dark",
+      "errors": [],
+      "overflow": null,
+      "empty": false
+    },
+    {
+      "page": "/policies",
       "viewport": "desktop",
       "theme": "dark",
       "errors": [],
@@ -554,6 +602,10 @@
       "ok": true
     },
     {
+      "name": "USSD sign-up: new farmer, a wrong answer, then the quote (not confirmed)",
+      "ok": true
+    },
+    {
       "name": "Pricing: all seven districts priced",
       "ok": true
     }
@@ -562,222 +614,122 @@
     {
       "profile": "desktop, no throttling",
       "page": "/",
-      "ttfb": 4,
-      "fcp": 28,
-      "lcp": 28,
-      "domContentLoaded": 12,
-      "load": 29,
-      "kb": 475
+      "ttfb": 96,
+      "fcp": 452,
+      "lcp": 452,
+      "domContentLoaded": 436,
+      "load": 436,
+      "kb": 483
     },
     {
       "profile": "desktop, no throttling",
       "page": "/season",
-      "ttfb": 3,
-      "fcp": 44,
-      "lcp": 64,
-      "domContentLoaded": 13,
-      "load": 24,
-      "kb": 475
+      "ttfb": 96,
+      "fcp": 308,
+      "lcp": 672,
+      "domContentLoaded": 212,
+      "load": 311,
+      "kb": 483
     },
     {
       "profile": "desktop, no throttling",
       "page": "/map",
-      "ttfb": 3,
-      "fcp": 24,
-      "lcp": 24,
-      "domContentLoaded": 12,
-      "load": 27,
-      "kb": 475
+      "ttfb": 96,
+      "fcp": 316,
+      "lcp": 316,
+      "domContentLoaded": 294,
+      "load": 311,
+      "kb": 483
     },
     {
       "profile": "desktop, no throttling",
       "page": "/explorer",
-      "ttfb": 2,
-      "fcp": 24,
-      "lcp": 24,
-      "domContentLoaded": 12,
-      "load": 26,
-      "kb": 475
+      "ttfb": 99,
+      "fcp": 252,
+      "lcp": 252,
+      "domContentLoaded": 224,
+      "load": 325,
+      "kb": 483
     },
     {
       "profile": "desktop, no throttling",
       "page": "/history",
-      "ttfb": 3,
-      "fcp": 24,
-      "lcp": 76,
-      "domContentLoaded": 16,
-      "load": 30,
-      "kb": 475
+      "ttfb": 110,
+      "fcp": 324,
+      "lcp": 760,
+      "domContentLoaded": 220,
+      "load": 376,
+      "kb": 483
     },
     {
       "profile": "desktop, no throttling",
       "page": "/basis-risk",
-      "ttfb": 2,
-      "fcp": 32,
-      "lcp": 52,
-      "domContentLoaded": 11,
-      "load": 29,
-      "kb": 475
+      "ttfb": 103,
+      "fcp": 248,
+      "lcp": 680,
+      "domContentLoaded": 229,
+      "load": 383,
+      "kb": 483
     },
     {
       "profile": "desktop, no throttling",
       "page": "/field-checks",
-      "ttfb": 4,
-      "fcp": 28,
-      "lcp": 60,
-      "domContentLoaded": 21,
-      "load": 31,
-      "kb": 475
+      "ttfb": 93,
+      "fcp": 236,
+      "lcp": 636,
+      "domContentLoaded": 218,
+      "load": 299,
+      "kb": 483
     },
     {
       "profile": "desktop, no throttling",
       "page": "/pricing",
-      "ttfb": 2,
-      "fcp": 20,
-      "lcp": 80,
-      "domContentLoaded": 9,
-      "load": 26,
-      "kb": 484
+      "ttfb": 100,
+      "fcp": 388,
+      "lcp": 680,
+      "domContentLoaded": 374,
+      "load": 391,
+      "kb": 494
     },
     {
       "profile": "desktop, no throttling",
       "page": "/farmer",
-      "ttfb": 6,
-      "fcp": 36,
-      "lcp": 68,
-      "domContentLoaded": 17,
-      "load": 34,
+      "ttfb": 97,
+      "fcp": 256,
+      "lcp": 620,
+      "domContentLoaded": 235,
+      "load": 304,
+      "kb": 493
+    },
+    {
+      "profile": "desktop, no throttling",
+      "page": "/policies",
+      "ttfb": 102,
+      "fcp": 332,
+      "lcp": 332,
+      "domContentLoaded": 237,
+      "load": 315,
       "kb": 483
     },
     {
       "profile": "desktop, no throttling",
       "page": "/term-sheet",
-      "ttfb": 3,
-      "fcp": 24,
-      "lcp": 56,
-      "domContentLoaded": 11,
-      "load": 23,
-      "kb": 481
+      "ttfb": 98,
+      "fcp": 408,
+      "lcp": 624,
+      "domContentLoaded": 304,
+      "load": 394,
+      "kb": 490
     },
     {
       "profile": "desktop, no throttling",
       "page": "/ussd",
-      "ttfb": 2,
-      "fcp": 28,
-      "lcp": 28,
-      "domContentLoaded": 11,
-      "load": 24,
-      "kb": 480
-    },
-    {
-      "profile": "phone, Slow 4G, 4x CPU",
-      "page": "/",
-      "ttfb": 3,
-      "fcp": 672,
-      "lcp": 672,
-      "domContentLoaded": 561,
-      "load": 2054,
-      "kb": 400
-    },
-    {
-      "profile": "phone, Slow 4G, 4x CPU",
-      "page": "/season",
-      "ttfb": 2,
-      "fcp": 704,
-      "lcp": 2252,
-      "domContentLoaded": 584,
-      "load": 1486,
-      "kb": 291
-    },
-    {
-      "profile": "phone, Slow 4G, 4x CPU",
-      "page": "/map",
-      "ttfb": 2,
-      "fcp": 684,
-      "lcp": 684,
-      "domContentLoaded": 579,
-      "load": 1488,
-      "kb": 400
-    },
-    {
-      "profile": "phone, Slow 4G, 4x CPU",
-      "page": "/explorer",
-      "ttfb": 2,
-      "fcp": 684,
-      "lcp": 684,
-      "domContentLoaded": 578,
-      "load": 2070,
-      "kb": 400
-    },
-    {
-      "profile": "phone, Slow 4G, 4x CPU",
-      "page": "/history",
-      "ttfb": 3,
-      "fcp": 720,
-      "lcp": 2436,
-      "domContentLoaded": 604,
-      "load": 2045,
-      "kb": 417
-    },
-    {
-      "profile": "phone, Slow 4G, 4x CPU",
-      "page": "/basis-risk",
-      "ttfb": 3,
-      "fcp": 688,
-      "lcp": 2372,
-      "domContentLoaded": 579,
-      "load": 2062,
-      "kb": 385
-    },
-    {
-      "profile": "phone, Slow 4G, 4x CPU",
-      "page": "/field-checks",
-      "ttfb": 2,
-      "fcp": 696,
-      "lcp": 1760,
-      "domContentLoaded": 589,
-      "load": 1442,
-      "kb": 297
-    },
-    {
-      "profile": "phone, Slow 4G, 4x CPU",
-      "page": "/pricing",
-      "ttfb": 2,
-      "fcp": 656,
-      "lcp": 2488,
-      "domContentLoaded": 544,
-      "load": 2013,
-      "kb": 416
-    },
-    {
-      "profile": "phone, Slow 4G, 4x CPU",
-      "page": "/farmer",
-      "ttfb": 2,
-      "fcp": 688,
-      "lcp": 688,
-      "domContentLoaded": 578,
-      "load": 1444,
-      "kb": 309
-    },
-    {
-      "profile": "phone, Slow 4G, 4x CPU",
-      "page": "/term-sheet",
-      "ttfb": 2,
-      "fcp": 696,
-      "lcp": 1996,
-      "domContentLoaded": 581,
-      "load": 1497,
-      "kb": 298
-    },
-    {
-      "profile": "phone, Slow 4G, 4x CPU",
-      "page": "/ussd",
-      "ttfb": 2,
-      "fcp": 664,
-      "lcp": 664,
-      "domContentLoaded": 555,
-      "load": 1427,
-      "kb": 229
+      "ttfb": 97,
+      "fcp": 312,
+      "lcp": 312,
+      "domContentLoaded": 222,
+      "load": 311,
+      "kb": 452
     }
   ]
 }
