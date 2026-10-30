@@ -8,7 +8,7 @@ MacBook Pro (Apple M1 Pro, 32 GB, macOS 26.6.2).
 | --- | --- | --- | --- |
 | Backend unit and API tests | Model maths, payouts, every endpoint, loss reports, USSD screens, SMS gateways | `cd backend && pytest` | 73 passed (SQLite and Postgres) |
 | Frontend unit tests | Pricing, payout curve, uncertainty, field-check rule, SMS length, colour classes | `cd frontend && npm test` | 33 passed |
-| Browser tests (functional and compatibility) | 12 pages × 3 screen sizes × light/dark, plus 7 user flows, in headless Chrome; the pages at 3 widths plus 2 flows in Firefox and Safari | `node frontend/tests/browser/check.mjs`, `node frontend/tests/browser/webdriver.mjs` (`BROWSER=firefox` for Firefox) | Chrome 72/72 checks, 7/7 flows; Firefox 36/36, 2/2; Safari 33/33, 2/2 |
+| Browser tests (functional and compatibility) | 12 pages × 3 screen sizes × light/dark, plus 7 user flows, in headless Chrome; the pages at 3 widths plus 2 flows in Firefox and Safari | `node frontend/tests/browser/check.mjs`, `node frontend/tests/browser/webdriver.mjs` (`BROWSER=firefox` for Firefox) | Chrome 72/72 checks, 7/7 flows; Firefox 36/36, 2/2; Safari 36/36, 2/2 |
 | Performance | API latency and load, page loads on desktop and on a throttled phone | `python backend/scripts/benchmark.py`, `THROTTLE=1 node frontend/tests/browser/check.mjs` | below |
 
 ## 1. Unit and API tests
@@ -74,10 +74,11 @@ switched on once in Safari's Developer settings). Safari cannot emulate a phone,
 and its window could not be resized because it opened full screen, so the tablet
 and phone widths load each page inside a frame 768 px and 390 px wide (an iPhone
 is 390 px); the page's breakpoints follow the frame as they would a phone screen.
-The same checks as in Chrome run on all 11 pages at each width, plus the Farmer
+The same checks as in Chrome run on all 12 pages at each width, plus the Farmer
 View lookup with the area field and the USSD menu (dial, 1, 0).
-Result, on the production build: **33/33 page-width checks clean, 2/2 flows passed.** (This ran
-on 26 October, before the Policies page existed.)
+Result, on 30 October against the live site (https://rdi-maize-insurance.vercel.app): **36/36
+page-width checks clean, 2/2 flows passed.** (An earlier run on 26 October, before the Policies
+page existed, passed 33/33.)
 
 **Firefox (Gecko).** The same script with `BROWSER=firefox` drives headless Firefox 159
 through Mozilla's geckodriver 0.37 (`brew install --cask firefox geckodriver`). Run on 28
