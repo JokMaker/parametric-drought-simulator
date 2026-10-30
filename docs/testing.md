@@ -6,19 +6,19 @@ MacBook Pro (Apple M1 Pro, 32 GB, macOS 26.6.2).
 
 | Strategy | What it checks | How to run | Result |
 | --- | --- | --- | --- |
-| Backend unit and API tests | Model maths, payouts, every endpoint, loss reports, USSD screens, SMS gateways | `cd backend && pytest` | 70 passed (SQLite and Postgres) |
+| Backend unit and API tests | Model maths, payouts, every endpoint, loss reports, USSD screens, SMS gateways | `cd backend && pytest` | 73 passed (SQLite and Postgres) |
 | Frontend unit tests | Pricing, payout curve, uncertainty, field-check rule, SMS length, colour classes | `cd frontend && npm test` | 33 passed |
 | Browser tests (functional and compatibility) | 12 pages × 3 screen sizes × light/dark, plus 7 user flows, in headless Chrome; the pages at 3 widths plus 2 flows in Firefox and Safari | `node frontend/tests/browser/check.mjs`, `node frontend/tests/browser/webdriver.mjs` (`BROWSER=firefox` for Firefox) | Chrome 72/72 checks, 7/7 flows; Firefox 36/36, 2/2; Safari 33/33, 2/2 |
 | Performance | API latency and load, page loads on desktop and on a throttled phone | `python backend/scripts/benchmark.py`, `THROTTLE=1 node frontend/tests/browser/check.mjs` | below |
 
 ## 1. Unit and API tests
 
-**Backend (pytest, 70 tests).** The tests replace the database with a temporary
+**Backend (pytest, 73 tests).** The tests replace the database with a temporary
 one and the SMS provider with a fake that records messages (FastAPI dependency
 overrides), so they never send a real SMS. They cover:
 
 - the index model: prediction from rain and NDVI z-scores, the linear payout between the −2% trigger and the −22% exit;
-- every API endpoint, including errors (unknown district → 404, bad policy number → 422, SMS not set up → 503);
+- every API endpoint, including errors (unknown district → 404, while `kirehe` or `KIREHE` still finds Kirehe, bad policy number → 422, SMS not set up → 503);
 - loss reports: one report per policy and season, causes, the summary;
 - USSD sign-up from a number with no policy: every screen in both languages, wrong answers (district 9, a field under 50 m², letters) repeating the question, nothing saved before the farmer confirms, the policy saved and texted to the caller's own number as one SMS, the same premium quoted and stored, one policy per number in any format, and sign-up still working when SMS is not set up;
 - the USSD menu: every screen in both languages (it opens in Kinyarwanda), going back with 0, the language switch, and every screen fits the 182-character USSD limit;
@@ -191,7 +191,7 @@ within the measured LCP of under 2.5 s.
 
 ```bash
 # from the repository root
-(cd backend && pytest)                                  # 70 tests (2 skipped without TEST_DATABASE_URL)
+(cd backend && pytest)                                  # 73 tests (2 skipped without TEST_DATABASE_URL)
 (cd frontend && npm test)                               # 33 tests
 
 # browser checks, with the backend on :8000 and the frontend on :3000
@@ -206,4 +206,4 @@ BASE=http://localhost:3100 THROTTLE=1 node frontend/tests/browser/check.mjs
 python backend/scripts/benchmark.py --base http://localhost:8001
 ```
 
-Raw browser results are written to `frontend/tests/browser/results.json`.
+Raw browser results from the last passing run are in `frontend/tests/browser/results.json`; a run with any failure writes `results-failed.json` instead (git-ignored), so the saved results are never overwritten by a broken run. A page that fails to load counts as a failure.

@@ -7,7 +7,8 @@
 // Needs the frontend (and the backend, for live data) running:
 //   node tests/browser/check.mjs                      # against http://localhost:3000
 //   BASE=http://localhost:3100 THROTTLE=1 node tests/browser/check.mjs
-// Writes a JSON report to tests/browser/results.json and screenshots to SHOTS if set.
+// Writes a JSON report to tests/browser/results.json (results-failed.json if anything fails)
+// and screenshots to SHOTS if set.
 // Nothing is written to the backend: no SMS is sent and no loss report is saved.
 
 import { spawn } from "node:child_process";
@@ -93,7 +94,8 @@ async function open(path) {
     ws.addEventListener("message", onLoad);
   });
   const started = Date.now();
-  await send("Page.navigate", { url: BASE + path });
+  const { errorText } = await send("Page.navigate", { url: BASE + path });
+  if (errorText) return errorText;
   await Promise.race([loaded, sleep(30_000)]);
   if (process.env.VERBOSE) console.error(`  ${path} ${Date.now() - started} ms`);
   // Wait for the data to arrive: no loading placeholders left, then a short settle.
@@ -102,6 +104,7 @@ async function open(path) {
     await sleep(250);
   }
   await sleep(600);
+  return null;
 }
 
 // Elements wider than the viewport, which force sideways scrolling on a phone.
@@ -127,9 +130,10 @@ for (const v of VIEWPORTS) {
     console.error(`${v.name}, ${dark ? "dark" : "light"}`);
     for (const path of PAGES) {
       problems.length = 0;
-      await open(path);
+      const loadError = await open(path);
+      if (loadError) problems.push(`page did not load: ${loadError}`);
       const overflow = await evaluate(OVERFLOW);
-      const empty = await evaluate("document.querySelector('main')?.innerText.trim().length < 50");
+      const empty = await evaluate("(document.querySelector('main')?.innerText.trim().length ?? 0) < 50");
       const row = { page: path, viewport: v.name, theme: dark ? "dark" : "light", errors: [...problems], overflow, empty };
       report.layout.push(row);
       if (row.errors.length || overflow || empty) failures.push(`${path} ${v.name} ${row.theme}: ${JSON.stringify({ errors: row.errors, overflow, empty })}`);
@@ -280,7 +284,8 @@ for (const p of profiles) {
 }
 await send("Emulation.setCPUThrottlingRate", { rate: 1 });
 
-const out = new URL("./results.json", import.meta.url);
+// results.json holds the last passing run; a failed run goes to results-failed.json instead.
+const out = new URL(failures.length ? "./results-failed.json" : "./results.json", import.meta.url);
 writeFileSync(out, JSON.stringify(report, null, 2) + "\n");
 
 const checks = report.layout.length;
@@ -291,7 +296,7 @@ for (const p of profiles) {
   console.log(`\nTimings (ms), ${p.name}:`);
   console.table(report.timings.filter((t) => t.profile === p.name).map(({ page, ttfb, fcp, lcp, domContentLoaded, load, kb }) => ({ page, ttfb, fcp, lcp, domContentLoaded, load, kb })));
 }
-if (failures.length) console.log("\nFailures:\n" + failures.map((f) => `- ${f}`).join("\n"));
+if (failures.length) console.log("\nFailures (details in tests/browser/results-failed.json):\n" + failures.map((f) => `- ${f}`).join("\n"));
 
 chrome.kill();
 process.exit(failures.length ? 1 : 0);

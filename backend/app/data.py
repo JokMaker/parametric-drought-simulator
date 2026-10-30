@@ -80,6 +80,11 @@ class Dataset:
     def districts(self) -> list[str]:
         return sorted({d for d, _ in self.seasons})
 
+    def district_named(self, name: str) -> str | None:
+        """The district's name as stored, matched ignoring case and surrounding spaces."""
+        wanted = name.strip().casefold()
+        return next((d for d in self.districts if d.casefold() == wanted), None)
+
     def result(self, district: str, season: int) -> SeasonResult | None:
         """The index and payout for a district-season, or None if there is no satellite data."""
         cal = self.calibration.get((district, season))
