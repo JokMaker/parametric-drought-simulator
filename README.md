@@ -280,7 +280,7 @@ cards that stack vertically, each on its own, and charts that each tell a story.
 ![Overview](docs/screenshots/overview.png)
 
 ### Drought Map
-![Drought Map, Season A 2023](docs/screenshots/drought-map.png)
+![Drought Map, Season A 2025](docs/screenshots/drought-map.png)
 
 ### District Explorer: a good catch (Rwamagana 2023)
 ![District Explorer, Rwamagana 2023](docs/screenshots/explorer-rwamagana-2023.png)
@@ -302,6 +302,9 @@ cards that stack vertically, each on its own, and charts that each tell a story.
 
 ### Farmer View
 ![Farmer View](docs/screenshots/farmer-view.png)
+
+### Policies
+![Policies](docs/screenshots/policies.png)
 
 ### Field Checks
 ![Field Checks](docs/screenshots/field-checks.png)
