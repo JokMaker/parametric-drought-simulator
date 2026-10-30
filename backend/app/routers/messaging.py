@@ -11,16 +11,16 @@ from ..policies import PolicyBook
 from ..schemas import SmsIn, SmsStatus, UssdPreviewIn, UssdPreviewOut
 from ..ussd import UssdMenu, same_number
 
-router = APIRouter(prefix="/api")
+router = APIRouter(prefix="/api", tags=["SMS and USSD"])
 
 
-@router.get("/sms/status", response_model=SmsStatus)
+@router.get("/sms/status", response_model=SmsStatus, summary="Whether SMS is set up")
 def sms_status(settings: SmsSettings = Depends(get_sms_settings)) -> SmsStatus:
     """Whether SMS through Africa's Talking is set up (backend/.env), without revealing the key."""
     return SmsStatus(configured=settings.configured, sandbox=settings.sandbox, phone=settings.masked_phone)
 
 
-@router.post("/sms")
+@router.post("/sms", summary="Send a payout SMS")
 def send_sms(body: SmsIn, gateway: SmsGateway = Depends(get_gateway)) -> dict:
     """Send a payout message to the demo phone through Africa's Talking."""
     if not gateway.settings.configured:
@@ -32,7 +32,7 @@ def send_sms(body: SmsIn, gateway: SmsGateway = Depends(get_gateway)) -> dict:
     return receipt | {"phone": gateway.settings.masked_phone, "sandbox": gateway.settings.sandbox}
 
 
-@router.post("/ussd", response_class=PlainTextResponse)
+@router.post("/ussd", response_class=PlainTextResponse, summary="USSD callback for Africa's Talking")
 async def ussd_callback(
     request: Request,
     menu: UssdMenu = Depends(get_menu),
@@ -53,7 +53,7 @@ async def ussd_callback(
     return menu.respond(form.get("text", [""])[0], policy, phone)
 
 
-@router.post("/ussd/preview", response_model=UssdPreviewOut)
+@router.post("/ussd/preview", response_model=UssdPreviewOut, summary="Run the USSD menu for the dashboard's phone")
 def ussd_preview(body: UssdPreviewIn, menu: UssdMenu = Depends(get_menu), policies: PolicyBook = Depends(get_policies)) -> UssdPreviewOut:
     """The same USSD menu for the dashboard's phone screen, run either as a chosen policy
     (a demo one or one a farmer signed up for) or as a web demo number, which signs up

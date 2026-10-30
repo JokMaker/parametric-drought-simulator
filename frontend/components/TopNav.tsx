@@ -16,6 +16,7 @@ const NAV = [
   { href: "/field-checks", label: "Field Checks" },
   { href: "/pricing", label: "Pricing" },
   { href: "/farmer", label: "Farmer View" },
+  { href: "/ussd", label: "USSD Menu" },
   { href: "/policies", label: "Policies" },
 ];
 
