@@ -53,11 +53,12 @@ def get_model(ds: data.Dataset = Depends(get_dataset)) -> ModelSummary:
 
 @router.get("/simulate", response_model=Simulation)
 def simulate(district: str = Query(...), season: int = Query(...), ds: data.Dataset = Depends(get_dataset)) -> Simulation:
-    result = ds.result(district, season)
+    name = ds.district_named(district)
+    if name is None:
+        raise HTTPException(404, f"Unknown district: {district}")
+    result = ds.result(name, season)
     if result is None:
-        if district not in ds.districts:
-            raise HTTPException(404, f"Unknown district: {district}")
-        raise HTTPException(404, f"No satellite data for {district} Season A {season}")
+        raise HTTPException(404, f"No satellite data for {name} Season A {season}")
     return _simulation(result)
 
 

@@ -124,7 +124,7 @@ source .venv/bin/activate
 python -m pytest
 ```
 
-The 70 tests (68 without a test Postgres database) check the API against the notebook (the index formula on all 175 district-seasons,
+The 73 tests (71 without a test Postgres database) check the API against the notebook (the index formula on all 175 district-seasons,
 the leave-one-out results, the hit and false payout rates, the drought-year totals (34/63 against
 26/112), basis risk and the pricing inputs) and test each building block on its own: the report
 store, USSD sign-up (saving the policy, one per number, the SMS to the caller), the SMS gateways (sandbox and live limits, sender ID, rejected messages, through a recording

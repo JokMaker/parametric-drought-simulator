@@ -44,3 +44,6 @@ next-env.d.ts
 # local editor/assistant notes
 CLAUDE.md
 AGENTS.md
+
+# browser check output from a failed run
+tests/browser/results-failed.json

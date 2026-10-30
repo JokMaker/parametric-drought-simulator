@@ -86,6 +86,12 @@ def test_simulate_errors(params, status):
     assert client.get("/api/simulate", params=params).status_code == status
 
 
+@pytest.mark.parametrize("name", ["kirehe", "KIREHE", " Kirehe "])
+def test_simulate_ignores_district_case(name):
+    s = client.get("/api/simulate", params={"district": name, "season": 2017})
+    assert s.status_code == 200 and s.json()["district"] == "Kirehe"
+
+
 def test_history_matches_drought_year_check():
     pts = client.get("/api/history").json()
     assert len(pts) == 175
