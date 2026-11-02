@@ -1,6 +1,6 @@
 {
   "base": "https://rdi-maize-insurance.vercel.app",
-  "date": "2026-10-30T18:57:00.484Z",
+  "date": "2026-11-02T02:58:46.882Z",
   "chrome": "Chrome/156.0.8078.74",
   "layout": [
     {
@@ -614,122 +614,122 @@
     {
       "profile": "desktop, no throttling",
       "page": "/",
-      "ttfb": 193,
-      "fcp": 740,
-      "lcp": 740,
-      "domContentLoaded": 734,
-      "load": 3091,
-      "kb": 431
+      "ttfb": 115,
+      "fcp": 400,
+      "lcp": 400,
+      "domContentLoaded": 392,
+      "load": 458,
+      "kb": 492
     },
     {
       "profile": "desktop, no throttling",
       "page": "/season",
-      "ttfb": 672,
-      "fcp": 1508,
-      "lcp": 2656,
-      "domContentLoaded": 1384,
-      "load": 2484,
-      "kb": 258
+      "ttfb": 118,
+      "fcp": 340,
+      "lcp": 704,
+      "domContentLoaded": 257,
+      "load": 353,
+      "kb": 492
     },
     {
       "profile": "desktop, no throttling",
       "page": "/map",
-      "ttfb": 1493,
-      "fcp": 2772,
-      "lcp": 2772,
-      "domContentLoaded": 2749,
-      "load": 3612,
-      "kb": 258
+      "ttfb": 112,
+      "fcp": 340,
+      "lcp": 340,
+      "domContentLoaded": 241,
+      "load": 329,
+      "kb": 492
     },
     {
       "profile": "desktop, no throttling",
       "page": "/explorer",
-      "ttfb": 1636,
-      "fcp": 2988,
-      "lcp": 2988,
-      "domContentLoaded": 2974,
-      "load": 6694,
-      "kb": 431
+      "ttfb": 113,
+      "fcp": 292,
+      "lcp": 292,
+      "domContentLoaded": 267,
+      "load": 368,
+      "kb": 492
     },
     {
       "profile": "desktop, no throttling",
       "page": "/history",
-      "ttfb": 232,
-      "fcp": 892,
-      "lcp": 2672,
-      "domContentLoaded": 784,
-      "load": 2353,
-      "kb": 407
+      "ttfb": 120,
+      "fcp": 284,
+      "lcp": 648,
+      "domContentLoaded": 259,
+      "load": 358,
+      "kb": 492
     },
     {
       "profile": "desktop, no throttling",
       "page": "/basis-risk",
-      "ttfb": 182,
-      "fcp": 3464,
-      "lcp": 3880,
-      "domContentLoaded": 3446,
-      "load": 3580,
-      "kb": 406
+      "ttfb": 115,
+      "fcp": 296,
+      "lcp": 664,
+      "domContentLoaded": 265,
+      "load": 356,
+      "kb": 492
     },
     {
       "profile": "desktop, no throttling",
       "page": "/field-checks",
-      "ttfb": 532,
-      "fcp": 2068,
-      "lcp": 3160,
-      "domContentLoaded": 2061,
-      "load": 2829,
-      "kb": 260
+      "ttfb": 111,
+      "fcp": 336,
+      "lcp": 632,
+      "domContentLoaded": 330,
+      "load": 330,
+      "kb": 492
     },
     {
       "profile": "desktop, no throttling",
       "page": "/pricing",
-      "ttfb": 424,
-      "fcp": 1332,
-      "lcp": 4484,
-      "domContentLoaded": 1220,
-      "load": 4494,
-      "kb": 350
+      "ttfb": 113,
+      "fcp": 280,
+      "lcp": 648,
+      "domContentLoaded": 254,
+      "load": 353,
+      "kb": 502
     },
     {
       "profile": "desktop, no throttling",
       "page": "/farmer",
-      "ttfb": 597,
-      "fcp": 3828,
-      "lcp": 4528,
-      "domContentLoaded": 3804,
-      "load": 4121,
-      "kb": 252
+      "ttfb": 115,
+      "fcp": 288,
+      "lcp": 888,
+      "domContentLoaded": 264,
+      "load": 332,
+      "kb": 493
     },
     {
       "profile": "desktop, no throttling",
       "page": "/policies",
-      "ttfb": 1244,
-      "fcp": 2124,
-      "lcp": 2124,
-      "domContentLoaded": 2118,
-      "load": 3162,
-      "kb": 232
+      "ttfb": 111,
+      "fcp": 352,
+      "lcp": 352,
+      "domContentLoaded": 261,
+      "load": 355,
+      "kb": 492
     },
     {
       "profile": "desktop, no throttling",
       "page": "/term-sheet",
-      "ttfb": 1711,
-      "fcp": 3656,
-      "lcp": 4824,
-      "domContentLoaded": 3635,
-      "load": 4506,
-      "kb": 261
+      "ttfb": 116,
+      "fcp": 344,
+      "lcp": 632,
+      "domContentLoaded": 331,
+      "load": 343,
+      "kb": 499
     },
     {
       "profile": "desktop, no throttling",
       "page": "/ussd",
-      "ttfb": 1047,
-      "fcp": 1704,
-      "lcp": 1704,
-      "domContentLoaded": 1684,
-      "load": 2822,
-      "kb": 242
+      "ttfb": 112,
+      "fcp": 336,
+      "lcp": 336,
+      "domContentLoaded": 248,
+      "load": 333,
+      "kb": 369
     }
   ]
 }
