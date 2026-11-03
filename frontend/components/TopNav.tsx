@@ -41,7 +41,7 @@ export default function TopNav() {
   const pathname = usePathname();
   return (
     <header className="bg-header text-header-ink print:hidden">
-      <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-x-6 gap-y-1 px-4 pt-3 sm:px-6">
+      <div className="mx-auto flex max-w-[1680px] flex-wrap items-center justify-between gap-x-6 gap-y-1 px-4 pt-3 sm:px-6 lg:px-8">
         <Link href="/" className="leading-tight">
           <span className="block text-[15px] font-semibold tracking-tight">Rwanda Drought Index</span>
           <span className="block text-xs text-header-ink/70">Season A maize · Eastern Province</span>
@@ -51,7 +51,7 @@ export default function TopNav() {
           <ThemeToggle />
         </div>
       </div>
-      <nav className="mx-auto mt-2 max-w-7xl overflow-x-auto px-2 sm:px-4" aria-label="Main">
+      <nav className="mx-auto mt-2 max-w-[1680px] overflow-x-auto px-2 sm:px-4 lg:px-6" aria-label="Main">
         <ul className="flex min-w-max">
           {NAV.map(({ href, label }) => {
             const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
