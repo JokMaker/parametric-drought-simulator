@@ -1,5 +1,6 @@
 "use client";
 
+import { Phone, PhoneOff } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { Card, PageHeader } from "@/components/ui";
@@ -7,7 +8,10 @@ import { USE_MOCK, ussdPreview } from "@/lib/api";
 import { USSD_CODE } from "@/lib/constants";
 import { DEMO_POLICIES } from "@/lib/policies";
 
-const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "*", "0", "#"];
+const KEYS: [string, string][] = [
+  ["1", ""], ["2", "abc"], ["3", "def"], ["4", "ghi"], ["5", "jkl"], ["6", "mno"],
+  ["7", "pqrs"], ["8", "tuv"], ["9", "wxyz"], ["*", "+"], ["0", "␣"], ["#", "⇧"],
+];
 const NEW_FARMER = "new";
 const WELCOME = `Kanda ${USSD_CODE}\nRDI Ubwishingizi bw'ibigori`;
 
@@ -120,7 +124,7 @@ export default function UssdPage() {
             </p>
           )}
           <ol className="mt-4 space-y-1.5 text-sm text-muted">
-            <li><span className="font-medium text-ink">1.</span> Type <span className="tabular font-medium text-ink">{USSD_CODE}</span> and press Send.</li>
+            <li><span className="font-medium text-ink">1.</span> Type <span className="tabular font-medium text-ink">{USSD_CODE}</span> and press the green call key (or Send).</li>
             {newFarmer ? (
               <>
                 <li><span className="font-medium text-ink">2.</span> 1 buys cover: pick your district, type your maize field size in m², then 1 confirms. The menu opens in Kinyarwanda; 5 switches to English.</li>
@@ -140,42 +144,143 @@ export default function UssdPage() {
           )}
         </Card>
 
-        <div className="mx-auto w-full max-w-[300px] rounded-[28px] border-[6px] border-ink/85 bg-surface-2 p-4 shadow-sm">
-          <div
-            className="tabular min-h-[210px] whitespace-pre-line rounded-md bg-[#cfd8c4] px-3 py-2.5 font-mono text-[13px] leading-snug text-[#1d2a1a]"
-            aria-live="polite"
+        <FeaturePhone
+          screen={busy ? "USSD code running…" : screen}
+          typed={typed}
+          placeholder={session === null ? USSD_CODE : "Reply"}
+          busy={busy}
+          onType={setTyped}
+          onKey={(k) => setTyped((t) => t + k)}
+          onSend={send}
+          onDelete={() => setTyped((t) => t.slice(0, -1))}
+          onEnd={() => {
+            setTyped("");
+            hangUp();
+          }}
+        />
+      </div>
+    </>
+  );
+}
+
+type PhoneProps = {
+  screen: string;
+  typed: string;
+  placeholder: string;
+  busy: boolean;
+  onType: (text: string) => void;
+  onKey: (key: string) => void;
+  onSend: () => void;
+  onDelete: () => void;
+  onEnd: () => void;
+};
+
+/**
+ * A basic keypad phone, the kind most farmers in Eastern Rwanda carry. The body stays
+ * dark in both themes, as a real handset would; the screen is an LCD with a text field
+ * so the keyboard works as well as the keypad.
+ */
+function FeaturePhone({ screen, typed, placeholder, busy, onType, onKey, onSend, onDelete, onEnd }: PhoneProps) {
+  // Soft keys are blank, as on a real handset: the screen labels them.
+  const softKey = "h-2.5 w-12 rounded-full bg-gradient-to-b from-[#4a4e53] to-[#2c2f33] shadow-[inset_0_1px_0_rgba(255,255,255,0.15),0_1px_2px_rgba(0,0,0,0.5)] active:translate-y-px disabled:opacity-60";
+  return (
+    <div className="mx-auto w-full max-w-[280px] select-none rounded-[38px] ring-1 ring-white/10 bg-gradient-to-b from-[#34383c] via-[#24272a] to-[#1a1c1e] p-3 pb-5 shadow-[0_18px_40px_-12px_rgba(0,0,0,0.55),inset_0_1px_0_rgba(255,255,255,0.12)]">
+      <div className="mx-auto mt-1 mb-2.5 h-1.5 w-14 rounded-full bg-[#0d0e0f] shadow-[inset_0_1px_2px_rgba(0,0,0,0.8)]" />
+
+      <div className="rounded-[14px] bg-[#0d0e0f] p-2 shadow-[inset_0_2px_6px_rgba(0,0,0,0.9)]">
+        <div className="rounded-[6px] bg-gradient-to-b from-[#d3dcc6] to-[#c2ccb4] px-2.5 pt-1.5 pb-2 font-mono text-[#1d2a1a] shadow-[inset_0_0_12px_rgba(40,55,30,0.25)]">
+          <div className="flex items-center justify-between text-[10px] font-semibold">
+            <span className="flex items-end gap-[2px]" aria-hidden>
+              {[4, 6, 8, 10].map((h) => (
+                <span key={h} className="w-[3px] rounded-[1px] bg-[#1d2a1a]" style={{ height: h }} />
+              ))}
+            </span>
+            <span>MTN RW</span>
+            <span className="flex items-center" aria-hidden>
+              <span className="flex h-[9px] w-[18px] gap-[1px] rounded-[2px] border border-[#1d2a1a] p-[1px]">
+                <span className="flex-1 bg-[#1d2a1a]" />
+                <span className="flex-1 bg-[#1d2a1a]" />
+                <span className="flex-1 bg-[#1d2a1a]" />
+              </span>
+              <span className="h-[4px] w-[2px] bg-[#1d2a1a]" />
+            </span>
+          </div>
+          <div className="my-1 border-t border-[#1d2a1a]/30" />
+          <div className="tabular h-[200px] overflow-y-auto whitespace-pre-line text-[12.5px] leading-snug" aria-live="polite">
+            {screen}
+          </div>
+          <input
+            aria-label="Phone input"
+            value={typed}
+            onChange={(e) => onType(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && onSend()}
+            placeholder={placeholder}
+            className="tabular mt-1 w-full border-b border-dashed border-[#1d2a1a]/50 bg-transparent px-0.5 py-0.5 text-[13px] text-[#1d2a1a] outline-none placeholder:text-[#1d2a1a]/45 focus:border-solid focus:border-[#1d2a1a]"
+          />
+          <div className="mt-1.5 flex justify-between text-[10px] font-bold uppercase">
+            <span>Send</span>
+            <span>Clear</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-3 grid grid-cols-[1fr_auto_1fr] items-center gap-2 px-1">
+        <div className="flex flex-col items-start gap-2">
+          <button onClick={onSend} disabled={busy} className={softKey}>
+            <span className="sr-only">Send</span>
+          </button>
+          <button
+            onClick={onSend}
+            disabled={busy}
+            aria-label="Call"
+            className="flex h-8 w-12 items-center justify-center rounded-full bg-gradient-to-b from-[#3fa34d] to-[#2a7a36] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.25)] active:translate-y-px disabled:opacity-60"
           >
-            {busy ? "USSD code running…" : screen}
-          </div>
-          <div className="mt-3 flex items-center gap-2">
-            <input
-              aria-label="Phone input"
-              value={typed}
-              onChange={(e) => setTyped(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && send()}
-              placeholder={session === null ? USSD_CODE : "Reply"}
-              className="tabular min-w-0 flex-1 rounded-sm border border-line bg-surface px-2 py-1.5 font-mono text-sm outline-none focus:border-accent"
-            />
-            <button onClick={send} disabled={busy} className="rounded-sm bg-[#2f7d3a] px-3 py-1.5 text-sm font-medium text-white disabled:opacity-60">
-              Send
-            </button>
-          </div>
-          <div className="mt-3 grid grid-cols-3 gap-1.5">
-            {KEYS.map((k) => (
-              <button
-                key={k}
-                onClick={() => setTyped((t) => t + k)}
-                className="tabular rounded-md border border-line bg-surface py-2 text-base hover:bg-surface-2"
-              >
-                {k}
-              </button>
-            ))}
-          </div>
-          <button onClick={() => setTyped((t) => t.slice(0, -1))} className="mt-1.5 w-full rounded-md border border-line bg-surface py-1.5 text-sm text-muted hover:bg-surface-2">
-            Delete
+            <Phone size={15} fill="currentColor" />
+          </button>
+        </div>
+        <button
+          onClick={onSend}
+          disabled={busy}
+          aria-label="OK"
+          className="flex h-[68px] w-[68px] items-center justify-center rounded-full bg-gradient-to-b from-[#45494d] to-[#2a2d30] shadow-[inset_0_1px_0_rgba(255,255,255,0.15),0_2px_4px_rgba(0,0,0,0.5)] active:translate-y-px disabled:opacity-60"
+        >
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#1f2124] text-[10px] font-bold text-[#c9ccd0] shadow-[inset_0_1px_2px_rgba(0,0,0,0.6)]">
+            OK
+          </span>
+        </button>
+        <div className="flex flex-col items-end gap-2">
+          <button onClick={onDelete} className={softKey}>
+            <span className="sr-only">Clear</span>
+          </button>
+          <button
+            onClick={onEnd}
+            aria-label="End call"
+            className="flex h-8 w-12 items-center justify-center rounded-full bg-gradient-to-b from-[#d24a40] to-[#a1302a] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.25)] active:translate-y-px"
+          >
+            <PhoneOff size={15} />
           </button>
         </div>
       </div>
-    </>
+
+      <div className="mt-3 grid grid-cols-3 gap-x-2.5 gap-y-2 px-1">
+        {KEYS.map(([k, letters]) => (
+          <button
+            key={k}
+            onClick={() => onKey(k)}
+            aria-label={k}
+            className="flex h-10 flex-col items-center justify-center rounded-[12px] bg-gradient-to-b from-[#40444a] to-[#2c2f33] leading-none text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.14),0_2px_3px_rgba(0,0,0,0.5)] hover:from-[#4a4f55] active:translate-y-px"
+          >
+            <span className="tabular text-[17px] font-semibold">{k}</span>
+            <span className="mt-0.5 h-[9px] text-[8.5px] uppercase tracking-wider text-[#9aa0a6]">{letters}</span>
+          </button>
+        ))}
+      </div>
+
+      <div className="mx-auto mt-4 flex w-10 justify-between" aria-hidden>
+        {[0, 1, 2, 3].map((i) => (
+          <span key={i} className="h-1 w-1 rounded-full bg-[#0d0e0f]" />
+        ))}
+      </div>
+    </div>
   );
 }
