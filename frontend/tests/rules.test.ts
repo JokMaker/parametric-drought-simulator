@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { DEFAULT_RULE, checkStatus } from "../lib/fieldChecks";
-import { DEMO_POLICIES, findPolicy } from "../lib/policies";
+import { DEMO_POLICIES, findPolicy, fromRegistered } from "../lib/policies";
 import { indexClass, payoutClass, riskClass } from "../lib/scales";
 import { smsParts } from "../lib/sms";
 
@@ -58,6 +58,19 @@ describe("findPolicy", () => {
   it("ignores case and spaces and rejects unknown ids", () => {
     assert.equal(findPolicy("  rdi-rwa-1233")?.district, "Rwamagana");
     assert.equal(findPolicy("RDI-XXX-0000"), undefined);
+  });
+
+  it("finds a policy a farmer signed up for, with its own district and area", () => {
+    const signedUp = [fromRegistered({
+      policyId: "RDI-NGO-5004", phone: "+250••••456", channel: "web", district: "Ngoma",
+      areaM2: 1250, season: 2027, premium: 870, createdAt: "2026-11-06T09:00:00+00:00",
+    })];
+    assert.equal(findPolicy("RDI-NGO-5004"), undefined);
+    const p = findPolicy("rdi-ngo-5004", signedUp)!;
+    assert.deepEqual([p.district, p.areaM2], ["Ngoma", 1250]);
+    // No "•" in the SMS preview: it would switch the message to UCS-2.
+    assert.equal(p.phone, "07xx xxx 456");
+    assert.equal(findPolicy("rdi-rwa-1233", signedUp)?.district, "Rwamagana");
   });
 });
 
