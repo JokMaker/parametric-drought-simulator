@@ -9,7 +9,7 @@ import Link from "next/link";
 import { getHistory, getModel, getPolicies, getSeasons, getSmsStatus, reportLoss, sendSms, USE_MOCK } from "@/lib/api";
 import { districtsInSeason, type DistrictSeason } from "@/lib/districtSeason";
 import { pct } from "@/lib/payout";
-import { USSD_CODE } from "@/lib/constants";
+import { LAST_SEASON, USSD_CODE } from "@/lib/constants";
 import { smsParts } from "@/lib/sms";
 import { DEMO_POLICIES, findPolicy, fromRegistered, type Policy } from "@/lib/policies";
 import { defaultTerms, expectedPayout, payoutHistory, perHectare, rwf } from "@/lib/pricing";
@@ -131,23 +131,23 @@ export default function FarmerPage() {
   // While the signed-up policies load, an unknown number may still be one of them.
   const notFound = query.trim() !== "" && !findPolicy(query, signedUp) && !registered.loading;
 
+  function select(p: Policy) {
+    setPolicy(p);
+    setAreaM2(p.areaM2);
+    setReported(null);
+    // A new cover's own season is still running, so open on the latest season with a final index.
+    if (p.season) setSeason(LAST_SEASON);
+  }
+
   function lookUp(id: string) {
     setQuery(id);
     const p = findPolicy(id, signedUp);
-    if (p) {
-      setPolicy(p);
-      setAreaM2(p.areaM2);
-      setReported(null);
-    }
+    if (p) select(p);
   }
 
   // A signed-up number typed before the list arrived opens once it does.
   const pending = findPolicy(query, signedUp);
-  if (pending && pending.id !== policy.id) {
-    setPolicy(pending);
-    setAreaM2(pending.areaM2);
-    setReported(null);
-  }
+  if (pending && pending.id !== policy.id) select(pending);
 
   let body;
   if (error) body = <ErrorNote message={error} />;
@@ -334,6 +334,13 @@ export default function FarmerPage() {
         <div>
           <div className="mb-1.5 text-[13px] text-muted">Season A</div>
           <SeasonTimeline season={season} onSelect={(s) => { setSeason(s); setReported(null); }} />
+          {policy.season && policy.season > LAST_SEASON && (
+            <p className="mt-2 text-xs text-muted">
+              This cover starts in Season A {policy.season}, which is still under way; its provisional index is on{" "}
+              <Link href="/season" className="text-accent underline-offset-2 hover:underline">This Season</Link>. The seasons above
+              show what the same cover would have paid in past years.
+            </p>
+          )}
         </div>
         <p className="flex items-center gap-1.5 text-xs text-faint">
           <MessageSquareText size={13} />
