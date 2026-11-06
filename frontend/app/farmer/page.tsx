@@ -1,17 +1,17 @@
 "use client";
 
 import { CheckCircle2, MessageSquareText, Search } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import NumberInput from "@/components/NumberInput";
 import SeasonTimeline from "@/components/SeasonTimeline";
 import { Card, ErrorNote, Loading, PageHeader } from "@/components/ui";
 import Link from "next/link";
-import { getHistory, getModel, getSeasons, getSmsStatus, reportLoss, sendSms, USE_MOCK } from "@/lib/api";
+import { getHistory, getModel, getPolicies, getSeasons, getSmsStatus, reportLoss, sendSms, USE_MOCK } from "@/lib/api";
 import { districtsInSeason, type DistrictSeason } from "@/lib/districtSeason";
 import { pct } from "@/lib/payout";
 import { USSD_CODE } from "@/lib/constants";
 import { smsParts } from "@/lib/sms";
-import { DEMO_POLICIES, findPolicy, type Policy } from "@/lib/policies";
+import { DEMO_POLICIES, findPolicy, fromRegistered, type Policy } from "@/lib/policies";
 import { defaultTerms, expectedPayout, payoutHistory, perHectare, rwf } from "@/lib/pricing";
 import { useApi } from "@/lib/useApi";
 
@@ -117,6 +117,9 @@ export default function FarmerPage() {
   const history = useApi("history", getHistory);
   const seasons = useApi("seasons", getSeasons);
   const model = useApi("model", getModel);
+  // Policies signed up for over USSD or the web phone; the demo policies still work without them.
+  const registered = useApi("policies", getPolicies);
+  const signedUp = useMemo(() => (registered.data ?? []).map(fromRegistered), [registered.data]);
   const [query, setQuery] = useState(DEFAULT_POLICY.id);
   const [policy, setPolicy] = useState<Policy>(DEFAULT_POLICY);
   const [areaM2, setAreaM2] = useState(DEFAULT_POLICY.areaM2);
@@ -125,16 +128,25 @@ export default function FarmerPage() {
   // The latest report sent, keyed by policy and season so it clears when either changes.
   const [reported, setReported] = useState<{ key: string; text: string; ok: boolean } | null>(null);
   const error = history.error ?? seasons.error ?? model.error;
-  const notFound = query.trim() !== "" && !findPolicy(query);
+  // While the signed-up policies load, an unknown number may still be one of them.
+  const notFound = query.trim() !== "" && !findPolicy(query, signedUp) && !registered.loading;
 
   function lookUp(id: string) {
     setQuery(id);
-    const p = findPolicy(id);
+    const p = findPolicy(id, signedUp);
     if (p) {
       setPolicy(p);
       setAreaM2(p.areaM2);
       setReported(null);
     }
+  }
+
+  // A signed-up number typed before the list arrived opens once it does.
+  const pending = findPolicy(query, signedUp);
+  if (pending && pending.id !== policy.id) {
+    setPolicy(pending);
+    setAreaM2(pending.areaM2);
+    setReported(null);
   }
 
   let body;
@@ -300,7 +312,7 @@ export default function FarmerPage() {
                 className="w-full min-w-0 bg-transparent px-2 py-1.5 text-sm uppercase outline-none"
               />
               <datalist id="demo-policies">
-                {DEMO_POLICIES.map((p) => (
+                {[...DEMO_POLICIES, ...signedUp].map((p) => (
                   <option key={p.id} value={p.id}>{p.district}</option>
                 ))}
               </datalist>
@@ -318,7 +330,7 @@ export default function FarmerPage() {
             ))}
           </div>
         </div>
-        {notFound && <p className="text-sm text-drought">No policy {query.toUpperCase()}. Try one of the demo policies.</p>}
+        {notFound && <p className="text-sm text-drought">No policy {query.toUpperCase()}. Check the number, or try a demo policy.</p>}
         <div>
           <div className="mb-1.5 text-[13px] text-muted">Season A</div>
           <SeasonTimeline season={season} onSelect={(s) => { setSeason(s); setReported(null); }} />

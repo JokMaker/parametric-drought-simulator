@@ -1,4 +1,5 @@
 import { DISTRICTS } from "./constants";
+import type { RegisteredPolicy } from "./types";
 
 // Synthetic demo policies: no real farmer, name or phone number is used. Maize areas
 // are typical smallholder sizes (the survey median is about 600 m2).
@@ -18,4 +19,15 @@ export const DEMO_POLICIES: Policy[] = DISTRICTS.flatMap((district, d) =>
   })),
 );
 
-export const findPolicy = (id: string) => DEMO_POLICIES.find((p) => p.id.toLowerCase() === id.trim().toLowerCase());
+/** A policy a farmer signed up for (USSD or the web phone), in the shape the demo policies use. */
+export const fromRegistered = (r: RegisteredPolicy): Policy => ({
+  id: r.policyId,
+  district: r.district,
+  areaM2: r.areaM2,
+  // The API sends "+250••••456"; keep the last three digits, masked like the demo numbers.
+  phone: `07xx xxx ${r.phone.slice(-3)}`,
+});
+
+/** Looks a policy number up among the demo policies and any signed-up ones, ignoring case. */
+export const findPolicy = (id: string, signedUp: Policy[] = []) =>
+  [...DEMO_POLICIES, ...signedUp].find((p) => p.id.toLowerCase() === id.trim().toLowerCase());
