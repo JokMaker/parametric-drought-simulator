@@ -128,7 +128,7 @@ export default function UssdPage() {
             {newFarmer ? (
               <>
                 <li><span className="font-medium text-ink">2.</span> 1 buys cover: pick your district, type your maize field size in m², then 1 confirms. The menu opens in Kinyarwanda; 5 switches to English.</li>
-                <li><span className="font-medium text-ink">3.</span> Dial again from the same number to open your new policy. It is listed on the <Link href="/policies" className="text-accent hover:underline">Policies</Link> page as a web demo.</li>
+                <li><span className="font-medium text-ink">3.</span> The screen shows your policy number and your menu straight away, so you can check your cover or report a loss (4) without dialling again. The policy is listed on the <Link href="/policies" className="text-accent hover:underline">Policies</Link> page as a web demo.</li>
               </>
             ) : (
               <>

@@ -49,9 +49,9 @@ T = {
         "area": "{district}\nEnter your maize field size in m2 ({min} to {max}):",
         "invalid": "Invalid answer.\n",
         "confirm": "{district}, {area} m2\nInsured value {cover}\nPremium {premium}/season\nWe keep your number for this cover.\n1. Confirm\n0. Back",
-        "joined": "Done. Your policy number is {policy}. We sent it to you by SMS.",
-        "joined_no_sms": "Done. Your policy number is {policy}.",
-        "joined_sms": "RDI Maize Insurance: your policy is {policy}. {district}, {area} m2, Season A {season}. Premium {premium}. Dial again to see your cover.",
+        "joined": "Done. Your policy number is {policy}.{sms}\n1. My cover\n2. This season\n3. My payouts\n4. Report a crop loss\n0. Exit",
+        "sms_sent": " Sent by SMS.",
+        "joined_sms": "RDI Maize Insurance: your policy is {policy}. {district}, {area} m2, Season A {season}. Premium {premium}. To report a crop loss, dial again and choose 4.",
     },
     "rw": {
         "menu": "RDI Ubwishingizi bw'ibigori\n{district} {policy}\n1. Ubwishingizi bwanjye\n2. Iki gihembwe\n3. Ingurane nahawe\n4. Menyesha igihombo\n5. English\n0. Sohoka",
@@ -76,9 +76,9 @@ T = {
         "area": "{district}\nAndika ubuso bw'umurima w'ibigori muri m2 ({min} kugeza {max}):",
         "invalid": "Igisubizo ntikemewe.\n",
         "confirm": "{district}, {area} m2\nAgaciro kishingiwe {cover}\nUmusanzu {premium}/igihembwe\nNimero yawe izabikwa.\n1. Emeza\n0. Subira inyuma",
-        "joined": "Byakozwe. Nimero y'ubwishingizi bwawe ni {policy}. Twayikoherereje kuri SMS.",
-        "joined_no_sms": "Byakozwe. Nimero y'ubwishingizi bwawe ni {policy}.",
-        "joined_sms": "RDI Ubwishingizi: nimero yawe ni {policy}. {district}, {area} m2, Igihembwe A {season}. Umusanzu {premium}. Ongera ukande kode urebe ubwishingizi.",
+        "joined": "Byakozwe. Nimero yawe ni {policy}.{sms}\n1. Ubwishingizi bwanjye\n2. Iki gihembwe\n3. Ingurane nahawe\n4. Menyesha igihombo\n0. Sohoka",
+        "sms_sent": " Yoherejwe kuri SMS.",
+        "joined_sms": "RDI Ubwishingizi: nimero yawe ni {policy}. {district}, {area} m2, Igihembwe A {season}. Umusanzu {premium}. Kumenyesha igihombo, ongera ukande kode uhitemo 4.",
     },
 }
 
@@ -106,8 +106,8 @@ class Session:
     path: tuple[str, ...]
 
     @classmethod
-    def replay(cls, text: str) -> "Session":
-        lang, path = "rw", []
+    def replay(cls, text: str, lang: str = "rw") -> "Session":
+        path: list[str] = []
         for answer in text.split("*") if text else []:
             if not path and answer == "5":
                 lang = "en" if lang == "rw" else "rw"
@@ -116,6 +116,29 @@ class Session:
             else:
                 path.append(answer)
         return cls(lang, tuple(path))
+
+
+def _sign_up_answers(path: tuple[str, ...]) -> tuple[str | None, int | None, bool, bool]:
+    """Read the sign-up answers in order: district, field size, confirm. A wrong answer
+    repeats the question, so an invalid one is skipped. Returns the district, the area,
+    whether the last answer was invalid, and whether the farmer confirmed."""
+    if not path or path[0] != "1":
+        return None, None, False, False
+    district, area, invalid = None, None, False
+    for answer in path[1:]:
+        if district is None:
+            ok = answer.isdigit() and 1 <= int(answer) <= len(DISTRICTS)
+            district = DISTRICTS[int(answer) - 1] if ok else None
+        elif area is None:
+            size = answer.replace(",", "").replace(" ", "")  # "1,250" as the screen writes it
+            ok = size.isdigit() and MIN_AREA_M2 <= int(size) <= MAX_AREA_M2
+            area = int(size) if ok else None
+        else:
+            ok = answer == "1"
+            if ok:
+                return district, area, False, True
+        invalid = not ok
+    return district, area, invalid, False
 
 
 class UssdMenu:
@@ -133,6 +156,11 @@ class UssdMenu:
         """The next screen. A caller without a policy gets the sign-up menu (or, when
         there is no number to sign up, as in the dashboard preview, a closing message)."""
         session = Session.replay(text)
+        if policy is not None and (after := self._after_sign_up(text)) is not None:
+            # Signed up earlier in this call: the menu carries on from the "Done" screen.
+            session = Session.replay(after, session.lang)
+            if not session.path:
+                return "CON " + T[session.lang]["joined"].format(policy=policy.id, sms="")
         t = T[session.lang]
         path = session.path
         if policy is None:
@@ -145,6 +173,17 @@ class UssdMenu:
         if path[0] not in screens:
             return "CON " + t["menu"].format(district=policy.district, policy=policy.id)
         return screens[path[0]](t, policy, path[1:], phone)
+
+    @staticmethod
+    def _after_sign_up(text: str) -> str | None:
+        """The answers given after buying cover in this same call, or None when the call
+        did not start with a sign-up. Africa's Talking resends the whole session, so a
+        farmer who has just signed up arrives with the sign-up answers still in `text`."""
+        answers = text.split("*") if text else []
+        for k in range(1, len(answers) + 1):
+            if _sign_up_answers(Session.replay("*".join(answers[:k])).path)[3]:
+                return "*".join(answers[k:])
+        return None
 
     def _season(self) -> int:
         """The season a policy covers: the one in progress, or else the next."""
@@ -160,20 +199,9 @@ class UssdMenu:
             return "END " + t["exit"]
         if path[0] != "1":
             return "CON " + t["join"]
-        district, area, invalid = None, None, False
-        for answer in path[1:]:
-            if district is None:
-                ok = answer.isdigit() and 1 <= int(answer) <= len(DISTRICTS)
-                district = DISTRICTS[int(answer) - 1] if ok else None
-            elif area is None:
-                size = answer.replace(",", "").replace(" ", "")  # "1,250" as the screen writes it
-                ok = size.isdigit() and MIN_AREA_M2 <= int(size) <= MAX_AREA_M2
-                area = int(size) if ok else None
-            else:
-                ok = answer == "1"
-                if ok:
-                    return self._register(t, phone, district, area)
-            invalid = not ok
+        district, area, invalid, confirmed = _sign_up_answers(path)
+        if confirmed:
+            return self._register(t, phone, district, area)
         prefix = t["invalid"] if invalid else ""
         if district is None:
             return "CON " + prefix + t["districts"]
@@ -191,11 +219,11 @@ class UssdMenu:
                                      season=season, premium=rwf(premium))
         try:
             self.gateway.send(sms, to=phone)
-            reply = "END " + t["joined"].format(policy=policy.id)
+            texted = t["sms_sent"]
         except SmsError:
-            reply = "END " + t["joined_no_sms"].format(policy=policy.id)
+            texted = ""
         self._tell_insurer(policy, premium)
-        return reply
+        return "CON " + t["joined"].format(policy=policy.id, sms=texted)
 
     def _tell_insurer(self, policy: Policy, premium: float) -> None:
         """Let the insurer (the AT_PHONE number) know about a new policy. Best effort:

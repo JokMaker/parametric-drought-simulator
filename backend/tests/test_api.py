@@ -322,7 +322,8 @@ def test_ussd_sign_up_screens(gateway, report_db, text, contains):
 def test_ussd_sign_up_saves_the_policy_and_texts_the_caller(gateway, report_db):
     quote = ussd("5*1*3*1250", phone=NEW_PHONE)
     reply = ussd("5*1*3*1250*1", phone=NEW_PHONE)
-    assert reply == "END Done. Your policy number is RDI-KAY-5001. We sent it to you by SMS."
+    assert reply.startswith("CON Done. Your policy number is RDI-KAY-5001. Sent by SMS.\n1. My cover")
+    assert len(reply) <= 182
     # The confirmation goes to the farmer's own number, as one SMS; the insurer (AT_PHONE) hears of it too.
     assert gateway.recipients == [NEW_PHONE, DEMO_PHONE]
     assert "RDI-KAY-5001" in gateway.sent[0] and sms_parts(gateway.sent[0]) == 1
@@ -341,14 +342,28 @@ def test_ussd_sign_up_saves_the_policy_and_texts_the_caller(gateway, report_db):
 
 
 def test_ussd_sign_up_in_kinyarwanda_texts_in_kinyarwanda(gateway):
-    assert ussd("1*7*600*1", phone=NEW_PHONE).startswith("END Byakozwe. Nimero y'ubwishingizi bwawe ni RDI-RWA-5001")
+    assert ussd("1*7*600*1", phone=NEW_PHONE).startswith("CON Byakozwe. Nimero yawe ni RDI-RWA-5001")
     assert gateway.sent[0].startswith("RDI Ubwishingizi: nimero yawe ni RDI-RWA-5001") and sms_parts(gateway.sent[0]) == 1
+
+
+def test_ussd_menu_stays_open_after_sign_up(gateway, report_db):
+    # Africa's Talking resends every answer in the call, sign-up included.
+    signed = "5*1*3*1250*1"
+    ussd(signed, phone=NEW_PHONE)
+    assert "Insured value RWF" in ussd(signed + "*1", phone=NEW_PHONE)        # 1. My cover
+    assert ussd(signed + "*1*0", phone=NEW_PHONE).startswith("CON Done. Your policy number is RDI-KAY-5001.")
+    assert ussd(signed + "*4", phone=NEW_PHONE).startswith("CON What damaged your crop?")
+    assert ussd(signed + "*4*1", phone=NEW_PHONE).startswith("END Thank you. Report received (drought)")
+    assert ussd(signed + "*0", phone=NEW_PHONE) == "END Thank you for using RDI Maize Insurance."
+    assert len(report_db.policies()) == 1  # replaying the sign-up does not buy cover twice
+    # The Kinyarwanda Done screen fits on one USSD screen too.
+    assert len(ussd("1*3*1250*1*1*0", phone=NEW_PHONE)) <= 182
 
 
 def test_ussd_sign_up_works_without_sms(report_db):
     app.dependency_overrides[get_sms_settings] = lambda: SmsSettings()
     try:
-        assert ussd("5*1*1*800*1", phone=NEW_PHONE) == "END Done. Your policy number is RDI-BUG-5001."
+        assert ussd("5*1*1*800*1", phone=NEW_PHONE).startswith("CON Done. Your policy number is RDI-BUG-5001.\n1. My cover")
     finally:
         app.dependency_overrides.pop(get_sms_settings, None)
 
@@ -401,7 +416,7 @@ def test_web_demo_phone_signs_up_without_sms(gateway, report_db):
         return client.post("/api/ussd/preview", json={"text": text, "phone": phone})
 
     assert preview("").json()["reply"].startswith("CON RDI Ubwishingizi bw'ibigori\nNta bwishingizi")
-    assert preview("5*1*2*900*1").json()["reply"] == "END Done. Your policy number is RDI-GAT-5001."
+    assert preview("5*1*2*900*1").json()["reply"].startswith("CON Done. Your policy number is RDI-GAT-5001.\n")
     assert gateway.sent == []  # not a real phone: no SMS to it, and no alert to the insurer
     # The same browser number now has a policy, so it opens that farmer's menu.
     assert preview("").json()["reply"].startswith("CON RDI Ubwishingizi bw'ibigori\nGatsibo RDI-GAT-5001")
