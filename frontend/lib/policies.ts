@@ -3,7 +3,8 @@ import type { RegisteredPolicy } from "./types";
 
 // Synthetic demo policies: no real farmer, name or phone number is used. Maize areas
 // are typical smallholder sizes (the survey median is about 600 m2).
-export type Policy = { id: string; district: string; areaM2: number; phone: string };
+// `season` is set only for signed-up policies: the Season A the cover was bought for.
+export type Policy = { id: string; district: string; areaM2: number; phone: string; season?: number };
 
 const CODE: Record<string, string> = {
   Bugesera: "BUG", Gatsibo: "GAT", Kayonza: "KAY", Kirehe: "KIR", Ngoma: "NGO", Nyagatare: "NYA", Rwamagana: "RWA",
@@ -26,6 +27,7 @@ export const fromRegistered = (r: RegisteredPolicy): Policy => ({
   areaM2: r.areaM2,
   // The API sends "+250••••456"; keep the last three digits, masked like the demo numbers.
   phone: `07xx xxx ${r.phone.slice(-3)}`,
+  season: r.season,
 });
 
 /** Looks a policy number up among the demo policies and any signed-up ones, ignoring case. */
