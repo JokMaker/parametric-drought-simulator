@@ -68,7 +68,7 @@ export default function FieldChecksPage() {
     const order: CheckStatus[] = ["check", "watch", "paid", "clear"];
     rows.sort((a, b) => order.indexOf(a.status) - order.indexOf(b.status) || (b.lossShare ?? 0) - (a.lossShare ?? 0));
     const checks = rows.filter((r) => r.status === "check");
-    const paid = rows.filter((r) => r.status === "paid");
+    const paid = rows.filter((r) => r.payout > 0);
     const totalReports = rows.reduce((s, r) => s + r.reports, 0);
     const title = checks.length
       ? `Season A ${season}: ${checks.length} of 7 districts need a field check: ${checks.map((r) => r.district).join(", ")}`
@@ -79,7 +79,7 @@ export default function FieldChecksPage() {
         <StatStrip
           items={[
             { value: String(checks.length), label: "Districts needing a field check", note: `paid under ${pct(rule.paidEnough)}, but evidence of loss` },
-            { value: String(paid.length), label: "Districts the index paid", note: `Season A ${season}` },
+            { value: String(paid.length), label: "Districts the index paid", note: `any payout, Season A ${season}` },
             { value: String(totalReports), label: "Farmer loss reports on file", note: USE_MOCK ? "reports need the live API" : "one per policy per season" },
             {
               value: live ? "—" : pct(Math.max(...rows.map((r) => r.lossShare ?? 0))),
