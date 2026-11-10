@@ -13,13 +13,15 @@ export default function Term({ k }: { k: GlossaryKey }) {
   const { term, text } = GLOSSARY[k];
   const id = useId();
   const button = useRef<HTMLButtonElement>(null);
-  const [at, setAt] = useState<{ top: number; left: number } | null>(null);
+  const [at, setAt] = useState<{ top?: number; bottom?: number; left: number } | null>(null);
 
   function show() {
     const r = button.current?.getBoundingClientRect();
     if (!r) return;
     const left = Math.min(Math.max(8, r.left + r.width / 2 - WIDTH / 2), window.innerWidth - WIDTH - 8);
-    setAt({ top: r.bottom + 6, left });
+    // Open upwards when the term sits near the bottom of the screen.
+    const below = window.innerHeight - r.bottom > 140;
+    setAt(below ? { top: r.bottom + 6, left } : { bottom: window.innerHeight - r.top + 6, left });
   }
   const hide = () => setAt(null);
 
@@ -61,7 +63,7 @@ export default function Term({ k }: { k: GlossaryKey }) {
         <span
           id={id}
           role="tooltip"
-          style={{ top: at.top, left: at.left, width: WIDTH }}
+          style={{ top: at.top, bottom: at.bottom, left: at.left, width: WIDTH }}
           className="card fixed z-50 block px-3 py-2 text-left text-xs font-normal leading-5 text-ink shadow-lg"
         >
           <span className="block font-semibold">{term}</span>
