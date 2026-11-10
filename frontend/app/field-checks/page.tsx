@@ -3,7 +3,7 @@
 import Link from "next/link";
 import NumberInput from "@/components/NumberInput";
 import { useState } from "react";
-import { Card, ErrorNote, Loading, PageHeader, StatStrip } from "@/components/ui";
+import { Card, ErrorNote, Loading, PageHeader, StatStrip, SwipeHint } from "@/components/ui";
 import { getCurrentSeason, getPlotLosses, getReportCounts, getSeasons, USE_MOCK } from "@/lib/api";
 import { DISTRICTS, YIELD_SEASONS } from "@/lib/constants";
 import { checkStatus, DEFAULT_RULE, STATUS_LABEL, type CheckRule, type CheckStatus } from "@/lib/fieldChecks";
@@ -137,6 +137,7 @@ export default function FieldChecksPage() {
             </label>
           </div>
 
+          <SwipeHint />
           <div className="-mx-2 overflow-x-auto">
             <table className="tabular w-full min-w-[760px] whitespace-nowrap text-sm">
               <thead>

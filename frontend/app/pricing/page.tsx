@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 import LossRatioChart from "@/components/charts/LossRatioChart";
 import NumberInput from "@/components/NumberInput";
-import { Card, ErrorNote, Loading, PageHeader, StatStrip } from "@/components/ui";
+import { Card, ErrorNote, Loading, PageHeader, StatStrip, SwipeHint } from "@/components/ui";
 import { getHistory, getModel, getSeasons } from "@/lib/api";
 import { pct } from "@/lib/payout";
 import { defaultTerms, oneInTen, payoutHistory, priceDistricts, rwf, rwfShort, seasonBooks, type Terms } from "@/lib/pricing";
@@ -119,6 +119,7 @@ export default function PricingPage() {
           title={`A hectare of maize costs a farmer ${rwf(byCost[0].farmerPays)} a season to insure in ${byCost[0].district}, ${rwf(byCost[byCost.length - 1].farmerPays)} in ${byCost[byCost.length - 1].district}`}
           source={`Fair premium = the cover × the average payout share over every season since 2001 (burning-cost pricing). Payouts use the ${m.model} index (leave-one-out for the seasons with harvest data, as on every other page) with the ${m.trigger}% trigger and ${m.exit}% exit. Farmer prices are after subsidy.`}
         >
+          <SwipeHint />
           <div className="-mx-2 overflow-x-auto">
             <table className="tabular w-full min-w-[760px] whitespace-nowrap text-sm">
               <thead>

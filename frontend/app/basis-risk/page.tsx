@@ -5,7 +5,7 @@ import { useState } from "react";
 import BasisRiskChart from "@/components/charts/BasisRiskChart";
 import ClassLegend from "@/components/charts/ClassLegend";
 import TriggerSimulator from "@/components/TriggerSimulator";
-import { Badge, Card, DotCount, ErrorNote, Loading, PageHeader, StatStrip, Tabs, type Tone } from "@/components/ui";
+import { Badge, Card, DotCount, ErrorNote, Loading, PageHeader, StatStrip, Tabs, type Tone, SwipeHint } from "@/components/ui";
 import { getBasisRisk, getModel, getSeasons } from "@/lib/api";
 import { classify, OUTCOME_LABEL, pct, signedPct, type Outcome } from "@/lib/payout";
 import { RISK_CLASSES } from "@/lib/scales";
@@ -101,6 +101,7 @@ export default function BasisRiskPage() {
               onChange={setFilter}
             />
           </div>
+          <SwipeHint />
           <div className="-mx-2 overflow-x-auto">
             <table className="tabular w-full min-w-[640px] text-sm">
               <thead>
