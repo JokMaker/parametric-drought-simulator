@@ -1,5 +1,7 @@
 import { AlertTriangle, Info } from "lucide-react";
 import type { ReactNode } from "react";
+import Term from "@/components/Term";
+import type { GlossaryKey } from "@/lib/glossary";
 
 export function PageHeader({ title, children }: { title: string; children?: ReactNode }) {
   return (
@@ -17,6 +19,7 @@ export function PageHeader({ title, children }: { title: string; children?: Reac
  */
 export function Card({
   label,
+  info,
   title,
   action,
   source,
@@ -24,6 +27,8 @@ export function Card({
   className = "",
 }: {
   label?: string;
+  /** A glossary term to explain next to the label. */
+  info?: GlossaryKey;
   title?: ReactNode;
   action?: ReactNode;
   source?: ReactNode;
@@ -35,7 +40,12 @@ export function Card({
       {(label || title || action) && (
         <div className="flex flex-wrap items-start justify-between gap-3 px-5 pt-4 sm:px-6">
           <div className="min-w-0">
-            {label && <div className="text-[13px] font-medium text-muted">{label}</div>}
+            {label && (
+              <div className="text-[13px] font-medium text-muted">
+                {label}
+                {info && <Term k={info} />}
+              </div>
+            )}
             {title && <h2 className="mt-0.5 text-[17px] font-semibold leading-snug">{title}</h2>}
           </div>
           {action}
@@ -59,7 +69,7 @@ export function Card({
 export function StatStrip({
   items,
 }: {
-  items: { value: ReactNode; label: string; note?: ReactNode; viz?: ReactNode }[];
+  items: { value: ReactNode; label: string; info?: GlossaryKey; note?: ReactNode; viz?: ReactNode }[];
 }) {
   return (
     <section
@@ -70,7 +80,10 @@ export function StatStrip({
       {items.map((it) => (
         <div key={it.label} className="bg-surface px-5 py-4">
           <div className="tabular text-[28px] font-semibold leading-none tracking-tight">{it.value}</div>
-          <div className="mt-2 text-[13px] leading-snug text-ink">{it.label}</div>
+          <div className="mt-2 text-[13px] leading-snug text-ink">
+            {it.label}
+            {it.info && <Term k={it.info} />}
+          </div>
           {it.viz && <div className="mt-2.5">{it.viz}</div>}
           {it.note && <div className="mt-1 text-xs text-muted">{it.note}</div>}
         </div>
