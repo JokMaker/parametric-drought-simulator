@@ -12,8 +12,17 @@ export function anomalyLabel(z: number) {
   return `${Math.abs(z).toFixed(1)} ${z > 0 ? "above" : "below"} normal`;
 }
 
+/** A share as a percentage. Halves round to even, as Python's round() does in the notebook and
+ *  the report (9 of 40 false payouts is 22%, not 23%), and a share under 0.5% that is not zero keeps
+ *  a decimal, so a token payout reads 0.2% rather than 0%. */
 export function pct(x: number, digits = 0) {
-  return `${(x * 100).toFixed(digits)}%`;
+  const p = x * 100;
+  if (digits === 0 && p > 0 && p < 0.5) digits = 1;
+  const f = 10 ** digits;
+  const v = Number((p * f).toFixed(6));
+  const lo = Math.floor(v);
+  const r = v - lo > 0.5 ? lo + 1 : v - lo < 0.5 ? lo : lo % 2 === 0 ? lo : lo + 1;
+  return `${(r / f).toFixed(digits)}%`;
 }
 
 export function signedPct(x: number, digits = 1) {

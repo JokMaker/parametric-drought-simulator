@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { anomalyLabel, classify, modelError, payoutFromIndex, reason, uncertainty } from "../lib/payout";
+import { anomalyLabel, classify, modelError, payoutFromIndex, reason, uncertainty, pct } from "../lib/payout";
 import { model, sim } from "./fixtures";
 
 describe("payoutFromIndex", () => {
@@ -82,5 +82,20 @@ describe("uncertainty", () => {
     const noError = { ...model, validation: [] };
     assert.equal(uncertainty(-5, noError).chanceBelowTrigger, 1);
     assert.equal(uncertainty(5, noError).chanceBelowTrigger, 0);
+  });
+});
+
+describe("pct", () => {
+  it("rounds halves to even, as the notebook and the report do", () => {
+    assert.equal(pct(9 / 40), "22%"); // false payouts: 22.5% -> 22%
+    assert.equal(pct(0.235), "24%");
+    assert.equal(pct(39 / 56), "70%");
+    assert.equal(pct(1), "100%");
+  });
+
+  it("keeps a decimal for a token share, so it never reads as zero", () => {
+    assert.equal(pct(0.002), "0.2%"); // Ngoma 2019
+    assert.equal(pct(0), "0%");
+    assert.equal(pct(-0.11), "-11%");
   });
 });
