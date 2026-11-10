@@ -4,6 +4,7 @@ import { DEFAULT_RULE, checkStatus } from "../lib/fieldChecks";
 import { DEMO_POLICIES, findPolicy, fromRegistered } from "../lib/policies";
 import { indexClass, payoutClass, riskClass } from "../lib/scales";
 import { smsParts } from "../lib/sms";
+import { GLOSSARY } from "../lib/glossary";
 
 describe("checkStatus", () => {
   const status = (payout: number, reports: number, lossShare: number | null) => checkStatus(payout, reports, lossShare, DEFAULT_RULE);
@@ -83,5 +84,14 @@ describe("colour classes", () => {
   it("bands payouts and basis risk", () => {
     assert.deepEqual([0, 0.2, 0.5, 0.9, 1].map((s) => payoutClass(s).key), ["none", "watch", "moderate", "severe", "extreme"]);
     assert.deepEqual([0.05, 0.15, 0.25, 0.4].map((r) => riskClass(r).key), ["low", "some", "high", "very"]);
+  });
+});
+
+describe("glossary", () => {
+  it("explains every term in one short sentence or two", () => {
+    for (const { term, text } of Object.values(GLOSSARY)) {
+      assert.ok(term.length > 0);
+      assert.ok(text.length <= 200, `${term} is too long for a tooltip`);
+    }
   });
 });
