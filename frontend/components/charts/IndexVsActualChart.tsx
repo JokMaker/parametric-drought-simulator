@@ -13,6 +13,7 @@ import {
   YAxis,
   ZAxis,
 } from "recharts";
+import { useSyncExternalStore } from "react";
 import { classify, OUTCOME_LABEL, signedPct, type Outcome } from "@/lib/payout";
 import type { ModelSummary, Simulation } from "@/lib/types";
 
@@ -22,6 +23,22 @@ const MATCH = "var(--ink)";
 // Mismatches use the basis-risk colour, so a mismatch reads the same everywhere.
 const MISMATCH = "var(--risk-4)";
 const TICK = { fontSize: 11, fill: "var(--muted)" };
+
+// On a phone the four corner labels collide, so they move into a key under the chart.
+const WIDE = "(min-width: 640px)";
+const subscribeWide = (cb: () => void) => {
+  const m = matchMedia(WIDE);
+  m.addEventListener("change", cb);
+  return () => m.removeEventListener("change", cb);
+};
+const useWide = () => useSyncExternalStore(subscribeWide, () => matchMedia(WIDE).matches, () => true);
+
+const CORNERS = [
+  { corner: "Top left", text: "✗ Missed: poor harvest, no payout", bad: true },
+  { corner: "Top right", text: "✓ No payout, harvest fine", bad: false },
+  { corner: "Bottom left", text: "✓ Paid, harvest poor", bad: false },
+  { corner: "Bottom right", text: "✗ False payout", bad: true },
+];
 
 function DotTooltip({ active, payload }: TooltipContentProps) {
   const d = payload?.[0]?.payload as Dot | undefined;
@@ -58,6 +75,7 @@ export default function IndexVsActualChart({ seasons, model }: { seasons: Simula
   const match = dots.filter((d) => d.outcome === "hit" || d.outcome === "correct-no-payout");
   const mismatch = dots.filter((d) => d.outcome === "miss" || d.outcome === "false-payout");
   const t = model.lowYieldThreshold;
+  const wide = useWide();
   const lim = Math.ceil(Math.max(...dots.flatMap((d) => [Math.abs(d.x), Math.abs(d.y)])) / 10) * 10;
 
   return (
@@ -68,7 +86,7 @@ export default function IndexVsActualChart({ seasons, model }: { seasons: Simula
           {/* Payout zone: index at or below the trigger. */}
           <ReferenceArea y1={-lim} y2={model.trigger} fill="var(--drought)" fillOpacity={0.07} />
           {/* The four outcomes, named in their own corner of the chart. */}
-          {[
+          {wide && [
             { x1: -lim, x2: t, y1: model.trigger, y2: lim, pos: "insideTopLeft", text: "✗ Missed: poor harvest, no payout", bad: true },
             { x1: t, x2: lim, y1: model.trigger, y2: lim, pos: "insideTopRight", text: "✓ No payout, harvest fine", bad: false },
             { x1: -lim, x2: t, y1: -lim, y2: model.trigger, pos: "insideBottomLeft", text: "✓ Paid, harvest poor", bad: false },
@@ -122,13 +140,23 @@ export default function IndexVsActualChart({ seasons, model }: { seasons: Simula
             x={model.lowYieldThreshold}
             stroke="var(--drought)"
             strokeDasharray="2 3"
-            label={{ value: `Poor harvest ${model.lowYieldThreshold}%`, position: "top", fontSize: 11, fill: "var(--muted)" }}
+            label={{ value: wide ? `Poor harvest ${model.lowYieldThreshold}%` : `${model.lowYieldThreshold}%`, position: "top", fontSize: 11, fill: "var(--muted)" }}
           />
           <Tooltip content={DotTooltip} cursor={false} />
           <Scatter data={match} fill={MATCH} stroke="var(--surface)" strokeWidth={2} isAnimationActive={false} />
           <Scatter data={mismatch} fill={MISMATCH} stroke="var(--surface)" strokeWidth={2} isAnimationActive={false} />
         </ScatterChart>
       </ResponsiveContainer>
+      {!wide && (
+        <ul className="mb-2 grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
+          {CORNERS.map((c) => (
+            <li key={c.corner} style={{ color: c.bad ? MISMATCH : "var(--ink)" }}>
+              <span className="text-muted">{c.corner}: </span>
+              {c.text}
+            </li>
+          ))}
+        </ul>
+      )}
       <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-xs text-muted">
         <span>Each dot: one district-season</span>
         <span className="flex items-center gap-1.5">
