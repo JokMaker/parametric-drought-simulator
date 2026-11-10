@@ -51,12 +51,14 @@ export default function Overview() {
             {
               value: pct(hits / poor),
               label: "Poor harvests paid",
+              info: "poorHarvest",
               viz: <DotCount filled={hits} total={poor} color="var(--sev-extreme)" />,
               note: `${hits} of ${poor}`,
             },
             {
               value: pct(falsePay / normal),
               label: "False payouts",
+              info: "falsePayout",
               viz: <DotCount filled={falsePay} total={normal} color="var(--risk-4)" />,
               note: `${falsePay} of ${normal} normal seasons`,
             },

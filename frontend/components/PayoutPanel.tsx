@@ -1,5 +1,7 @@
 "use client";
 
+import Term from "@/components/Term";
+import type { GlossaryKey } from "@/lib/glossary";
 import { classify, pct, reason, signedPct, uncertainty } from "@/lib/payout";
 import { indexClass, indexClasses, payoutClass } from "@/lib/scales";
 import type { ModelSummary, Simulation } from "@/lib/types";
@@ -137,10 +139,13 @@ const DOWN = "var(--drought)";
 const UP = "var(--other)";
 
 /** One step of the index chain. */
-function Step({ label, value, sub, color }: { label: string; value: string; sub?: string; color?: string }) {
+function Step({ label, info, value, sub, color }: { label: string; info?: GlossaryKey; value: string; sub?: string; color?: string }) {
   return (
     <div className="min-w-0 flex-1 rounded-sm bg-surface-2 px-3 py-2.5">
-      <div className="truncate text-xs text-muted">{label}</div>
+      <div className="truncate text-xs text-muted">
+        {label}
+        {info && <Term k={info} />}
+      </div>
       <div className="tabular mt-0.5 text-2xl font-semibold tracking-tight" style={color ? { color } : undefined}>
         {value}
       </div>
@@ -157,12 +162,12 @@ function Chain({ sim, model }: { sim: Simulation; model: ModelSummary }) {
   const arrow = <ArrowRight size={16} className="hidden shrink-0 self-center text-faint sm:block" />;
   return (
     <div className="grid grid-cols-2 gap-2 sm:flex sm:items-stretch">
-      <Step label="Rainfall" value={sd(sim.rainZ)} sub="SD from normal" color={sim.rainZ < 0 ? DOWN : UP} />
-      <Step label="Crop greenness" value={sd(sim.ndviZ)} sub="SD from normal" color={sim.ndviZ < 0 ? DOWN : UP} />
+      <Step label="Rainfall" info="sd" value={sd(sim.rainZ)} sub="SD from normal" color={sim.rainZ < 0 ? DOWN : UP} />
+      <Step label="Crop greenness" info="ndvi" value={sd(sim.ndviZ)} sub="SD from normal" color={sim.ndviZ < 0 ? DOWN : UP} />
       {arrow}
-      <Step label="Predicted yield" value={signedPct(sim.index)} sub={`± ${range.error.toFixed(0)} pts, vs the expected harvest`} />
+      <Step label="Predicted yield" info="index" value={signedPct(sim.index)} sub={`± ${range.error.toFixed(0)} pts, vs the expected harvest`} />
       {arrow}
-      <Step label="Payout" value={pct(sim.payout)} sub="of the sum insured" />
+      <Step label="Payout" info="payoutRule" value={pct(sim.payout)} sub="of the sum insured" />
     </div>
   );
 }
@@ -316,7 +321,10 @@ export function HarvestCard({ sim, model }: { sim: Simulation; model: ModelSumma
           color={payoutClass(sim.payoutIfActual).color} />
       </div>
       <div className="tabular mt-4 flex flex-wrap items-baseline gap-x-2 border-t border-line pt-3 text-sm">
-        <span className="text-muted">Basis risk</span>
+        <span className="text-muted">
+          Basis risk
+          <Term k="basisRisk" />
+        </span>
         <span className="text-lg font-semibold">{pct(gap)}</span>
         <span className="text-muted">gap between the two payouts</span>
       </div>

@@ -53,17 +53,19 @@ export default function BasisRiskPage() {
       <div className="space-y-5">
         <StatStrip
           items={[
-            { value: pct(highest.basisRisk), label: "Highest basis risk", note: highest.district },
+            { value: pct(highest.basisRisk), label: "Highest basis risk", info: "basisRisk", note: highest.district },
             { value: pct(lowest.basisRisk), label: "Lowest basis risk", note: lowest.district },
             {
               value: String(count("miss")),
               label: "Poor harvests the index missed",
+              info: "poorHarvest",
               viz: <DotCount filled={count("miss")} total={poorCount} color="var(--risk-4)" />,
               note: `of ${poorCount} poor seasons`,
             },
             {
               value: String(count("false-payout")),
               label: "False payouts",
+              info: "falsePayout",
               viz: <DotCount filled={count("false-payout")} total={rows.length - poorCount} color="var(--risk-4)" />,
               note: `of ${rows.length - poorCount} normal seasons`,
             },

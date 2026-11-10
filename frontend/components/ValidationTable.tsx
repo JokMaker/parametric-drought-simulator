@@ -1,4 +1,5 @@
 import type { ValidationRow } from "@/lib/types";
+import Term from "./Term";
 import { Badge } from "./ui";
 
 export default function ValidationTable({ rows, selected }: { rows: ValidationRow[]; selected: string }) {
@@ -7,14 +8,24 @@ export default function ValidationTable({ rows, selected }: { rows: ValidationRo
     <div className="space-y-5">
       {schemes.map((scheme) => (
         <div key={scheme} className="overflow-x-auto">
-          <div className="mb-2 text-xs font-medium text-muted">{scheme}</div>
+          <div className="mb-2 text-xs font-medium text-muted">
+            {scheme}
+            {scheme === "Leave-one-out" && <Term k="loo" />}
+            {scheme === "Leave-one-season-out" && <Term k="loso" />}
+          </div>
           <table className="tabular w-full text-sm">
             <thead>
               <tr className="text-left text-xs text-faint">
                 <th className="pb-2 font-medium">Model</th>
-                <th className="pb-2 text-right font-medium">RMSE</th>
+                <th className="pb-2 text-right font-medium">
+                  RMSE
+                  <Term k="rmse" />
+                </th>
                 <th className="pb-2 text-right font-medium">MAE</th>
-                <th className="pb-2 text-right font-medium">R²</th>
+                <th className="pb-2 text-right font-medium">
+                  R²
+                  <Term k="r2" />
+                </th>
               </tr>
             </thead>
             <tbody>
