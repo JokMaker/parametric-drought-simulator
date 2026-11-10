@@ -168,7 +168,7 @@ instead of real phones, which is enough for a demo.
    tunnel address plus `/api/ussd`. Dial the code on the simulator (this project's channel is
    `*384*44698#`; set `NEXT_PUBLIC_USSD_CODE` if yours differs). The menu offers the farmer's cover,
    this season's provisional index, past payouts, a crop-loss report with its cause, an SMS copy of
-   any screen. It opens in Kinyarwanda (a draft), with English as option 5. The dashboard's **USSD Menu** page runs the same
+   any screen. It opens in Kinyarwanda, with English as option 5. The dashboard's **USSD Menu** page runs the same
    menu through `/api/ussd/preview`.
 
    **Signing up.** Any other number is offered cover instead: the farmer picks their district,
