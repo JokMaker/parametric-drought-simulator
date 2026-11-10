@@ -185,3 +185,8 @@ export function ErrorNote({ message }: { message: string }) {
     </div>
   );
 }
+
+/** On a phone, wide tables scroll sideways; say so, since the hidden columns are easy to miss. */
+export function SwipeHint() {
+  return <p className="mb-1 text-xs text-muted sm:hidden">Swipe the table sideways for more columns →</p>;
+}

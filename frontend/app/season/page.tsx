@@ -2,7 +2,7 @@
 
 import { IndexLegend } from "@/components/charts/ClassLegend";
 import DistrictMap from "@/components/charts/DistrictMap";
-import { Card, ErrorNote, Loading, PageHeader } from "@/components/ui";
+import { Card, ErrorNote, Loading, PageHeader, SwipeHint } from "@/components/ui";
 import { getCurrentSeason, getModel, getShapes } from "@/lib/api";
 import { pct, signedPct } from "@/lib/payout";
 import { indexClass } from "@/lib/scales";
@@ -139,6 +139,7 @@ export default function SeasonPage() {
           }
           source="Normal = the median of the 25 past seasons over the same days of the window. The line on each bar marks normal (100%). Red: well below normal (z ≤ −0.5); green: well above (z ≥ 0.5)."
         >
+          <SwipeHint />
           <div className="-mx-2 overflow-x-auto">
             <table className="tabular w-full min-w-[720px] text-sm">
               <thead>
