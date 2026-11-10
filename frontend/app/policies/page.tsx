@@ -56,7 +56,7 @@ export default function PoliciesPage() {
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
           <Card
             label="Policies · newest first"
-            title={rows.length ? `${rows.length} farmer${rows.length === 1 ? "" : "s"} signed up over USSD` : "No farmer has signed up yet"}
+            title={rows.length ? `${rows.length} farmer${rows.length === 1 ? "" : "s"} signed up over USSD or the web demo phone` : "No farmer has signed up yet"}
             source={`Farmers sign up by dialling ${USSD_CODE} from a number with no policy: they pick their district, enter their maize field size, see the insured value and premium, and confirm. The policy is stored against the phone number, the farmer gets an SMS with the policy number, and the insurer's phone gets an alert. Sign-ups from the USSD Menu page's on-screen phone use a demo number, get no SMS and are marked "web demo". Phone numbers are masked here; the full number stays in the database. The premium is the one quoted at sign-up, priced like the Pricing page's default terms.`}
           >
             {rows.length === 0 ? (
