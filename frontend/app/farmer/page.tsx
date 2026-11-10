@@ -344,7 +344,7 @@ export default function FarmerPage() {
         </div>
         <p className="flex items-center gap-1.5 text-xs text-faint">
           <MessageSquareText size={13} />
-          Demo: policies and phone numbers are synthetic. The Kinyarwanda text is a draft for a native speaker to check.{" "}
+          Demo: policies and phone numbers are synthetic.{" "}
           <Link href="/ussd" className="text-accent underline-offset-2 hover:underline">On a basic phone: try the USSD menu</Link>
         </p>
       </section>

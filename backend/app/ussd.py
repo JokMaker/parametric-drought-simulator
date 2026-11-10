@@ -9,8 +9,7 @@ The farmer is identified by the phone number they dial from (Africa's Talking
 sends it with every key press): the demo phone (AT_PHONE in backend/.env) holds
 the demo policy AT_POLICY (RDI-RWA-1233 by default); any other number either has
 a policy it signed up for, or gets the sign-up menu. The menu opens in
-Kinyarwanda, with 5 for English; the Kinyarwanda text is a draft for a native
-speaker to check.
+Kinyarwanda, with 5 for English.
 """
 
 from dataclasses import dataclass
