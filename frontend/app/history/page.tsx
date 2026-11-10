@@ -116,7 +116,7 @@ export default function HistoryPage() {
           label="Every district, every year"
           title={
             allPaid.length
-              ? `All seven districts would have been paid in ${allPaid.length} years; the worst was ${worstYear.y} (average ${worstYear.mean.toFixed(0)}%)`
+              ? `All seven districts would have been paid in ${allPaid.length} year${allPaid.length === 1 ? "" : "s"}; the worst was ${worstYear.y} (average ${worstYear.mean.toFixed(0)}%)`
               : `The worst year was ${worstYear.y}, with an average predicted change of ${worstYear.mean.toFixed(0)}%`
           }
           source="Rows: districts. Columns: October–December rains (red line: documented drought). A dot marks a payout. Click a square to open it in the Explorer."
