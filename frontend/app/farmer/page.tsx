@@ -3,6 +3,8 @@
 import { CheckCircle2, MessageSquareText, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import NumberInput from "@/components/NumberInput";
+import Term from "@/components/Term";
+import type { GlossaryKey } from "@/lib/glossary";
 import SeasonTimeline from "@/components/SeasonTimeline";
 import { Card, ErrorNote, Loading, PageHeader } from "@/components/ui";
 import Link from "next/link";
@@ -101,10 +103,13 @@ function SendSms({ text }: { text: string }) {
   );
 }
 
-function Tile({ label, value, sub, tone }: { label: string; value: string; sub?: string; tone?: string }) {
+function Tile({ label, info, value, sub, tone }: { label: string; info?: GlossaryKey; value: string; sub?: string; tone?: string }) {
   return (
     <div className="rounded-sm bg-surface-2 px-3 py-2.5">
-      <div className="text-xs text-muted">{label}</div>
+      <div className="text-xs text-muted">
+        {label}
+        {info && <Term k={info} />}
+      </div>
       <div className="tabular text-xl font-semibold" style={tone ? { color: tone } : undefined}>{value}</div>
       {sub && <div className="tabular text-[11px] text-muted">{sub}</div>}
     </div>
@@ -180,9 +185,9 @@ export default function FarmerPage() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                 <Tile label="Your maize is worth" value={rwf(value)} sub={`${Math.round(perHa.yieldKg * ha)} kg expected`} />
-                <Tile label="Your cover" value={rwf(cover)} sub={`${Math.abs(exit)}% of the value`} />
+                <Tile label="Your cover" info="cover" value={rwf(cover)} sub={`${Math.abs(exit)}% of the value`} />
                 <Tile label="You pay per season" value={rwf(premium)} sub="after subsidy" />
-                <Tile label="Payout this season" value={rwf(amount)} sub={`${pct(v.payout)} of cover · index ${v.index > 0 ? "+" : ""}${v.index.toFixed(1)}%`} tone={paid ? "var(--drought)" : undefined} />
+                <Tile label="Payout this season" info="payoutRule" value={rwf(amount)} sub={`${pct(v.payout)} of cover · index ${v.index > 0 ? "+" : ""}${v.index.toFixed(1)}%`} tone={paid ? "var(--drought)" : undefined} />
               </div>
 
               <div>
