@@ -1,7 +1,7 @@
 "use client";
 
 import { geoArea, geoMercator, geoPath } from "d3-geo";
-import { useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { DistrictShapes } from "@/lib/types";
 
 const WIDTH = 600;
@@ -46,6 +46,17 @@ export default function DistrictMap({
   const box = useRef<HTMLDivElement>(null);
   // Position and container width are measured in event handlers, never during render.
   const [hover, setHover] = useState<{ district: string; x: number; y: number; width: number } | null>(null);
+  // Labels are drawn in map units, so they shrink with the map; on a narrow screen scale them back
+  // up (to at most 1.4x) so district names stay readable.
+  const [shown, setShown] = useState(WIDTH);
+  useEffect(() => {
+    const el = box.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([e]) => setShown(e.contentRect.width));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  const k = Math.min(1.4, Math.max(1, (WIDTH / shown) * 0.75));
 
   const drawn = useMemo(() => {
     const features = shapes.features.map(rewind);
@@ -119,8 +130,8 @@ export default function DistrictMap({
           <g key={district} pointerEvents="none" textAnchor="middle" className="tabular">
             <text
               x={x}
-              y={label ? y - 3 : y + 4}
-              fontSize={14}
+              y={label ? y - 3 * k : y + 4 * k}
+              fontSize={14 * k}
               fontWeight={600}
               fill="var(--ink)"
               stroke="var(--surface)"
@@ -133,8 +144,8 @@ export default function DistrictMap({
             {label && (
               <text
                 x={x}
-                y={y + 14}
-                fontSize={12}
+                y={y + 14 * k}
+                fontSize={12 * k}
                 fill="var(--ink)"
                 stroke="var(--surface)"
                 strokeWidth={4}
