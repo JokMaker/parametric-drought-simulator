@@ -4,6 +4,7 @@ import IndexVsActualChart from "@/components/charts/IndexVsActualChart";
 import InfluenceChart from "@/components/charts/InfluenceChart";
 import StoryTour from "@/components/StoryTour";
 import HowItWorks from "@/components/HowItWorks";
+import StartHere from "@/components/StartHere";
 import { Card, DotCount, ErrorNote, Loading, PageHeader, ShareBars, StatStrip } from "@/components/ui";
 import ValidationTable from "@/components/ValidationTable";
 import { getHistory, getModel, getSeasons } from "@/lib/api";
@@ -109,6 +110,9 @@ export default function Overview() {
   return (
     <>
       <PageHeader title="Drought index insurance for Eastern Rwanda" />
+      <div className="mb-5">
+        <StartHere />
+      </div>
       {m && (
         <div className="mb-5">
           <HowItWorks trigger={m.trigger} exit={m.exit} />
