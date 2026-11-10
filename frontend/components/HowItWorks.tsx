@@ -16,8 +16,8 @@ export default function HowItWorks({ trigger, exit }: { trigger: number; exit: n
             <Icon size={18} />
           </span>
           <span className="min-w-0">
-            <span className="block truncate text-sm font-medium">{title}</span>
-            <span className="tabular block truncate text-xs text-muted">{sub}</span>
+            <span className="block text-sm leading-snug font-medium sm:truncate">{title}</span>
+            <span className="tabular block text-xs text-muted sm:truncate">{sub}</span>
           </span>
           {(i === 1 || i === 2) && (
             <ArrowRight size={14} className="absolute top-1/2 -right-[7px] z-10 hidden -translate-y-1/2 rounded-full bg-surface text-faint sm:block" />
