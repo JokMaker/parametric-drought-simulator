@@ -95,7 +95,7 @@ export default function Overview() {
 
         <Card
           label="How reliable the model is"
-          title={`${m.model} explains ${pct(r2("Leave-one-out"))} of yield variation in unseen district-seasons, but only ${pct(Math.max(0, r2("Leave-one-season-out")))} for an unseen year`}
+          title={`${m.model} explains ${pct(r2("Leave-one-out"))} of yield variation in unseen district-seasons, ${r2("Leave-one-season-out") > 0 ? `but only ${pct(r2("Leave-one-season-out"))} for an unseen year` : "but cannot yet predict an unseen year"}`}
           source="Held-out errors. Leave-one-out hides one district-season at a time; leave-one-season-out hides a whole year. R² below zero is worse than guessing the average."
         >
           <ValidationTable rows={m.validation} selected={m.model} />
