@@ -90,7 +90,7 @@ export default function BasisRiskPage() {
 
         <Card
           label={`Season by season · ${rows.length} district-seasons`}
-          title={`${count("hit") + count("correct-no-payout")} decisions matched the harvest; ${count("miss")} missed season and ${count("false-payout")} false payouts did not`}
+          title={`${count("hit") + count("correct-no-payout")} decisions matched the harvest; ${count("miss")} missed season${count("miss") === 1 ? "" : "s"} and ${count("false-payout")} false payout${count("false-payout") === 1 ? "" : "s"} did not`}
           source={`${POOR_RULE(m.lowYieldThreshold)} The index is the leave-one-out prediction. Click a district to open it in the Explorer.`}
         >
           <div className="mb-3">
