@@ -4,7 +4,8 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { FIRST_SEASON, isDroughtSeason, LAST_SEASON, SEASONS, YIELD_SEASONS } from "@/lib/constants";
 
-/** Season A years as a scrollable strip; marks seasons with yield data and drought years. */
+/** Season A years as a strip that marks seasons with yield data and drought years. On a phone the
+ *  strip would show only three years at a time, so it becomes a dropdown between the arrows. */
 export default function SeasonTimeline({ season, onSelect }: { season: number; onSelect: (s: number) => void }) {
   const selected = useRef<HTMLButtonElement>(null);
   const mounted = useRef(false);
@@ -40,7 +41,19 @@ export default function SeasonTimeline({ season, onSelect }: { season: number; o
       >
         <ChevronLeft size={16} />
       </button>
-      <div className="no-scrollbar flex flex-1 gap-1 overflow-x-auto py-1">
+      <select
+        value={season}
+        onChange={(e) => onSelect(Number(e.target.value))}
+        className="tabular w-0 min-w-0 flex-1 rounded-sm border border-line bg-surface px-2 py-1.5 text-sm sm:hidden"
+        aria-label="Season A"
+      >
+        {[...SEASONS].reverse().map((y) => (
+          <option key={y} value={y}>
+            {`${y}${YIELD_SEASONS.includes(y) ? " · harvest" : ""}${isDroughtSeason(y) ? " · drought" : ""}`}
+          </option>
+        ))}
+      </select>
+      <div className="no-scrollbar hidden flex-1 gap-1 overflow-x-auto py-1 sm:flex">
         {SEASONS.map((y) => {
           const active = y === season;
           const drought = isDroughtSeason(y);
