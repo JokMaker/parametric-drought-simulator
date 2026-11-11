@@ -25,7 +25,7 @@ type Stop = {
 
 /**
  * Five stops through the data, chosen from it rather than written by hand:
- * a quiet year, the worst year, a drought caught, a drought missed and a false alarm.
+ * a quiet year, the worst year, a poor harvest caught, a poor harvest missed and a false alarm.
  * A guided tour lets a first-time reader learn the dashboard by example.
  */
 function buildStops(history: Parameters<typeof districtsInSeason>[0], seasons: Simulation[], m: ModelSummary): Stop[] {
