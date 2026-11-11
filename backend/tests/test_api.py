@@ -241,11 +241,21 @@ def test_loss_reports_rejected(report_db, report):
     assert client.post("/api/loss-reports", json=report).status_code == 422
 
 
-def test_signed_up_farmer_can_report_a_loss(report_db):
-    policy, _ = report_db.register("+250788000222", "Kayonza", 500, 2027, 300.0)
-    report = {"policyId": policy.id, "district": "Kayonza", "season": 2024}
+def test_signed_up_farmer_reports_only_for_their_own_season(report_db):
+    season = client.get("/api/current-season").json()["season"]
+    policy, _ = report_db.register("+250788000222", "Kayonza", 500, season, 300.0)
+    assert policy.season == season and report_db.policy(policy.id).season == season
+    report = {"policyId": policy.id, "district": "Kayonza", "season": season}
     assert client.post("/api/loss-reports", json=report).status_code == 201
+    # Not for another district, nor for a season before the cover existed.
     assert client.post("/api/loss-reports", json={**report, "district": "Ngoma"}).status_code == 422
+    assert client.post("/api/loss-reports", json={**report, "season": 2024}).status_code == 422
+
+
+def test_loss_reports_only_for_seasons_field_checks_can_show(report_db):
+    # 2010 has satellite data but no harvest data, so Field Checks never shows it.
+    report = {"policyId": "RDI-RWA-1233", "district": "Rwamagana", "season": 2010}
+    assert client.post("/api/loss-reports", json=report).status_code == 422
 
 
 def test_database_url_in_env_file_is_ignored(monkeypatch):
