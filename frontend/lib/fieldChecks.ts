@@ -27,9 +27,10 @@ export function checkStatus(
   lossShare: number | null,
   rule: CheckRule,
 ): CheckStatus {
-  const evidence = reports >= rule.reports || (lossShare ?? 0) >= rule.lossShare;
+  const evidence = reports >= rule.reports || (lossShare !== null && lossShare >= rule.lossShare);
   if (evidence && payout < rule.paidEnough) return "check";
   if (payout > 0) return "paid";
-  if (reports > 0 || (lossShare ?? 0) >= rule.lossShare - 0.1) return "watch";
+  // No survey yet (the season in progress) is no evidence, whatever the threshold.
+  if (reports > 0 || (lossShare !== null && lossShare >= rule.lossShare - 0.1)) return "watch";
   return "clear";
 }
