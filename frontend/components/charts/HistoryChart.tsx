@@ -14,6 +14,7 @@ import {
   YAxis,
 } from "recharts";
 import { DROUGHT_YEARS } from "@/lib/constants";
+import { pct } from "@/lib/payout";
 import { indexClass, payoutClass } from "@/lib/scales";
 
 export type YearBar = {
@@ -76,7 +77,7 @@ function YearTooltip({ active, payload }: TooltipContentProps) {
       </div>
       <div className="flex justify-between gap-4">
         <span className="text-muted">{d.districts > 1 ? "Average payout" : "Payout"}</span>
-        <span className="font-medium">{(d.payout * 100).toFixed(0)}%</span>
+        <span className="font-medium">{pct(d.payout)}</span>
       </div>
       {d.districts > 1 && (
         <div className="flex justify-between gap-4">
