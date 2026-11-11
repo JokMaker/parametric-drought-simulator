@@ -1,5 +1,6 @@
 """The calibrated drought index and payout rule (proposal §3.9)."""
 
+import math
 from dataclasses import dataclass
 
 
@@ -16,7 +17,10 @@ class IndexModel:
     def predict(self, rain_z: float, ndvi_z: float) -> float:
         """Predicted yield change (%). Inputs are each district's own z-scores;
         they are standardised again with the scaler fitted on the calibration
-        observations (2018-2025) before the Ridge coefficients apply."""
+        observations (2018-2025) before the Ridge coefficients apply.
+        A missing reading is refused rather than read as a normal season."""
+        if not (math.isfinite(rain_z) and math.isfinite(ndvi_z)):
+            raise ValueError("rainfall and greenness readings are both needed")
         total = self.intercept
         for x, mean, scale, coef in zip(
             (rain_z, ndvi_z), self.scaler_mean, self.scaler_scale, self.coefficients
@@ -30,5 +34,8 @@ class IndexModel:
 
 
 def payout(index: float, trigger: float, exit: float) -> float:
+    # min/max would turn a missing index into a silent 0% payout.
+    if math.isnan(index):
+        raise ValueError("the index is missing")
     share = (trigger - index) / (trigger - exit)
     return min(1.0, max(0.0, share))
