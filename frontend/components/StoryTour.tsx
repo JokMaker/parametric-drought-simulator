@@ -61,7 +61,7 @@ function buildStops(history: Parameters<typeof districtsInSeason>[0], seasons: S
   const stops: Stop[] = [
     {
       name: "A normal year",
-      title: `Season A ${quiet.s}: good rains everywhere, so no district is paid`,
+      title: `Season A ${quiet.s}: no district reaches the trigger, so none is paid`,
       season: quiet.s,
       facts: seasonFacts(quiet),
     },
@@ -74,7 +74,7 @@ function buildStops(history: Parameters<typeof districtsInSeason>[0], seasons: S
   ];
   if (caught)
     stops.push({
-      name: "A drought caught",
+      name: "A poor harvest caught",
       title: `${caught.district} ${caught.season}: the harvest fell ${Math.abs(caught.actualYieldAnom ?? 0).toFixed(0)}% and the index paid ${pct(caught.payout)}`,
       season: caught.season,
       district: caught.district,
@@ -82,7 +82,7 @@ function buildStops(history: Parameters<typeof districtsInSeason>[0], seasons: S
     });
   if (missed)
     stops.push({
-      name: "A drought missed",
+      name: "A poor harvest missed",
       title: `${missed.district} ${missed.season}: the harvest fell ${Math.abs(missed.actualYieldAnom ?? 0).toFixed(0)}% but the satellites saw a normal season`,
       season: missed.season,
       district: missed.district,
