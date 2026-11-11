@@ -125,7 +125,7 @@ source .venv/bin/activate
 python -m pytest
 ```
 
-The 102 tests (100 without a test Postgres database; 94% line coverage with `python -m pytest --cov=app`) check the API against the notebook (the index formula on all 175 district-seasons,
+The 109 tests (107 without a test Postgres database; 94% line coverage with `python -m pytest --cov=app`) check the API against the notebook (the index formula on all 175 district-seasons,
 the leave-one-out results, the hit and false payout rates, the drought-year totals (34/63 against
 26/112), basis risk and the pricing inputs) and test each building block on its own: the report
 store, USSD sign-up (saving the policy, one per number, the SMS to the caller), the SMS gateways (sandbox and live limits, sender ID, rejected messages, through a recording
@@ -240,7 +240,7 @@ Full details are in [docs/testing.md](docs/testing.md) and the technical report.
 
 | What | Result |
 |---|---|
-| Backend tests (pytest) | 102 tests, 100 pass locally (2 need a test Postgres database), **94% line coverage**, including 21 model edge cases |
+| Backend tests (pytest) | 109 tests, 107 pass locally (2 need a test Postgres database), **94% line coverage**, including 21 model edge cases |
 | Frontend unit tests (Node test runner) | 40 tests, all pass; 100% line coverage of the 8 logic modules |
 | Browser checks | Every page at phone, tablet and desktop size, light and dark: **72/72** page checks and **7/7** flows in Chrome; 36/36 in Firefox and Safari |
 | API response time (local) | Median 1–1.6 ms, 95th percentile under 5 ms |

@@ -408,6 +408,30 @@ def test_ussd_payouts_before_a_new_cover_are_not_called_theirs(report_db):
         assert heading in r.text and len(r.text) <= 182, lang
 
 
+@pytest.mark.parametrize(
+    "phone",
+    [
+        "+250700000101,+250700000102,+250700000103",  # several recipients as one number
+        "abc",  # not a number
+        "",
+        "+2507 0000 0101",  # spaces
+    ],
+)
+def test_ussd_refuses_a_phone_that_is_not_one_number(gateway, report_db, phone):
+    # Each step of a full sign-up, sent as that "phone": none may save or text anything.
+    for text in ["", "1", "1*3", "1*3*500", "1*3*500*1"]:
+        r = client.post("/api/ussd", data={"sessionId": "s", "serviceCode": "*384#", "phoneNumber": phone, "text": text})
+        assert r.status_code == 400 and r.text == "END Invalid request"
+    assert gateway.sent == [] and gateway.recipients == []
+    assert report_db.policies() == [] and report_db.live_sms_today() == 0
+
+
+@pytest.mark.parametrize("phone", ["+250788000000", "0788000000", " +250788000000 "])
+def test_ussd_accepts_one_number_in_any_usual_format(gateway, phone):
+    r = client.post("/api/ussd", data={"sessionId": "s", "serviceCode": "*384#", "phoneNumber": phone, "text": ""})
+    assert r.status_code == 200 and r.text.startswith("CON")
+
+
 def test_store_keeps_one_policy_per_number(store):
     first, created = store.register("+250788111222", "Ngoma", 900, 2026, 400.0)
     assert created and first.id == "RDI-NGO-5001"

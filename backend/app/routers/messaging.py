@@ -2,12 +2,12 @@
 
 from urllib.parse import parse_qs
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import PlainTextResponse
 
 from ..dependencies import get_gateway, get_menu, get_policies, get_sms_settings
 from ..messaging import SmsError, SmsGateway, SmsSettings, UnconfiguredGateway
-from ..policies import PolicyBook
+from ..policies import PolicyBook, valid_phone
 from ..schemas import SmsIn, SmsStatus, UssdPreviewIn, UssdPreviewOut
 from ..ussd import UssdMenu, same_number
 
@@ -35,6 +35,7 @@ def send_sms(body: SmsIn, gateway: SmsGateway = Depends(get_gateway)) -> dict:
 @router.post("/ussd", response_class=PlainTextResponse, summary="USSD callback for Africa's Talking")
 async def ussd_callback(
     request: Request,
+    response: Response,
     menu: UssdMenu = Depends(get_menu),
     settings: SmsSettings = Depends(get_sms_settings),
 ) -> str:
@@ -46,6 +47,12 @@ async def ussd_callback(
     signed up for, or is offered the sign-up menu."""
     form = parse_qs((await request.body()).decode(), keep_blank_values=True)
     phone = form.get("phoneNumber", [""])[0]
+    # Checked before anything is saved or texted: a list of numbers or a non-number is
+    # refused, so a forged request cannot text several phones past the daily SMS limit.
+    if not valid_phone(phone):
+        response.status_code = 400
+        return "END Invalid request"
+    phone = phone.strip()
     if same_number(phone, settings.phone):
         policy = menu.policies.get(settings.demo_policy)
     else:

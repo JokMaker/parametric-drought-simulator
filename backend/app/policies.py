@@ -8,6 +8,8 @@ maize area x expected yield x farm-gate price; cover = the share of that value l
 at the exit; premium = cover x the district's average payout share, plus a loading,
 less a subsidy.
 """
+import re
+
 
 from dataclasses import dataclass
 
@@ -28,6 +30,15 @@ WEB_DEMO_PHONE = r"^\+2507000\d{5}$"
 
 def is_web_demo(phone: str) -> bool:
     return phone.startswith("+2507000")
+
+
+# One number only: an optional +, then 9-15 digits (E.164). No commas, spaces or letters,
+# so a forged callback cannot pass several recipients as one "phone number".
+PHONE_RE = re.compile(r"\+?\d{9,15}")
+
+
+def valid_phone(raw: str) -> bool:
+    return bool(raw) and PHONE_RE.fullmatch(raw.strip()) is not None
 
 
 def phone_key(phone: str) -> str:
