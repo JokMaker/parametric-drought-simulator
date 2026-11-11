@@ -22,6 +22,9 @@ type Lang = "en" | "rw";
 const word = (z: number) => (z <= -0.5 ? "below normal" : z >= 0.5 ? "above normal" : "about normal");
 
 /** The message a farmer would receive when the season's result is published. */
+/** A survey plot size in hectares, as square metres rounded to 10, the same on the buttons and in the note. */
+const toM2 = (ha: number) => Math.round((ha * 10_000) / 10) * 10;
+
 function smsText(lang: Lang, p: Policy, v: DistrictSeason, amount: number) {
   // Kept to one SMS (160 plain GSM characters) in every case; checked in lib/sms.ts.
   const money = rwf(amount);
@@ -192,7 +195,7 @@ export default function FarmerPage() {
           <div className="grid gap-6 md:grid-cols-[1fr_auto] md:items-start">
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                <Tile label="Your maize is worth" value={rwf(value)} sub={`${Math.round(perHa.yieldKg * ha)} kg expected`} />
+                <Tile label="Your maize is worth" value={rwf(value)} sub={`${Math.round(perHa.yieldKg * ha).toLocaleString("en-US")} kg expected`} />
                 <Tile label="Your cover" info="cover" value={rwf(cover)} sub={`${Math.abs(exit)}% of the value`} />
                 <Tile label="You pay per season" value={rwf(premium)} sub="after subsidy" />
                 <Tile label="Payout this season" info="payoutRule" value={rwf(amount)} sub={`${pct(v.payout)} of cover · index ${indexPct(v.index, trigger)}`} tone={paid ? "var(--drought)" : undefined} />
@@ -279,7 +282,7 @@ export default function FarmerPage() {
               <NumberInput
                 id="area"
                 min={50}
-                max={50_000}
+                max={100_000}
                 step={50}
                 value={areaM2}
                 onChange={(n) => setAreaM2(Math.round(n))}
@@ -294,7 +297,7 @@ export default function FarmerPage() {
                 { label: "Large", ha: sizes.p75 },
                 { label: "Very large", ha: sizes.p90 },
               ].map((s) => {
-                const m2 = Math.round((s.ha * 10_000) / 10) * 10;
+                const m2 = toM2(s.ha);
                 return (
                   <button
                     key={s.label}
@@ -308,8 +311,9 @@ export default function FarmerPage() {
             </div>
           </div>
           <p className="mt-1.5 text-xs text-faint">
-            Sizes are from the NISR survey: a quarter of Eastern maize farmers grow under {Math.round(sizes.p25 * 10_000)} m², half
-            under {Math.round(sizes.p50 * 10_000)} m², and one in ten over {Math.round(sizes.p90 * 10_000)} m². One hectare is 10,000 m².
+            Sizes are from the NISR survey: a quarter of Eastern maize farmers grow under about {toM2(sizes.p25).toLocaleString("en-US")} m²,
+            half under {toM2(sizes.p50).toLocaleString("en-US")} m², and one in ten over {toM2(sizes.p90).toLocaleString("en-US")} m². One
+            hectare is 10,000 m².
           </p>
         </section>
       </div>
@@ -352,7 +356,13 @@ export default function FarmerPage() {
             ))}
           </div>
         </div>
-        {notFound && <p className="text-sm text-drought">No policy {query.toUpperCase()}. Check the number, or try a demo policy.</p>}
+        {notFound && (
+          <p className="text-sm text-drought">
+            {registered.error
+              ? `Policy ${query.toUpperCase()} not found: signed-up policies could not be loaded (${registered.error}). The demo policies still work.`
+              : `No policy ${query.toUpperCase()}. Check the number, or try a demo policy.`}
+          </p>
+        )}
         <div>
           <div className="mb-1.5 text-[13px] text-muted">Season A</div>
           <SeasonTimeline season={season} onSelect={(s) => { setSeason(s); setReported(null); }} />

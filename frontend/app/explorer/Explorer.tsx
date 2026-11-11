@@ -144,8 +144,8 @@ export default function Explorer() {
         </div>
       </section>
 
-      {model.error || sim.error ? (
-        <ErrorNote message={model.error ?? sim.error ?? ""} />
+      {model.error || sim.error || history.error || calibration.error ? (
+        <ErrorNote message={model.error ?? sim.error ?? history.error ?? calibration.error ?? ""} />
       ) : model.data && sim.data ? (
         <>
           <PayoutCard sim={sim.data} model={model.data} />

@@ -35,7 +35,8 @@ function Field({ id, label, value, onChange, unit, step, min, max, hint }: {
   );
 }
 
-const share = (v: number) => Math.round(v * 100);
+// To one decimal, so a typed 22.5 stays 22.5 rather than showing 23 while 22.5% is used.
+const share = (v: number) => Math.round(v * 1000) / 10;
 
 export default function PricingPage() {
   const history = useApi("history", getHistory);
