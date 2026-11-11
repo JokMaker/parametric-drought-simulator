@@ -4,7 +4,7 @@ import { IndexLegend } from "@/components/charts/ClassLegend";
 import DistrictMap from "@/components/charts/DistrictMap";
 import { Card, ErrorNote, Loading, PageHeader, SwipeHint } from "@/components/ui";
 import { getCurrentSeason, getModel, getShapes } from "@/lib/api";
-import { pct, signedPct } from "@/lib/payout";
+import { pct, indexPct } from "@/lib/payout";
 import { indexClass } from "@/lib/scales";
 import type { CurrentSeason } from "@/lib/types";
 import { useApi } from "@/lib/useApi";
@@ -86,7 +86,7 @@ export default function SeasonPage() {
     const title =
       paying.length === 0
         ? `Day ${s.daysElapsed} of ${s.windowDays}: rainfall below normal in ${dry.length} of 7 districts, none past the ${trigger}% trigger yet`
-        : `Day ${s.daysElapsed} of ${s.windowDays}: ${paying.length} of 7 districts past the ${trigger}% trigger so far, ${worst.district} lowest at ${signedPct(worst.index)}`;
+        : `Day ${s.daysElapsed} of ${s.windowDays}: ${paying.length} of 7 districts past the ${trigger}% trigger so far, ${worst.district} lowest at ${indexPct(worst.index)}`;
 
     body = (
       <div className="space-y-5">
@@ -101,7 +101,7 @@ export default function SeasonPage() {
               shapes={shapes.data}
               height={420}
               fill={(d) => (byName.has(d) ? indexClass(byName.get(d)!.index, trigger, exit).color : "var(--surface-2)")}
-              label={(d) => (byName.has(d) ? signedPct(byName.get(d)!.index) : "")}
+              label={(d) => (byName.has(d) ? indexPct(byName.get(d)!.index) : "")}
               ariaLabel={`Provisional predicted yield change by district, Season A ${s.season}, day ${s.daysElapsed}`}
               tooltip={(d) => {
                 const v = byName.get(d);
@@ -110,7 +110,7 @@ export default function SeasonPage() {
                     <div className="font-semibold">{d}</div>
                     <div className="flex justify-between gap-4"><span className="text-muted">Rainfall so far</span><span>{v.rainMm.toFixed(0)} mm</span></div>
                     <div className="flex justify-between gap-4"><span className="text-muted">Normal by now</span><span>{v.rainNormalMm.toFixed(0)} mm</span></div>
-                    <div className="flex justify-between gap-4"><span className="text-muted">Provisional index</span><span className="font-medium">{signedPct(v.index)}</span></div>
+                    <div className="flex justify-between gap-4"><span className="text-muted">Provisional index</span><span className="font-medium">{indexPct(v.index)}</span></div>
                   </div>
                 ) : d;
               }}
@@ -157,7 +157,7 @@ export default function SeasonPage() {
                     <td className="px-2 py-2.5 font-medium">{d.district}</td>
                     <td className="px-2 py-2.5"><VsNormal value={d.rainMm} normal={d.rainNormalMm} z={d.rainZ} unit=" mm" /></td>
                     <td className="px-2 py-2.5"><VsNormal value={d.ndvi} normal={d.ndviNormal} z={d.ndviZ} unit="" digits={2} /></td>
-                    <td className="px-2 py-2.5 text-right font-semibold">{signedPct(d.index)}</td>
+                    <td className="px-2 py-2.5 text-right font-semibold">{indexPct(d.index)}</td>
                     <td className="px-2 py-2.5 text-right">{pct(d.payout)}</td>
                   </tr>
                 ))}

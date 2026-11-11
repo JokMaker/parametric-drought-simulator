@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { DISTRICTS, DROUGHT_YEARS } from "@/lib/constants";
-import { anomalyLabel, pct, signedPct } from "@/lib/payout";
+import { anomalyLabel, pct, indexPct } from "@/lib/payout";
 import { indexClass } from "@/lib/scales";
 import type { HistoryPoint } from "@/lib/types";
 
@@ -49,7 +49,7 @@ export default function HistoryHeatmap({ points, trigger, exit }: { points: Hist
                   <button
                     key={y}
                     role="gridcell"
-                    aria-label={`${d}, ${y} rains: ${signedPct(p.index)}${pays ? ", payout" : ""}`}
+                    aria-label={`${d}, ${y} rains: ${indexPct(p.index)}${pays ? ", payout" : ""}`}
                     onMouseEnter={() => setHover(p)}
                     onFocus={() => setHover(p)}
                     onMouseLeave={() => setHover(null)}
@@ -79,7 +79,7 @@ export default function HistoryHeatmap({ points, trigger, exit }: { points: Hist
               {" "}
               · rainfall {anomalyLabel(hover.rainZ)}, greenness {anomalyLabel(hover.ndviZ)} · index{" "}
             </span>
-            <span className="font-medium">{signedPct(hover.index)}</span>
+            <span className="font-medium">{indexPct(hover.index)}</span>
             <span className="text-muted"> · payout </span>
             <span className="font-medium">{pct(hover.payout)}</span>
           </span>

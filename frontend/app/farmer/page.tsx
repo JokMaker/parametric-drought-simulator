@@ -10,7 +10,7 @@ import { Card, ErrorNote, Loading, PageHeader } from "@/components/ui";
 import Link from "next/link";
 import { getHistory, getModel, getPolicies, getSeasons, getSmsStatus, reportLoss, sendSms, USE_MOCK } from "@/lib/api";
 import { districtsInSeason, type DistrictSeason } from "@/lib/districtSeason";
-import { pct } from "@/lib/payout";
+import { pct, changeWords, indexPct } from "@/lib/payout";
 import { LAST_SEASON, USSD_CODE } from "@/lib/constants";
 import { smsParts } from "@/lib/sms";
 import { DEMO_POLICIES, findPolicy, fromRegistered, type Policy } from "@/lib/policies";
@@ -189,15 +189,16 @@ export default function FarmerPage() {
                 <Tile label="Your maize is worth" value={rwf(value)} sub={`${Math.round(perHa.yieldKg * ha)} kg expected`} />
                 <Tile label="Your cover" info="cover" value={rwf(cover)} sub={`${Math.abs(exit)}% of the value`} />
                 <Tile label="You pay per season" value={rwf(premium)} sub="after subsidy" />
-                <Tile label="Payout this season" info="payoutRule" value={rwf(amount)} sub={`${pct(v.payout)} of cover · index ${v.index > 0 ? "+" : ""}${v.index.toFixed(1)}%`} tone={paid ? "var(--drought)" : undefined} />
+                <Tile label="Payout this season" info="payoutRule" value={rwf(amount)} sub={`${pct(v.payout)} of cover · index ${indexPct(v.index, trigger)}`} tone={paid ? "var(--drought)" : undefined} />
               </div>
 
               <div>
                 <h3 className="text-sm font-semibold">Why</h3>
                 <p className="mt-1 text-sm text-muted">
                   From October to December, rainfall in {policy.district} was {word(v.rainZ)} and crop greenness was{" "}
-                  {word(v.ndviZ)}. That points to a harvest {Math.abs(v.index).toFixed(0)}% {v.index < 0 ? "below" : "above"} what is
-                  expected for the district,{" "}
+                  {word(v.ndviZ)}. That points to a harvest{" "}
+                  {changeWords(v.index, trigger) === "about normal" ? "close to" : changeWords(v.index, trigger)} what is expected for
+                  the district,{" "}
                   {paid
                     ? v.payout >= 1
                       ? `past the ${exit}% level, so the full cover is paid.`

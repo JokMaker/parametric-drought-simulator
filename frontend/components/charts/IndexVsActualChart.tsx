@@ -14,7 +14,7 @@ import {
   ZAxis,
 } from "recharts";
 import { useSyncExternalStore } from "react";
-import { classify, OUTCOME_LABEL, signedPct, type Outcome } from "@/lib/payout";
+import { classify, OUTCOME_LABEL, signedPct, type Outcome, indexPct } from "@/lib/payout";
 import type { ModelSummary, Simulation } from "@/lib/types";
 
 type Dot = { x: number; y: number; district: string; season: number; outcome: Outcome };
@@ -50,7 +50,7 @@ function DotTooltip({ active, payload }: TooltipContentProps) {
       </div>
       <div className="flex justify-between gap-4">
         <span className="text-muted">Actual yield change</span>
-        <span className="font-medium">{signedPct(d.x)}</span>
+        <span className="font-medium">{indexPct(d.x)}</span>
       </div>
       <div className="flex justify-between gap-4">
         <span className="text-muted">Predicted (index)</span>

@@ -10,7 +10,7 @@ import { Card, ErrorNote, Loading } from "@/components/ui";
 import { getHistory, getModel, getSeasons, getShapes } from "@/lib/api";
 import { isDroughtSeason, SEASONS } from "@/lib/constants";
 import { districtsInSeason } from "@/lib/districtSeason";
-import { classify, pct, signedPct } from "@/lib/payout";
+import { classify, pct, signedPct, indexPct } from "@/lib/payout";
 import { indexClass } from "@/lib/scales";
 import type { ModelSummary, Simulation } from "@/lib/types";
 import { useApi } from "@/lib/useApi";
@@ -48,11 +48,11 @@ function buildStops(history: Parameters<typeof districtsInSeason>[0], seasons: S
     { k: "Documented drought", v: isDroughtSeason(x.s) ? "Yes" : "No" },
     (() => {
       const w = [...x.v].sort((p, q) => p.index - q.index)[0];
-      return { k: `${w.index < 0 ? "Worst" : "Lowest"}: ${w.district}`, v: signedPct(w.index) };
+      return { k: `${w.index < 0 ? "Worst" : "Lowest"}: ${w.district}`, v: indexPct(w.index) };
     })(),
   ];
   const districtFacts = (s: Simulation) => [
-    { k: "Index predicted", v: signedPct(s.index) },
+    { k: "Index predicted", v: indexPct(s.index) },
     { k: "Real harvest", v: signedPct(s.actualYieldAnom ?? 0) },
     { k: "Index paid", v: pct(s.payout) },
     { k: "Harvest called for", v: pct(s.payoutIfActual ?? 0) },
@@ -188,7 +188,7 @@ export default function StoryTour() {
             height={440}
             highlight={stop.district}
             fill={(d) => (values.has(d) ? indexClass(values.get(d)!.index, trigger, exit).color : "var(--surface-2)")}
-            label={(d) => (values.has(d) ? signedPct(values.get(d)!.index) : "")}
+            label={(d) => (values.has(d) ? indexPct(values.get(d)!.index) : "")}
             ariaLabel={`Predicted yield change by district, Season A ${stop.season}`}
             onSelect={(d) => router.push(`/explorer?district=${d}&season=${stop.season}`)}
             tooltip={(d) => {
@@ -198,7 +198,7 @@ export default function StoryTour() {
                   <div className="font-semibold">{d}</div>
                   <div className="flex justify-between gap-4">
                     <span className="text-muted">Predicted yield</span>
-                    <span>{signedPct(v.index)}</span>
+                    <span>{indexPct(v.index)}</span>
                   </div>
                   <div className="flex justify-between gap-4">
                     <span className="text-muted">Payout</span>

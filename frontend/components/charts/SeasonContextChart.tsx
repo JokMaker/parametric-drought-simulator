@@ -15,7 +15,7 @@ import {
   YAxis,
 } from "recharts";
 import { DROUGHT_YEARS } from "@/lib/constants";
-import { pct, signedPct } from "@/lib/payout";
+import { pct, signedPct, indexPct } from "@/lib/payout";
 import { indexClass } from "@/lib/scales";
 
 export type SeasonValue = { season: number; index: number; payout: number };
@@ -40,7 +40,7 @@ function SeasonTooltip({ active, payload }: TooltipContentProps) {
     <div className="card tabular px-3 py-2 text-xs shadow-md">
       <div className="font-semibold">Season A {d.season}</div>
       <div className="text-muted">
-        Index {signedPct(d.index)} · payout {pct(d.payout)}
+        Index {indexPct(d.index)} · payout {pct(d.payout)}
       </div>
     </div>
   );

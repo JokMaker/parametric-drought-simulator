@@ -2,7 +2,7 @@
 
 import Term from "@/components/Term";
 import type { GlossaryKey } from "@/lib/glossary";
-import { classify, pct, reason, signedPct, uncertainty } from "@/lib/payout";
+import { changeWords, classify, pct, reason, signedPct, uncertainty, indexPct } from "@/lib/payout";
 import { indexClass, indexClasses, payoutClass } from "@/lib/scales";
 import type { ModelSummary, Simulation } from "@/lib/types";
 import { ArrowRight } from "lucide-react";
@@ -17,7 +17,8 @@ const at = (v: number) => ((Math.min(HIGH, Math.max(LOW, v)) - LOW) / (HIGH - LO
 const SOURCE_SAT = "CHIRPS rainfall and MODIS NDVI, October–December, against each district's own record.";
 
 function payoutHeadline(sim: Simulation, m: ModelSummary) {
-  const loss = sim.index < 0 ? `${Math.abs(sim.index).toFixed(0)}% below normal` : `${sim.index.toFixed(0)}% above normal`;
+  const change = changeWords(sim.index, m.trigger);
+  const loss = change === "about normal" ? "about normal" : `${change} normal`;
   if (sim.payout >= 1) return `Full payout: the index predicts a harvest ${loss}`;
   if (sim.payout > 0) return `${pct(sim.payout)} payout: the index predicts a harvest ${loss}`;
   return sim.index <= m.trigger
@@ -36,7 +37,12 @@ function satelliteHeadline(sim: Simulation) {
 function harvestHeadline(sim: Simulation, m: ModelSummary) {
   const outcome = classify(sim, m)!;
   const actual = sim.actualYieldAnom!;
-  const fell = actual < 0 ? `the harvest fell ${Math.abs(actual).toFixed(0)}%` : `the harvest rose ${actual.toFixed(0)}%`;
+  const fell =
+    Math.abs(actual) < 0.5
+      ? "the harvest was about normal"
+      : actual < 0
+        ? `the harvest fell ${Math.abs(actual).toFixed(0)}%`
+        : `the harvest rose ${actual.toFixed(0)}%`;
   switch (outcome) {
     case "hit":
       return `Correct: ${fell} and the index paid ${pct(sim.payout)}`;
@@ -110,7 +116,7 @@ function PayoutScale({ sim, model }: { sim: Simulation; model: ModelSummary }) {
         ))}
       </div>
       <Range low={range.low} high={range.high} />
-      <Pin value={sim.index} label={`Index ${signedPct(sim.index)}`} />
+      <Pin value={sim.index} label={`Index ${indexPct(sim.index)}`} />
       {harvest !== null && <Pin value={harvest} label={`Real harvest ${signedPct(harvest)}`} dotted />}
     </div>
   );
@@ -165,7 +171,7 @@ function Chain({ sim, model }: { sim: Simulation; model: ModelSummary }) {
       <Step label="Rainfall" info="sd" value={sd(sim.rainZ)} sub="SD from normal" color={sim.rainZ < 0 ? DOWN : UP} />
       <Step label="Crop greenness" info="ndvi" value={sd(sim.ndviZ)} sub="SD from normal" color={sim.ndviZ < 0 ? DOWN : UP} />
       {arrow}
-      <Step label="Predicted yield" info="index" value={signedPct(sim.index)} sub={`± ${range.error.toFixed(0)} pts, vs the expected harvest`} />
+      <Step label="Predicted yield" info="index" value={indexPct(sim.index)} sub={`± ${range.error.toFixed(0)} pts, vs the expected harvest`} />
       {arrow}
       <Step label="Payout" info="payoutRule" value={pct(sim.payout)} sub="of the sum insured" />
     </div>
@@ -311,7 +317,7 @@ export function HarvestCard({ sim, model }: { sim: Simulation; model: ModelSumma
       source={`NISR Seasonal Agricultural Survey, Season A ${sim.season}. ${POOR_RULE(model.lowYieldThreshold)}`}
     >
       <div className="space-y-3">
-        <CompareRow label="Predicted (index)" value={sim.index} min={-50} max={50} text={signedPct(sim.index)}
+        <CompareRow label="Predicted (index)" value={sim.index} min={-50} max={50} text={indexPct(sim.index)}
           color={indexClass(sim.index, model.trigger, model.exit).color} />
         <CompareRow label="Actual harvest" value={sim.actualYieldAnom} min={-50} max={50} text={signedPct(sim.actualYieldAnom)}
           color={indexClass(sim.actualYieldAnom, model.trigger, model.exit).color} />

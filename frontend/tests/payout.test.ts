@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { anomalyLabel, classify, modelError, payoutFromIndex, reason, uncertainty, pct } from "../lib/payout";
+import { anomalyLabel, changeWords, classify, indexPct, modelError, payoutFromIndex, reason, uncertainty, pct } from "../lib/payout";
 import { model, sim } from "./fixtures";
 
 describe("payoutFromIndex", () => {
@@ -97,5 +97,23 @@ describe("pct", () => {
     assert.equal(pct(0.002), "0.2%"); // Ngoma 2019
     assert.equal(pct(0), "0%");
     assert.equal(pct(-0.11), "-11%");
+  });
+});
+
+describe("index wording near the trigger and zero", () => {
+  it("keeps a decimal rather than round onto the trigger", () => {
+    assert.equal(indexPct(-1.97), "-1.97%");
+    assert.equal(indexPct(-2.03), "-2.03%");
+    assert.equal(indexPct(-2), "-2.0%");
+    assert.equal(indexPct(-13.41), "-13.4%");
+    assert.equal(indexPct(10.2), "+10.2%");
+  });
+
+  it("says about normal instead of 0%", () => {
+    assert.equal(changeWords(-0.22), "about normal");
+    assert.equal(changeWords(0.48), "about normal");
+    assert.equal(changeWords(-13.4), "13% below");
+    assert.equal(changeWords(-1.97), "1.97% below");
+    assert.equal(changeWords(10.2), "10% above");
   });
 });

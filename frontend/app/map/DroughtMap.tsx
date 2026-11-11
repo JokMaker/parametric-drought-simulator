@@ -10,7 +10,7 @@ import { Card, ErrorNote, Loading, Tabs } from "@/components/ui";
 import { getBasisRisk, getHistory, getModel, getSeasons, getShapes } from "@/lib/api";
 import { FIRST_SEASON, isDroughtSeason, LAST_SEASON, SEASONS, windowYearOf, YIELD_RANGE, YIELD_SEASONS } from "@/lib/constants";
 import { districtsInSeason } from "@/lib/districtSeason";
-import { anomalyLabel, pct, signedPct } from "@/lib/payout";
+import { anomalyLabel, pct, signedPct, indexPct } from "@/lib/payout";
 import { indexClass, PAYOUT_CLASSES, payoutClass, RISK_CLASSES, riskClass } from "@/lib/scales";
 import { useApi } from "@/lib/useApi";
 
@@ -75,7 +75,7 @@ export default function DroughtMap() {
   const valueText = (d: string) => {
     if (metric === "risk") return pct(riskOf.get(d) ?? 0);
     const v = values.get(d)!;
-    return metric === "index" ? signedPct(v.index) : pct(v.payout);
+    return metric === "index" ? indexPct(v.index) : pct(v.payout);
   };
   const order = (d: string) =>
     metric === "risk" ? -(riskOf.get(d) ?? 0) : metric === "index" ? values.get(d)!.index : -values.get(d)!.payout;
@@ -92,7 +92,7 @@ export default function DroughtMap() {
   } else if (paying.length === 0) {
     headline = `No district reaches the ${trigger}% trigger in Season A ${season}`;
   } else if (metric === "index") {
-    headline = `${paying.length} of ${districts.length} districts reach the trigger; ${worst} is hardest hit at ${signedPct(values.get(worst)!.index)}`;
+    headline = `${paying.length} of ${districts.length} districts reach the trigger; ${worst} is hardest hit at ${indexPct(values.get(worst)!.index)}`;
   } else {
     headline = `${paying.length} of ${districts.length} districts would be paid${
       full.length ? `, ${full.length === 1 ? full[0] : `${full.length} of them`} in full` : ""
@@ -176,7 +176,7 @@ export default function DroughtMap() {
                     <>
                       <Row k="Rainfall" v={anomalyLabel(v.rainZ)} />
                       <Row k="Crop greenness" v={anomalyLabel(v.ndviZ)} />
-                      <Row k="Predicted yield" v={signedPct(v.index)} />
+                      <Row k="Predicted yield" v={indexPct(v.index)} />
                       <Row k="Payout" v={pct(v.payout)} />
                       {v.actualYieldAnom !== null && <Row k="Actual harvest" v={signedPct(v.actualYieldAnom)} />}
                     </>
@@ -212,7 +212,7 @@ export default function DroughtMap() {
                       {c.label}
                     </span>
                   </td>
-                  <td className="py-2 text-right">{metric === "risk" ? pct(riskOf.get(d) ?? 0) : signedPct(v.index)}</td>
+                  <td className="py-2 text-right">{metric === "risk" ? pct(riskOf.get(d) ?? 0) : indexPct(v.index)}</td>
                   {metric !== "risk" && <td className="py-2 text-right">{pct(v.payout)}</td>}
                 </tr>
               );

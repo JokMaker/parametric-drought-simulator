@@ -29,10 +29,25 @@ export function signedPct(x: number, digits = 1) {
   return `${x > 0 ? "+" : ""}${x.toFixed(digits)}%`;
 }
 
+/** An index value. One that would round onto the trigger keeps a second decimal, so -1.97
+ *  (no payout) reads -1.97% rather than seeming to sit on a -2% trigger it did not reach. */
+export function indexPct(x: number, trigger = -2) {
+  return signedPct(x, x.toFixed(1) === trigger.toFixed(1) && x !== trigger ? 2 : 1);
+}
+
+/** A yield change in words: "13% below", "4% above", or "about normal" when it rounds to 0.
+ *  Near the trigger a second decimal is kept, as in indexPct. */
+export function changeWords(x: number, trigger = -2) {
+  const a = Math.abs(x);
+  if (a < 0.5) return "about normal";
+  const digits = Math.round(a) === Math.abs(trigger) && x !== trigger ? 2 : 0;
+  return `${a.toFixed(digits)}% ${x < 0 ? "below" : "above"}`;
+}
+
 /** FR6: the reason sentence shown with every payout decision. */
 export function reason(s: Simulation, trigger: number, exit: number) {
   const seen = `Rainfall was ${anomalyLabel(s.rainZ)} and crop greenness ${anomalyLabel(s.ndviZ)}.`;
-  const idx = `${s.index.toFixed(1)}%`;
+  const idx = indexPct(s.index, trigger);
   if (s.payout <= 0)
     return `${seen} Predicted yield change of ${idx} is above the ${trigger}% trigger, so no payout.`;
   if (s.payout >= 1)
