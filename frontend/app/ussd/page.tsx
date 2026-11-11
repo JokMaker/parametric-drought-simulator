@@ -2,7 +2,7 @@
 
 import { Phone, PhoneOff } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Card, PageHeader } from "@/components/ui";
 import { USE_MOCK, ussdPreview } from "@/lib/api";
 import { USSD_CODE } from "@/lib/constants";
@@ -50,26 +50,37 @@ export default function UssdPage() {
   const [busy, setBusy] = useState(false);
   const newFarmer = caller === NEW_FARMER;
 
+  // Bumped on every hang-up, so a reply that arrives after the call ended is dropped.
+  const call = useRef(0);
+
   function hangUp() {
+    call.current += 1;
     setSession(null);
     setScreen(WELCOME);
+    setTyped("");
+    setBusy(false);
   }
 
   async function ask(text: string) {
+    const id = call.current;
     setBusy(true);
     try {
       const reply = await ussdPreview(text, newFarmer ? { phone: demoPhone } : { policyId: caller });
+      if (id !== call.current) return;
       setScreen(reply.slice(4));
       setSession(reply.startsWith("CON") ? text : null);
     } catch (e) {
+      if (id !== call.current) return;
       setScreen((e as Error).message);
       setSession(null);
     } finally {
-      setBusy(false);
+      if (id === call.current) setBusy(false);
     }
   }
 
   function send() {
+    // One request at a time: Enter in the input is not covered by the disabled keys.
+    if (busy) return;
     const input = typed.trim();
     setTyped("");
     if (session === null) {
