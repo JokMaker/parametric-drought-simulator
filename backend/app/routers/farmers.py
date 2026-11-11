@@ -28,8 +28,12 @@ def report_loss(
         raise HTTPException(422, f"No policy {body.policy_id}")
     if policy.district != body.district:
         raise HTTPException(422, f"Policy {body.policy_id} does not cover {body.district}")
+    if policy.season is not None and body.season != policy.season:
+        raise HTTPException(422, f"Policy {body.policy_id} covers Season A {policy.season} only")
+    # Reports are taken where Field Checks can weigh them: seasons with harvest data, and
+    # the season in progress.
     current = ds.current_season
-    if (body.district, body.season) not in ds.seasons and not (current and body.season == current["season"]):
+    if (body.district, body.season) not in ds.calibration and not (current and body.season == current["season"]):
         raise HTTPException(422, f"No Season A {body.season} to report on")
     created = store.add(body.policy_id, body.district, body.season)
     return LossReportOut(created=created, reports=store.count(body.district, body.season))

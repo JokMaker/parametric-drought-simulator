@@ -44,6 +44,9 @@ class Policy:
     id: str
     district: str
     area_m2: int
+    # The season a farmer's cover was bought for; None for a demo policy, which stands
+    # for a farmer insured in every season so the history can be explored.
+    season: int | None = None
 
     @property
     def hectares(self) -> float:

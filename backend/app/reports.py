@@ -102,7 +102,7 @@ class ReportStore(ABC):
             ).fetchone()
             policy_id = f"RDI-{DISTRICT_CODES[district]}-{5000 + row[0]:04d}"
             self._execute(con, "UPDATE policies SET policy_id = ? WHERE id = ?", (policy_id, row[0]))
-            return Policy(policy_id, district, area_m2), True
+            return Policy(policy_id, district, area_m2, season), True
 
     def policy_for_phone(self, phone: str) -> Policy | None:
         with self._connection() as con:
@@ -113,7 +113,7 @@ class ReportStore(ABC):
             return self._policy_where(con, "policy_id = ?", policy_id)
 
     def _policy_where(self, con, where: str, value: str) -> Policy | None:
-        row = self._execute(con, f"SELECT policy_id, district, area_m2 FROM policies WHERE {where}", (value,)).fetchone()
+        row = self._execute(con, f"SELECT policy_id, district, area_m2, season FROM policies WHERE {where}", (value,)).fetchone()
         return Policy(*row) if row else None
 
     def policies(self) -> list[dict]:
