@@ -330,7 +330,7 @@ export default function FarmerPage() {
               <button
                 key={p.id}
                 onClick={() => lookUp(p.id)}
-                className={`rounded-sm border px-2 py-1 ${p.district === policy.district ? "border-ink bg-ink text-surface" : "border-line text-muted hover:text-ink"}`}
+                className={`rounded-sm border px-2 py-1 ${!notFound && p.district === policy.district ? "border-ink bg-ink text-surface" : "border-line text-muted hover:text-ink"}`}
               >
                 {p.district}
               </button>
@@ -341,7 +341,7 @@ export default function FarmerPage() {
         <div>
           <div className="mb-1.5 text-[13px] text-muted">Season A</div>
           <SeasonTimeline season={season} onSelect={(s) => { setSeason(s); setReported(null); }} />
-          {policy.season && policy.season > LAST_SEASON && (
+          {!notFound && policy.season && policy.season > LAST_SEASON && (
             <p className="mt-2 text-xs text-muted">
               This cover starts in Season A {policy.season}, which is still under way; its provisional index is on{" "}
               <Link href="/season" className="text-accent underline-offset-2 hover:underline">This Season</Link>. The seasons above
