@@ -7,7 +7,7 @@ import ClassLegend from "@/components/charts/ClassLegend";
 import TriggerSimulator from "@/components/TriggerSimulator";
 import { Badge, Card, DotCount, ErrorNote, Loading, PageHeader, StatStrip, Tabs, type Tone, SwipeHint } from "@/components/ui";
 import { getBasisRisk, getModel, getSeasons } from "@/lib/api";
-import { classify, OUTCOME_LABEL, pct, signedPct, type Outcome } from "@/lib/payout";
+import { classify, OUTCOME_LABEL, pct, signedPct, type Outcome, indexPct } from "@/lib/payout";
 import { RISK_CLASSES } from "@/lib/scales";
 import { POOR_RULE, YIELD_RANGE, YIELD_SEASONS } from "@/lib/constants";
 import { useApi } from "@/lib/useApi";
@@ -129,7 +129,7 @@ export default function BasisRiskPage() {
                       </Link>
                     </td>
                     <td className="px-2 py-2.5 text-muted">{s.season}</td>
-                    <td className="px-2 py-2.5 text-right">{signedPct(s.index)}</td>
+                    <td className="px-2 py-2.5 text-right">{indexPct(s.index)}</td>
                     <td className="px-2 py-2.5 text-right">
                       {s.actualYieldAnom === null ? "–" : signedPct(s.actualYieldAnom)}
                     </td>

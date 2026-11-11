@@ -7,7 +7,7 @@ import { Card, ErrorNote, Loading, PageHeader, StatStrip, SwipeHint } from "@/co
 import { getCurrentSeason, getPlotLosses, getReportCounts, getSeasons, USE_MOCK } from "@/lib/api";
 import { DISTRICTS, YIELD_SEASONS } from "@/lib/constants";
 import { checkStatus, DEFAULT_RULE, STATUS_LABEL, type CheckRule, type CheckStatus } from "@/lib/fieldChecks";
-import { pct, signedPct } from "@/lib/payout";
+import { pct, signedPct, indexPct } from "@/lib/payout";
 import { useApi } from "@/lib/useApi";
 
 const TONE: Record<CheckStatus, string> = {
@@ -164,7 +164,7 @@ export default function FieldChecksPage() {
                         {STATUS_LABEL[r.status]}
                       </span>
                     </td>
-                    <td className="px-2 py-2.5 text-right">{signedPct(r.index)}</td>
+                    <td className="px-2 py-2.5 text-right">{indexPct(r.index)}</td>
                     <td className="px-2 py-2.5 text-right">{pct(r.payout)}</td>
                     <td className="px-2 py-2.5">
                       {r.lossShare === null ? (
