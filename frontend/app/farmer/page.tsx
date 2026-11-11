@@ -11,7 +11,7 @@ import Link from "next/link";
 import { getHistory, getModel, getPolicies, getSeasons, getSmsStatus, reportLoss, sendSms, USE_MOCK } from "@/lib/api";
 import { districtsInSeason, type DistrictSeason } from "@/lib/districtSeason";
 import { pct, changeWords, indexPct } from "@/lib/payout";
-import { LAST_SEASON, USSD_CODE } from "@/lib/constants";
+import { LAST_SEASON, USSD_CODE, YIELD_RANGE, YIELD_SEASONS } from "@/lib/constants";
 import { smsParts } from "@/lib/sms";
 import { DEMO_POLICIES, findPolicy, fromRegistered, type Policy } from "@/lib/policies";
 import { defaultTerms, expectedPayout, payoutHistory, perHectare, rwf } from "@/lib/pricing";
@@ -132,6 +132,7 @@ export default function FarmerPage() {
   const [lang, setLang] = useState<Lang>("rw");
   // The latest report sent, keyed by policy and season so it clears when either changes.
   const [reported, setReported] = useState<{ key: string; text: string; ok: boolean } | null>(null);
+  const [sending, setSending] = useState(false);
   const error = history.error ?? seasons.error ?? model.error;
   // While the signed-up policies load, an unknown number may still be one of them.
   const notFound = query.trim() !== "" && !findPolicy(query, signedUp) && !registered.loading;
@@ -174,13 +175,18 @@ export default function FarmerPage() {
     const paid = v.payout > 0;
     const reportKey = `${policy.id}:${season}`;
     const harvestFell = v.actualYieldAnom !== null && v.actualYieldAnom <= m.lowYieldThreshold;
+    // A farmer's own cover is for one season; the past seasons show what it would have paid.
+    const before = !!policy.season && season < policy.season;
+    // Reports go where Field Checks can weigh them: seasons with harvest data. A signed-up
+    // policy reports for its own season, from the USSD menu.
+    const canReport = !policy.season && YIELD_SEASONS.includes(season);
     const sizes = m.pricingInputs.farmSizeHa;
 
     body = (
       <div className="space-y-5">
         <Card
           label={`Policy ${policy.id} · ${policy.district} · ${areaM2.toLocaleString("en-US")} m² of maize`}
-          title={paid ? `Season A ${season}: you will be paid ${rwf(amount)}` : `Season A ${season}: no payout for ${policy.district} this season`}
+          title={paid ? `Season A ${season}: ${before ? "this cover would have paid" : "you will be paid"} ${rwf(amount)}` : `Season A ${season}: no payout for ${policy.district} this season`}
           source={`Crop value = maize area × ${policy.district}'s expected yield (${Math.round(perHa.yieldKg).toLocaleString("en-US")} kg/ha, Season A ${m.pricingInputs.season} trend) × RWF ${Math.round(terms.price)}/kg (survey farm-gate price). Cover = ${Math.abs(exit)}% of the crop value, the loss at which the payout is full. Premium = cover × ${policy.district}'s average payout since 2001, plus a ${pct(terms.loading)} loading, less a ${pct(terms.subsidy)} subsidy. Every insured farmer in a district gets the same payout share: the index is per district, not per farm.`}
         >
           <div className="grid gap-6 md:grid-cols-[1fr_auto] md:items-start">
@@ -219,12 +225,20 @@ export default function FarmerPage() {
                       {reported.ok && <CheckCircle2 size={16} className="mt-0.5 shrink-0" />}
                       <span>
                         {reported.text}{" "}
-                        {reported.ok && <Link href="/field-checks" className="underline underline-offset-2">See field checks</Link>}
+                        {reported.ok && <Link href={`/field-checks?season=${season}`} className="underline underline-offset-2">See field checks</Link>}
                       </span>
+                    </p>
+                  ) : !canReport ? (
+                    <p className="mt-2 text-xs text-muted">
+                      {policy.season
+                        ? `This cover is for Season A ${policy.season}, so a loss is reported for that season: dial ${USSD_CODE} and choose 4.`
+                        : `Reports are taken for the seasons with harvest data (${YIELD_RANGE}), where field checks can weigh them.`}
                     </p>
                   ) : (
                     <button
-                      onClick={() =>
+                      disabled={sending}
+                      onClick={() => {
+                        setSending(true);
                         reportLoss(policy.id, policy.district, season).then(
                           (r) =>
                             setReported({
@@ -234,14 +248,14 @@ export default function FarmerPage() {
                                 ? "Report noted (saved-results mode: not stored)."
                                 : r.created
                                   ? `Report received: ${r.reports} ${r.reports === 1 ? "report" : "reports"} on file for ${policy.district}, Season A ${season}.`
-                                  : `You have already reported this season; ${r.reports} on file for ${policy.district}.`,
+                                  : `You have already reported this season; ${r.reports} ${r.reports === 1 ? "report" : "reports"} on file for ${policy.district}.`,
                             }),
                           (e: Error) => setReported({ key: reportKey, ok: false, text: e.message }),
-                        )
-                      }
-                      className="mt-2 rounded-sm bg-ink px-3 py-1.5 text-sm font-medium text-surface"
+                        ).finally(() => setSending(false));
+                      }}
+                      className="mt-2 rounded-sm bg-ink px-3 py-1.5 text-sm font-medium text-surface disabled:opacity-60"
                     >
-                      Report a crop loss
+                      {sending ? "Sending…" : "Report a crop loss"}
                     </button>
                   )}
                   {harvestFell && (

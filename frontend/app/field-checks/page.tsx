@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import NumberInput from "@/components/NumberInput";
-import { useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
 import { Card, ErrorNote, Loading, PageHeader, StatStrip, SwipeHint } from "@/components/ui";
 import { getCurrentSeason, getPlotLosses, getReportCounts, getSeasons, USE_MOCK } from "@/lib/api";
 import { DISTRICTS, YIELD_SEASONS } from "@/lib/constants";
@@ -29,11 +30,22 @@ type Row = {
 };
 
 export default function FieldChecksPage() {
+  return (
+    <Suspense fallback={<Loading />}>
+      <FieldChecks />
+    </Suspense>
+  );
+}
+
+/** Opens on ?season= when given (the Farmer view links here after a report), else 2019. */
+function FieldChecks() {
+  const asked = Number(useSearchParams().get("season"));
   const seasons = useApi("seasons", getSeasons);
   const losses = useApi("plot-losses", getPlotLosses);
   const reports = useApi("report-counts", getReportCounts);
   const current = useApi("current-season", getCurrentSeason);
-  const [season, setSeason] = useState(2019);
+  const [picked, setSeason] = useState(asked || 2019);
+  const season = YIELD_SEASONS.includes(picked) || picked === current.data?.season ? picked : 2019;
   const [rule, setRule] = useState<CheckRule>(DEFAULT_RULE);
   const error = seasons.error ?? losses.error ?? reports.error ?? current.error;
 
