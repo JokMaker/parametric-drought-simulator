@@ -157,6 +157,8 @@ export default function FarmerPage() {
   let body;
   if (error) body = <ErrorNote message={error} />;
   else if (!history.data || !seasons.data || !model.data) body = <Loading />;
+  // An unknown number shows nothing, rather than the last policy under a number it does not have.
+  else if (notFound) body = null;
   else {
     const m = model.data;
     const { trigger, exit } = m;
