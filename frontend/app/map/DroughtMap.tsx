@@ -5,7 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import ClassLegend, { IndexLegend } from "@/components/charts/ClassLegend";
 import DistrictMap from "@/components/charts/DistrictMap";
-import SeasonTimeline from "@/components/SeasonTimeline";
+import SeasonTimeline, { TimelineKey } from "@/components/SeasonTimeline";
 import { Card, ErrorNote, Loading, Tabs } from "@/components/ui";
 import { getBasisRisk, getHistory, getModel, getSeasons, getShapes } from "@/lib/api";
 import { FIRST_SEASON, isDroughtSeason, LAST_SEASON, SEASONS, windowYearOf, YIELD_RANGE, YIELD_SEASONS } from "@/lib/constants";
@@ -42,10 +42,19 @@ export default function DroughtMap() {
     router.replace(`${pathname}?${q}`, { scroll: false });
   }
 
+  // An unknown ?season= or ?metric= falls back to the default; keep the address bar on what is shown.
+  useEffect(() => {
+    const m = params.get("metric");
+    const s = params.get("season");
+    if ((m !== null && m !== metric) || (s !== null && s !== String(season))) {
+      router.replace(`${pathname}?${new URLSearchParams({ metric, season: String(season) })}`, { scroll: false });
+    }
+  }, [params, metric, season, pathname, router]);
+
   // Play steps through every season, so droughts can be watched spreading and clearing.
   const [playOn, setPlaying] = useState(false);
   // Playback stops by itself on the last season.
-  const playing = playOn && season < LAST_SEASON;
+  const playing = playOn && season < LAST_SEASON && metric !== "risk";
   useEffect(() => {
     if (!playing) return;
     const t = setTimeout(() => {
@@ -79,7 +88,8 @@ export default function DroughtMap() {
   };
   const order = (d: string) =>
     metric === "risk" ? -(riskOf.get(d) ?? 0) : metric === "index" ? values.get(d)!.index : -values.get(d)!.payout;
-  const ranked = [...districts].sort((a, b) => order(a) - order(b));
+  // Ties (several districts at 0% payout) fall back to the index, worst first.
+  const ranked = [...districts].sort((a, b) => order(a) - order(b) || values.get(a)!.index - values.get(b)!.index);
 
   // The finding for this view, in one sentence.
   const paying = districts.filter((d) => values.get(d)!.index <= trigger);
@@ -125,7 +135,15 @@ export default function DroughtMap() {
   return (
     <div className="space-y-5">
       <section className="card px-5 pt-2 pb-4 sm:px-6">
-        <Tabs label="Map layer" value={metric} options={METRICS} onChange={(m) => set({ metric: m })} />
+        <Tabs
+          label="Map layer"
+          value={metric}
+          options={METRICS}
+          onChange={(m) => {
+            setPlaying(false);
+            set({ metric: m });
+          }}
+        />
         {metric !== "risk" && (
           <div className="mt-4 flex items-center gap-2">
             <button
@@ -145,6 +163,11 @@ export default function DroughtMap() {
                 }}
               />
             </div>
+          </div>
+        )}
+        {metric !== "risk" && (
+          <div className="mt-2 flex justify-end">
+            <TimelineKey />
           </div>
         )}
       </section>

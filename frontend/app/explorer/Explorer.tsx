@@ -4,7 +4,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useEffectEvent } from "react";
 import SeasonContextChart, { type SeasonValue } from "@/components/charts/SeasonContextChart";
 import { HarvestCard, type InputSeason, PayoutCard, SatelliteCard } from "@/components/PayoutPanel";
-import SeasonTimeline from "@/components/SeasonTimeline";
+import SeasonTimeline, { TimelineKey } from "@/components/SeasonTimeline";
 import { Card, ErrorNote, Loading } from "@/components/ui";
 import { getHistory, getModel, getSeasons, getSimulation } from "@/lib/api";
 import { DISTRICTS, FIRST_SEASON, isDroughtSeason, LAST_SEASON, SEASONS, windowYearOf } from "@/lib/constants";
@@ -40,8 +40,9 @@ export default function Explorer() {
   const params = useSearchParams();
 
   // The selection lives in the URL so links like ?district=Kirehe&season=2022 work.
-  const districtParam = params.get("district");
-  const district = DISTRICTS.find((d) => d === districtParam) ?? "Rwamagana";
+  // Any case or spacing works (?district=kirehe); an unknown value falls back to the default.
+  const districtParam = params.get("district")?.trim().toLowerCase();
+  const district = DISTRICTS.find((d) => d.toLowerCase() === districtParam) ?? "Rwamagana";
   const seasonParam = Number(params.get("season"));
   const season = SEASONS.includes(seasonParam) ? seasonParam : 2023;
 
@@ -58,8 +59,16 @@ export default function Explorer() {
     router.replace(`${pathname}?${q}`, { scroll: false });
   }
 
-  // Left and right arrow keys step through seasons.
+  // Keep the address bar on what is shown, so a shared link never names something else.
+  useEffect(() => {
+    if (params.get("district") !== district || params.get("season") !== String(season)) {
+      router.replace(`${pathname}?${new URLSearchParams({ district, season: String(season) })}`, { scroll: false });
+    }
+  }, [params, district, season, pathname, router]);
+
+  // Left and right arrow keys step through seasons (not with a modifier, which the browser uses).
   const onKey = useEffectEvent((e: KeyboardEvent) => {
+    if (e.altKey || e.metaKey || e.ctrlKey || e.shiftKey) return;
     const tag = (e.target as HTMLElement).tagName;
     if (tag === "INPUT" || tag === "SELECT" || tag === "TEXTAREA") return;
     if (e.key === "ArrowLeft" && season > FIRST_SEASON) select({ season: season - 1 });
@@ -94,9 +103,9 @@ export default function Explorer() {
     <div className="space-y-5">
       <section className="card space-y-4 px-5 py-4 sm:px-6">
         <div className="flex flex-wrap items-end justify-between gap-3">
-          <label className="text-[13px] text-muted">
-            District
-            <div className="mt-1.5 flex flex-wrap overflow-hidden rounded-sm border border-line">
+          <div className="text-[13px] text-muted">
+            <span id="district-label">District</span>
+            <div role="group" aria-labelledby="district-label" className="mt-1.5 flex flex-wrap overflow-hidden rounded-sm border border-line">
               {DISTRICTS.map((d) => (
                 <button
                   key={d}
@@ -110,7 +119,7 @@ export default function Explorer() {
                 </button>
               ))}
             </div>
-          </label>
+          </div>
           <div className="text-[13px] text-muted">
             Examples:{" "}
             {EXAMPLES.map((e, i) => (
@@ -129,14 +138,7 @@ export default function Explorer() {
         <div>
           <div className="mb-1.5 flex flex-wrap items-center justify-between gap-2 text-[13px] text-muted">
             <span>Season A (harvest year)</span>
-            <span className="flex items-center gap-4 text-xs">
-              <span className="flex items-center gap-1.5">
-                <span className="h-1.5 w-1.5 rounded-full bg-ink/70" /> Harvest data
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="h-0.5 w-3.5 rounded-full bg-drought" /> Documented drought
-              </span>
-            </span>
+            <TimelineKey />
           </div>
           <SeasonTimeline season={season} onSelect={(s) => select({ season: s })} />
         </div>

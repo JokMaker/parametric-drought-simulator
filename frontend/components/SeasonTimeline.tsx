@@ -93,3 +93,17 @@ export default function SeasonTimeline({ season, onSelect }: { season: number; o
     </div>
   );
 }
+
+/** The key to the timeline's marks: a dot for seasons with harvest data, a red line for documented droughts. */
+export function TimelineKey() {
+  return (
+    <span className="flex items-center gap-4 text-xs text-muted">
+      <span className="flex items-center gap-1.5">
+        <span className="h-1.5 w-1.5 rounded-full bg-ink/70" /> Harvest data
+      </span>
+      <span className="flex items-center gap-1.5">
+        <span className="h-0.5 w-3.5 rounded-full bg-drought" /> Documented drought
+      </span>
+    </span>
+  );
+}
