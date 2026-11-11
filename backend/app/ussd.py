@@ -31,6 +31,7 @@ T = {
         "season": "Season A {season}, day {day} of {days}\nRain so far: {rain}% of normal\nIndex {index} ({state})\nFinal result after 31 Dec",
         "no_season": "No season in progress.",
         "payouts": "Your payouts:\n{lines}",
+        "payouts_before": "Before your cover, it would have paid:\n{lines}",
         "paid": "{season}: {amount} ({share})",
         "none": "{season}: none",
         "sms_option": "\n1. Send me this by SMS\n0. Back",
@@ -58,6 +59,7 @@ T = {
         "season": "Igihembwe A {season}, umunsi {day}/{days}\nImvura: {rain}% y'isanzwe\nIgipimo {index} ({state})\nIbisubizo nyuma ya 31 Ukuboza",
         "no_season": "Nta gihembwe kiri gukurikiranwa.",
         "payouts": "Ingurane wahawe:\n{lines}",
+        "payouts_before": "Mbere y'ubwishingizi bwawe, bwari kwishyura:\n{lines}",
         "paid": "{season}: {amount} ({share})",
         "none": "{season}: nta ngurane",
         "sms_option": "\n1. Mbyoherereze kuri SMS\n0. Subira inyuma",
@@ -269,7 +271,9 @@ class UssdMenu:
             share = self.ds.calibration[(policy.district, s)].payout
             lines.append(t["paid"].format(season=s, amount=rwf(share * cover), share=f"{share:.0%}")
                          if share > 0 else t["none"].format(season=s))
-        return self._with_sms(t, t["payouts"].format(lines="\n".join(lines)), rest, phone)
+        # A farmer's own cover is for one season, so earlier payouts were never theirs.
+        heading = t["payouts_before"] if policy.season and seasons and seasons[0] < policy.season else t["payouts"]
+        return self._with_sms(t, heading.format(lines="\n".join(lines)), rest, phone)
 
     def report_loss(self, t: dict, policy: Policy, rest: tuple[str, ...], phone: str = "") -> str:
         current = self.ds.current_season

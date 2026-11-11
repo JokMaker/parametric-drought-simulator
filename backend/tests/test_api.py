@@ -369,7 +369,7 @@ def test_ussd_sign_up_saves_the_policy_and_texts_the_caller(gateway, report_db):
     assert "Maize 1,250 m2 in Kayonza" in ussd("5*1", phone=NEW_PHONE)
     # A screen sent by SMS goes to the farmer who asked for it, not the demo phone.
     assert ussd("5*3*1", phone=NEW_PHONE) == "END Sent. Check your SMS messages."
-    assert gateway.recipients[-1] == NEW_PHONE and "Your payouts" in gateway.sent[-1]
+    assert gateway.recipients[-1] == NEW_PHONE and "Before your cover" in gateway.sent[-1]
     assert ussd("5*4*1", phone=NEW_PHONE).startswith("END Thank you. Report received (drought)")
 
 
@@ -398,6 +398,14 @@ def test_ussd_sign_up_works_without_sms(report_db):
         assert ussd("5*1*1*800*1", phone=NEW_PHONE).startswith("CON Done. Your policy number is RDI-BUG-5001.\n1. My cover")
     finally:
         app.dependency_overrides.pop(get_sms_settings, None)
+
+
+def test_ussd_payouts_before_a_new_cover_are_not_called_theirs(report_db):
+    season = client.get("/api/current-season").json()["season"]
+    report_db.register(NEW_PHONE, "Kirehe", 500, season, 300.0)
+    for lang, prefix, heading in [("en", "5*3", "Before your cover"), ("rw", "3", "Mbere y'ubwishingizi")]:
+        r = client.post("/api/ussd", data={"sessionId": "s", "serviceCode": "*384#", "phoneNumber": NEW_PHONE, "text": prefix})
+        assert heading in r.text and len(r.text) <= 182, lang
 
 
 def test_store_keeps_one_policy_per_number(store):
