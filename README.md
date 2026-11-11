@@ -24,7 +24,7 @@ Kirehe, Ngoma, Nyagatare, Rwamagana), backtested from 2001 to 2025.
 
 | Page | What it does | Requirements |
 |---|---|---|
-| **Overview** | Opens with a four-step picture of how the index works and a five-stop guided tour on the map (a normal year, the worst year, a drought caught, a drought missed, a false alarm), then a scatter plot of the index against the actual harvest for all 56 district-seasons; then the selected model, trigger (−2%) and exit (−22%), hit rate (50%) and false payout rate (22%), validation results (leave-one-out and leave-one-season-out), and which input drives the index | FR7, FR8, FR9 |
+| **Overview** | Opens with a **Start here** box (a farmer goes to their policy or the USSD menu; an analyst or insurer to the drought map or basis risk), then a four-step picture of how the index works and a five-stop guided tour on the map (a normal year, the worst year, a drought caught, a drought missed, a false alarm), then a scatter plot of the index against the actual harvest for all 56 district-seasons; then the selected model, trigger (−2%) and exit (−22%), hit rate (50%) and false payout rate (22%), validation results (leave-one-out and leave-one-season-out), and which input drives the index | FR7, FR8, FR9 |
 | **This Season** | Follows the Season A window in progress (now October–December 2026) with near-real-time data: rainfall from NASA GPM IMERG and crop greenness from MODIS daily reflectance, each against the same dates in every season since 2001. Shows a provisional index per district on a map, rainfall and greenness so far against normal, and how far an early read can be trusted (tested on 25 past seasons: 60% agreement with the final decision by mid-October, 78% at the close). Refresh with `notebook/jok/bin/python notebook/update_current_season.py` | — |
 | **Drought Map** | The seven districts on a map, coloured by the predicted yield change, the payout or the basis risk for any season since 2001. Press Play to watch every season from 2001 in turn. Hover a district for its rainfall and greenness anomalies, index and payout; click it to open it in the Explorer | FR1, FR3, FR5, FR10 |
 | **District Explorer** | Pick a district and season; see rainfall and vegetation anomalies, a payout gauge with the index's likely range (± the model's leave-one-out error) and the chance the harvest really fell past the trigger, where the index sits between trigger and exit, and the reason for the payout. For 2018–2025 the index and payout are shown side by side with the actual harvest | FR1, FR3, FR5, FR6, FR7, FR9 |
@@ -32,8 +32,9 @@ Kirehe, Ngoma, Nyagatare, Rwamagana), backtested from 2001 to 2025.
 | **Basis Risk** | A "what if" simulator: move the trigger and exit and see how many poor harvests are paid, how many are missed, the false payouts and the basis risk change live. Then basis risk per district (Nyagatare 33% highest, Kayonza 18% lowest) and a season-by-season table filterable by outcome (missed, false payout, paid correctly) | FR10 |
 | **Field Checks** | The safety net for losses the index misses. A district needs a field check when the index paid under 25% but there is evidence of loss: at least 3 farmer reports (saved by the API in the database), or at least 45% of NISR-surveyed farms harvesting under half the expected yield. Season A 2019 flags all seven districts. Thresholds are editable | FR10 |
 | **Pricing** | Prices the cover from what the maize is worth: maize area × expected yield × price (RWF 200/kg, the NISR farm-gate median). Set the cover level, loading, subsidy and share of the 118,687 ha insured; see the premium per hectare and for a median farm in each district, premiums against expected payouts, the 1-in-10 season, the reserve needed for the worst season (2006), and a loss ratio for every season since 2001 | — |
-| **Policies** | Every policy farmers have signed up for over USSD (dial `*384*44698#` from a number with no policy): policy number, district, field size, premium, season, masked phone and sign-up time, with totals (farmers, hectares, premiums a season) and a count per district. The insurer's phone also gets an SMS for each new policy | — |
-| **Farmer View** | Look up a synthetic demo policy, enter the maize area, and see the crop's value, the cover, the premium and the payout for any season, with the SMS the farmer would receive in English or Kinyarwanda (draft). When the district is not paid, the farmer can report a crop loss, the route for losses the satellites miss; reports go to Field Checks. Press **Send this SMS** to deliver it through Africa's Talking. The USSD Menu page runs the real `*384*44698#` menu (cover, this season, payouts, report a loss with its cause, Kinyarwanda); choose **A new farmer** to sign up in the browser with a demo number (`+2507000…`, no SMS sent), and the policy appears on the Policies page as a web demo | — |
+| **Policies** | Every policy farmers have signed up for over USSD or the web demo phone (dial `*384*44698#` from a number with no policy): policy number, district, field size, premium, season, masked phone and sign-up time, with totals (farmers, hectares, premiums a season) and a count per district. The insurer's phone also gets an SMS for each new policy | — |
+| **Farmer View** | Look up a synthetic demo policy, enter the maize area, and see the crop's value, the cover, the premium and the payout for any season, with the SMS the farmer would receive in English or Kinyarwanda. When the district is not paid, the farmer can report a crop loss, the route for losses the satellites miss; reports go to Field Checks. Press **Send this SMS** to deliver it through Africa's Talking. The USSD Menu page runs the real `*384*44698#` menu (cover, this season, payouts, report a loss with its cause, Kinyarwanda); choose **A new farmer** to sign up in the browser with a demo number (`+2507000…`, no SMS sent), and the policy appears on the Policies page as a web demo | — |
+| **Everywhere** | Pages are grouped into **Analysis** and **Farmers** (Farmer View, USSD Menu, Policies); on phones an **All pages** menu replaces the row of tabs. An **ⓘ** next to each technical term (index, trigger and exit, basis risk, SD, leave-one-out, R²…) explains it in one plain sentence. On phones the season strip becomes a dropdown | — |
 | **Term sheet** | A printable one-page contract summary per district (cover, index formula, accuracy, payout schedule, settlement, field-check clause, 2001–2025 record), downloadable as PDF; linked from Pricing | — |
 
 ## Machine learning model
@@ -69,7 +70,7 @@ Versions the project is built and tested with. Newer minor versions should work.
 | Part | Requirement | Tested with |
 |---|---|---|
 | Frontend | Node.js 20 or later, npm | Node.js 22.21, npm 10.9 |
-| | Next.js, React, TypeScript, Tailwind CSS, Recharts | Next.js 16.3.6, React 19.2.8, TypeScript 5.9, Tailwind CSS 4.3, Recharts 3.10 |
+| | Next.js, React, TypeScript, Tailwind CSS, Recharts | Next.js 16.4.6, React 19.2.8, TypeScript 5.9, Tailwind CSS 4.3, Recharts 3.10 |
 | Backend | Python 3.12 or later | Python 3.12.13 (also the Docker image, `python:3.12-slim`) |
 | | FastAPI, Pydantic, Uvicorn, psycopg (from `backend/requirements.txt`) | FastAPI 0.141, Pydantic 2.13, Uvicorn 0.54, psycopg 3.3 |
 | | pytest (from `backend/requirements-dev.txt`) | pytest 9.1 |
@@ -124,7 +125,7 @@ source .venv/bin/activate
 python -m pytest
 ```
 
-The 73 tests (71 without a test Postgres database) check the API against the notebook (the index formula on all 175 district-seasons,
+The 74 tests (72 without a test Postgres database; 94% line coverage with `python -m pytest --cov=app`) check the API against the notebook (the index formula on all 175 district-seasons,
 the leave-one-out results, the hit and false payout rates, the drought-year totals (34/63 against
 26/112), basis risk and the pricing inputs) and test each building block on its own: the report
 store, USSD sign-up (saving the policy, one per number, the SMS to the caller), the SMS gateways (sandbox and live limits, sender ID, rejected messages, through a recording
@@ -132,7 +133,7 @@ transport so nothing is sent), the USSD session and every menu screen, and inval
 
 ```bash
 cd frontend
-npm test                          # 33 unit tests: pricing, payouts, field checks, SMS length
+npm test                          # 37 unit tests: pricing, payouts, field checks, SMS length, glossary
 node tests/browser/check.mjs      # every page at phone, tablet and desktop size, light and dark, plus the main flows
 ```
 
@@ -168,13 +169,15 @@ instead of real phones, which is enough for a demo.
    tunnel address plus `/api/ussd`. Dial the code on the simulator (this project's channel is
    `*384*44698#`; set `NEXT_PUBLIC_USSD_CODE` if yours differs). The menu offers the farmer's cover,
    this season's provisional index, past payouts, a crop-loss report with its cause, an SMS copy of
-   any screen. It opens in Kinyarwanda, with English as option 5. The dashboard's **USSD Menu** page runs the same
+   any screen. It opens in Kinyarwanda (checked by a native speaker), with English as option 5. The dashboard's **USSD Menu** page runs the same
    menu through `/api/ussd/preview`.
 
    **Signing up.** Any other number is offered cover instead: the farmer picks their district,
    enters their maize field size in m², sees the insured value and premium, and confirms. The
    policy (numbered `RDI-KAY-5001`, ...) is saved in the database against the phone number, the
-   farmer gets an SMS with the policy number, and dialling again opens their own menu. To try it,
+   screen shows the policy number with the farmer's menu straight away (so a loss can be reported
+   without dialling again), and the farmer gets an SMS with the policy number and how to report a
+   loss. Dialling again later opens their own menu. To try it,
    dial from a simulator number other than `AT_PHONE`, or choose **A new farmer** on the dashboard's
    USSD Menu page (it signs up with a demo number in the reserved `+2507000…` range and texts no one).
    `GET /api/policies` lists sign-ups with the phone numbers masked and marks web demos.
@@ -203,6 +206,8 @@ In Rwanda the networks reject messages from the shared sender name, so live SMS 
 approved sender ID (`AT_SENDER_ID`). Africa's Talking asks for a national ID or passport and an
 RRA tax number (TIN) for that, and the same documents for airtime, short codes and a dedicated
 USSD code. A tested message from the shared sender was rejected by MTN Rwanda on 26 October 2026.
+The sender ID "JokMaker" was submitted to RURA, MTN Rwanda and Airtel Rwanda through Africa's
+Talking on 31 October 2026 and is awaiting carrier approval; once approved, set `AT_SENDER_ID`.
 
 ### Run the notebook
 
@@ -225,6 +230,32 @@ The notebook rebuilds the model from raw data and writes its results into `backe
    `notebook/jok/bin/python notebook/update_current_season.py` (about a minute; add `--skill-curve` to redo the
    reliability test, a few minutes). It needs the same Earth Engine sign-in as the notebook.
 
+## Testing and results
+
+Full details are in [docs/testing.md](docs/testing.md) and the technical report.
+
+| What | Result |
+|---|---|
+| Backend tests (pytest) | 74 tests, 72 pass locally (2 need a test Postgres database), **94% line coverage** |
+| Frontend unit tests (Node test runner) | 37 tests, all pass; 97–100% line coverage of the 8 logic modules |
+| Browser checks | Every page at phone, tablet and desktop size, light and dark: **72/72** page checks and **7/7** flows in Chrome; 36/36 in Firefox and Safari |
+| API response time (local) | Median 1–1.6 ms, 95th percentile under 5 ms |
+| Load test, local | 100 concurrent users: about 1,960 requests/s, 0 errors |
+| Load test, live (Render free plan, from Kigali, 10 Nov 2026) | About 80 requests/s at every level; 95th percentile 0.8 s at 50 users, 1.9 s at 100, 3.6 s at 200; at 500 users Render's rate limiter refused 61% of requests. The breaking point (100–200 users) is the free plan, not the code |
+| Lighthouse (mobile) | Performance 93–97, Accessibility, Best Practices and SEO 100 |
+| Security | Phone numbers masked, keys only in environment variables, schema validation on every request, parameterised SQL, CORS limited to the dashboard, HTTPS; `npm audit` reports no critical or high issues after the Next.js 16.4.6 upgrade |
+| User testing (22 people, 3–6 Nov 2026) | 11 students, 8 farmers, 3 in agriculture or insurance. **SUS 70.7** (benchmark 68). Tasks completed: USSD sign-up 45%, payout lookup 50%, highest basis risk 55%, crop-loss report 64% |
+
+**Changes made after user testing:** the USSD session stays open after sign-up (policy number and
+menu on one screen); the confirmation SMS explains how to report a loss; pages grouped into Analysis
+and Farmers with an All pages menu on phones; a Start here box on the Overview; an ⓘ explanation for
+every technical term; a season dropdown on phones.
+
+**Model results** (also on the Overview page): leave-one-out R² 0.11 (baseline −0.04); payout
+decisions 70% accurate, F1 48%, false payouts 22%; leave-one-season-out R² −0.11, so the index cannot
+yet predict an unseen year on its own. That is why the system shows the uncertainty of every payout
+and adds field checks for the losses the index misses.
+
 ## Designs
 
 **Figma file:** [Drought Index Simulator – Designs](https://www.figma.com/design/b7m0ZzV4ZXdzikU7GOhHUG/Drought-Index-Simulator-%E2%80%93-Designs?node-id=0-1). It holds editable designs of every
@@ -242,8 +273,11 @@ the [U.S. Drought Monitor](https://droughtmonitor.unl.edu/), [drought.gov](https
 and [Our World in Data](https://ourworldindata.org/). The supervisor's 13th feedback asked for
 cards that stack vertically, each on its own, and charts that each tell a story.
 
-- **Navigation:** a dark header bar with the five pages as tabs and a live/offline data indicator.
-  On phones the tabs scroll sideways.
+- **Navigation:** a dark header bar with the pages in two labelled groups, **Analysis** and
+  **Farmers**, and a live/offline data indicator. On phones and tablets an **All pages** menu
+  replaces the tabs. User testing (below) found the single row of eleven tabs confusing.
+- **Plain language:** the Overview opens with a Start here box, and every technical term carries an
+  ⓘ with a one-sentence explanation, because testers found "index" and "basis risk" hard.
 - **One column of cards:** each page is a single column, one card per finding. A short row of key
   figures sits at the top of a page, as on drought.gov.
 - **Every card title is the finding**, not the chart name. "6 of 7 districts reach the trigger;
@@ -270,7 +304,7 @@ cards that stack vertically, each on its own, and charts that each tell a story.
   ([Arbol](https://www.arbol.io/post/how-parametric-insurance-pricing-works)). The Drought Map
   plays through every season, so droughts can be watched spreading and clearing.
 - **Explorer controls:** district buttons and a season timeline replace dropdowns, so every option
-  is visible. Seasons with yield data and documented drought years are marked on the timeline, and
+  is visible (on phones the timeline becomes a dropdown, since only three years would fit). Seasons with yield data and documented drought years are marked on the timeline, and
   the arrow keys step through years. The selection is kept in the URL, so any view can be shared.
   The Explorer ends with the selected season placed among all 25 seasons for that district.
 - **Light and dark mode** follow the system setting, with a manual toggle.
@@ -363,7 +397,7 @@ flowchart LR
   subgraph Future["Future deployment (not built)"]
     direction TB
     F1["PostgreSQL, accounts and roles"]
-    F2["Live SMS sender ID and<br/>USSD short code (needs TIN)"]
+    F2["Live SMS sender ID (submitted)<br/>and USSD short code"]
     F3["Mobile Money payouts"]
   end
   API -.-> Future
@@ -478,7 +512,7 @@ parametric-drought-simulator/
 │   ├── app/                 Pages: overview, this season, map, explorer, history, basis
 │   │                        risk, field checks, pricing, farmer view, term sheet, USSD
 │   ├── components/          Top navigation, payout cards, charts, shared UI
-│   ├── lib/                 API client, types, payout, pricing, SMS length, constants
+│   ├── lib/                 API client, types, payout, pricing, SMS length, constants, glossary
 │   ├── tests/               Unit tests (node --test); browser/ checks in Chrome and Safari
 │   └── Dockerfile
 ├── notebook/                Calibration notebook (data extraction, yields 2017–2025, EDA,
