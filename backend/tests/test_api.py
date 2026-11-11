@@ -230,10 +230,32 @@ def test_loss_reports_count_once_per_policy(report_db):
         {"policyId": "RDI-RWA-1233", "district": "Nowhere", "season": 2019},
         {"policyId": "RDI-RWA-1233", "district": "Rwamagana", "season": 1990},
         {"policyId": "not-a-policy", "district": "Rwamagana", "season": 2019},
+        # Well formed, but no such policy: made-up numbers cannot force a field check.
+        {"policyId": "RDI-ZZZ-0001", "district": "Kayonza", "season": 2024},
+        {"policyId": "RDI-KAY-9999", "district": "Kayonza", "season": 2024},
+        # A real policy, but for another district.
+        {"policyId": "RDI-RWA-1233", "district": "Kayonza", "season": 2024},
     ],
 )
 def test_loss_reports_rejected(report_db, report):
     assert client.post("/api/loss-reports", json=report).status_code == 422
+
+
+def test_signed_up_farmer_can_report_a_loss(report_db):
+    policy, _ = report_db.register("+250788000222", "Kayonza", 500, 2027, 300.0)
+    report = {"policyId": policy.id, "district": "Kayonza", "season": 2024}
+    assert client.post("/api/loss-reports", json=report).status_code == 201
+    assert client.post("/api/loss-reports", json={**report, "district": "Ngoma"}).status_code == 422
+
+
+def test_database_url_in_env_file_is_ignored(monkeypatch):
+    # Only the process environment picks Postgres; backend/.env never does.
+    from app.reports import database_url
+
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    assert database_url() == ""
+    monkeypatch.setenv("DATABASE_URL", " postgresql://example/db\n")
+    assert database_url() == "postgresql://example/db"
 
 
 def test_loss_report_for_the_season_in_progress(report_db):

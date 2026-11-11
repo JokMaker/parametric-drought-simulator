@@ -125,7 +125,7 @@ source .venv/bin/activate
 python -m pytest
 ```
 
-The 95 tests (93 without a test Postgres database; 94% line coverage with `python -m pytest --cov=app`) check the API against the notebook (the index formula on all 175 district-seasons,
+The 100 tests (98 without a test Postgres database; 94% line coverage with `python -m pytest --cov=app`) check the API against the notebook (the index formula on all 175 district-seasons,
 the leave-one-out results, the hit and false payout rates, the drought-year totals (34/63 against
 26/112), basis risk and the pricing inputs) and test each building block on its own: the report
 store, USSD sign-up (saving the policy, one per number, the SMS to the caller), the SMS gateways (sandbox and live limits, sender ID, rejected messages, through a recording
@@ -195,8 +195,9 @@ Policies, crop-loss reports and the SMS log live in one database, in three table
 `loss_reports`, `sms_log`). Locally that is a SQLite file, `backend/var/loss_reports.sqlite3`,
 created on first use and git-ignored, so phone numbers never reach the repository. The deployed
 backend uses Postgres on [Neon](https://neon.tech), because the host wipes its disk on every
-restart: set `DATABASE_URL` (in `backend/.env` or the host's environment) to the Neon connection
-string and the tables are created on the first start. The same queries run on both
+restart: set `DATABASE_URL` in the host's environment to the Neon connection string and the tables
+are created on the first start. A `DATABASE_URL` in `backend/.env` is ignored, so a local run never
+writes to the deployed database; export it in the shell to use Postgres locally on purpose. The same queries run on both
 (`backend/app/reports.py`: `SqliteStore` and `PostgresStore` share every method). To run the store
 tests on Postgres as well, set `TEST_DATABASE_URL`; each run works in a throwaway schema.
 
@@ -239,7 +240,7 @@ Full details are in [docs/testing.md](docs/testing.md) and the technical report.
 
 | What | Result |
 |---|---|
-| Backend tests (pytest) | 95 tests, 93 pass locally (2 need a test Postgres database), **94% line coverage**, including 21 model edge cases |
+| Backend tests (pytest) | 100 tests, 98 pass locally (2 need a test Postgres database), **94% line coverage**, including 21 model edge cases |
 | Frontend unit tests (Node test runner) | 37 tests, all pass; 97–100% line coverage of the 8 logic modules |
 | Browser checks | Every page at phone, tablet and desktop size, light and dark: **72/72** page checks and **7/7** flows in Chrome; 36/36 in Firefox and Safari |
 | API response time (local) | Median 1–1.6 ms, 95th percentile under 5 ms |

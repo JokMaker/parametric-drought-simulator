@@ -5,6 +5,8 @@ services:
       - "8000:8000"
     environment:
       CORS_ORIGINS: http://localhost:3000
+      # Keep local runs off the deployed database, even if backend/.env names it.
+      DATABASE_URL: ""
     # Africa's Talking credentials for SMS and USSD (optional; see backend/.env.example).
     env_file:
       - path: ./backend/.env

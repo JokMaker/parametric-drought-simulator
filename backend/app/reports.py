@@ -11,6 +11,7 @@ outside backend/data/ (which holds the notebook's read-only export), git-ignored
 set REPORTS_DB to move it. Tests use SQLite files of their own.
 """
 
+import os
 import sqlite3
 from abc import ABC, abstractmethod
 from collections.abc import Iterator
@@ -236,9 +237,17 @@ class PostgresStore(ReportStore):
             yield con
 
 
+def database_url() -> str:
+    """The Postgres database, taken only from the process environment (Render sets it there).
+    A DATABASE_URL left in backend/.env is ignored, so running the backend on a laptop writes
+    to the local SQLite file, never to the deployed database. To use Postgres locally on
+    purpose, export DATABASE_URL in the shell."""
+    return os.environ.get("DATABASE_URL", "").strip()
+
+
 @lru_cache
 def default_store() -> ReportStore:
-    url = setting("DATABASE_URL")
+    url = database_url()
     if url:
         return PostgresStore(url)
     return SqliteStore(Path(setting("REPORTS_DB") or DEFAULT_PATH))
