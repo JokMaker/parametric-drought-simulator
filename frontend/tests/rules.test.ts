@@ -26,6 +26,13 @@ describe("checkStatus", () => {
     assert.equal(status(0, 0, 0.2), "clear");
     assert.equal(status(0, 0, null), "clear");
   });
+
+  it("treats a season with no survey yet as no evidence, even at a low threshold", () => {
+    const low = { ...DEFAULT_RULE, lossShare: 0.1 };
+    assert.equal(checkStatus(0, 0, null, low), "clear");
+    assert.equal(checkStatus(0, 0, null, { ...DEFAULT_RULE, lossShare: 0 }), "clear");
+    assert.equal(checkStatus(0, 1, null, low), "watch");
+  });
 });
 
 describe("smsParts", () => {

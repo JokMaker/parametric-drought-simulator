@@ -81,11 +81,17 @@ export default function TriggerSimulator({ seasons, model }: { seasons: Simulati
     diff(now.falsePay, base.falsePay, "more false payouts", "fewer false payouts"),
   ].filter(Boolean);
 
+  // Name the exit only when it has moved, so the usual case stays short.
+  const exitMoved = exit !== model.exit;
+  const rule = `A ${trigger}% trigger${exitMoved ? ` with a ${exit}% exit` : ""}`;
+  const modelRule = exitMoved ? `${model.trigger}% / ${model.exit}%` : `${model.trigger}%`;
   const title = !changed
     ? `At the model's ${model.trigger}% trigger, ${now.hits} of ${now.poor} poor harvests are paid and ${now.falsePay} good seasons are paid by mistake`
     : effects.length
-      ? `A ${trigger}% trigger gives ${effects.join(" and ")} than the model's ${model.trigger}%`
-      : `A ${trigger}% trigger makes the same pay / no-pay decisions as the model's ${model.trigger}%`;
+      ? `${rule} gives ${effects.join(" and ")} than the model's ${modelRule}`
+      : `${rule} makes the same pay / no-pay decisions as the model's ${modelRule}${
+          now.risk !== base.risk ? `, but basis risk moves from ${pct(base.risk)} to ${pct(now.risk)}` : ""
+        }`;
 
   const delta = (a: number, b: number, goodWhenUp: boolean, fmt = (x: number) => String(x)) => {
     if (a === b || !changed) return null;
