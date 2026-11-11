@@ -84,7 +84,7 @@ export default function DistrictMap({
 
   return (
     <div ref={box} className="relative" onMouseLeave={() => setHover(null)}>
-      <svg viewBox={`0 0 ${WIDTH} ${height}`} className="h-auto w-full" role="img" aria-label={ariaLabel}>
+      <svg viewBox={`0 0 ${WIDTH} ${height}`} className="h-auto w-full" role={onSelect ? "group" : "img"} aria-label={ariaLabel}>
         {drawn.map(({ district, d }) => (
           <path
             key={district}
