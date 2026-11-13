@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Mono, Josefin_Sans } from "next/font/google";
+import Link from "next/link";
 import Script from "next/script";
 import TopNav from "@/components/TopNav";
 import { USE_MOCK } from "@/lib/api";
@@ -48,7 +49,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <footer className="border-t border-line print:hidden">
           <div className="mx-auto max-w-[1680px] px-4 py-4 text-xs text-faint sm:px-6 lg:px-8">
             Data: CHIRPS rainfall, MODIS NDVI (via Google Earth Engine), NISR Seasonal Agricultural
-            Survey. District-level data only; no farmer records.
+            Survey. The model uses district-level data only; USSD sign-ups store a phone number.{" "}
+            <Link href="/privacy" className="underline underline-offset-2 hover:text-ink">
+              Privacy
+            </Link>
           </div>
         </footer>
       </body>
