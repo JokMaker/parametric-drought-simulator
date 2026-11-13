@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import IndexVsActualChart from "@/components/charts/IndexVsActualChart";
 import InfluenceChart from "@/components/charts/InfluenceChart";
 import StoryTour from "@/components/StoryTour";
@@ -119,6 +120,13 @@ export default function Overview() {
         </div>
       )}
       {body}
+      <p className="mt-8 border-t border-line pt-4 text-sm text-muted">
+        Signing up over USSD stores your phone number.{" "}
+        <Link href="/privacy" className="font-medium text-accent underline-offset-2 hover:underline">
+          Read how your data is handled
+        </Link>
+        .
+      </p>
     </>
   );
 }
