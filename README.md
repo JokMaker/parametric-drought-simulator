@@ -13,12 +13,12 @@ Kirehe, Ngoma, Nyagatare, Rwamagana), backtested from 2001 to 2025.
 ## Links
 
 - **Live dashboard:** https://rdi-maize-insurance.vercel.app
-- **Live API:** https://rdi-drought-api.onrender.com (interactive docs at [/docs](https://rdi-drought-api.onrender.com/docs))
-- **USSD:** dial `*384*44698#` in the [Africa's Talking simulator](https://developers.africastalking.com/simulator) (sandbox)
+- **Live API:** https://rdi-drought-api.onrender.com (interactive docs: https://rdi-drought-api.onrender.com/docs)
+- **USSD:** dial `*384*44698#` in the Africa's Talking simulator (sandbox): https://developers.africastalking.com/simulator
 - **GitHub repository:** https://github.com/JokMaker/parametric-drought-simulator
-- **Video demo:** [Watch the demo video](https://drive.google.com/drive/folders/1dPZbokrtjRAwl817-qMKtASJvdUOcN2X?usp=sharing)
-- **Technical report (PDF):** [Read the technical report](docs/RDI_Technical_Report.pdf)
-- **Figma designs:** [Open the Figma file](https://www.figma.com/design/b7m0ZzV4ZXdzikU7GOhHUG/Drought-Index-Simulator-%E2%80%93-Designs?node-id=0-1)
+- **Video demo:** https://drive.google.com/drive/folders/1dPZbokrtjRAwl817-qMKtASJvdUOcN2X?usp=sharing
+- **Technical report (PDF):** https://github.com/JokMaker/parametric-drought-simulator/blob/main/docs/RDI_Technical_Report.pdf
+- **Figma designs:** https://www.figma.com/design/b7m0ZzV4ZXdzikU7GOhHUG/Drought-Index-Simulator-%E2%80%93-Designs?node-id=0-1
 
 ## Features
 
@@ -39,7 +39,7 @@ Kirehe, Ngoma, Nyagatare, Rwamagana), backtested from 2001 to 2025.
 
 ## Machine learning model
 
-The model is built in [notebook/drought_index.ipynb](notebook/drought_index.ipynb), which runs locally (see [Run the notebook](#run-the-notebook)).
+The model is built in https://github.com/JokMaker/parametric-drought-simulator/blob/main/notebook/drought_index.ipynb, which runs locally (see Run the notebook below).
 
 | Item | Summary |
 |---|---|
@@ -143,16 +143,16 @@ node tests/browser/check.mjs      # every page at phone, tablet and desktop size
 The frontend tests use Node's built-in test runner and drive Chrome through its DevTools
 protocol, so they need no extra packages. Results, the browser and device coverage, and the
 performance measurements (API load test, page loads on a throttled phone) are in
-[docs/testing.md](docs/testing.md).
+https://github.com/JokMaker/parametric-drought-simulator/blob/main/docs/testing.md.
 
 ### SMS and USSD (Africa's Talking)
 
 The Farmer View can send the payout SMS, and farmers can use the cover from a basic phone by
-dialling a USSD code. Both run through [Africa's Talking](https://africastalking.com). The free
-**sandbox** delivers to their [phone simulator](https://developers.africastalking.com/simulator)
+dialling a USSD code. Both run through Africa's Talking (https://africastalking.com). The free
+**sandbox** delivers to their phone simulator (https://developers.africastalking.com/simulator)
 instead of real phones, which is enough for a demo.
 
-1. **Account and key.** Sign up at [account.africastalking.com](https://account.africastalking.com),
+1. **Account and key.** Sign up at https://account.africastalking.com,
    open the **Sandbox** app, and under **Settings → API Key** generate a key. A new key can take
    10 to 30 minutes before it is accepted, so generate it well before a demo.
 2. **Credentials.** Copy `backend/.env.example` to `backend/.env` (git-ignored) and fill in:
@@ -167,7 +167,7 @@ instead of real phones, which is enough for a demo.
 3. **SMS.** Log in to the simulator with the `AT_PHONE` number, then press **Send this SMS** in the
    Farmer View. Each payout message fits one SMS (at most 160 plain characters).
 4. **USSD.** Africa's Talking must reach the backend from the internet. Run a tunnel such as
-   [ngrok](https://ngrok.com) (`ngrok http 8000`), then in the Sandbox app open **USSD → Create
+   ngrok (https://ngrok.com, `ngrok http 8000`), then in the Sandbox app open **USSD → Create
    Channel**, pick the shared code `*384#` and a channel number, and set the callback URL to the
    tunnel address plus `/api/ussd`. Dial the code on the simulator (this project's channel is
    `*384*44698#`; set `NEXT_PUBLIC_USSD_CODE` if yours differs). The menu offers the farmer's cover,
@@ -194,7 +194,7 @@ instead of real phones, which is enough for a demo.
 Policies, crop-loss reports and the SMS log live in one database, in three tables (`policies`,
 `loss_reports`, `sms_log`). Locally that is a SQLite file, `backend/var/loss_reports.sqlite3`,
 created on first use and git-ignored, so phone numbers never reach the repository. The deployed
-backend uses Postgres on [Neon](https://neon.tech), because the host wipes its disk on every
+backend uses Postgres on Neon (https://neon.tech), because the host wipes its disk on every
 restart: set `DATABASE_URL` in the host's environment to the Neon connection string and the tables
 are created on the first start. A `DATABASE_URL` in `backend/.env` is ignored, so a local run never
 writes to the deployed database; export it in the shell to use Postgres locally on purpose. The same queries run on both
@@ -236,7 +236,7 @@ The notebook rebuilds the model from raw data and writes its results into `backe
 
 ## Testing and results
 
-Full details are in [docs/testing.md](docs/testing.md) and the technical report.
+Full details are in https://github.com/JokMaker/parametric-drought-simulator/blob/main/docs/testing.md and the technical report.
 
 | What | Result |
 |---|---|
@@ -262,7 +262,7 @@ and adds field checks for the losses the index misses.
 
 ## Designs
 
-**Figma file:** [Drought Index Simulator – Designs](https://www.figma.com/design/b7m0ZzV4ZXdzikU7GOhHUG/Drought-Index-Simulator-%E2%80%93-Designs?node-id=0-1). It holds editable designs of every
+**Figma file (Drought Index Simulator – Designs):** https://www.figma.com/design/b7m0ZzV4ZXdzikU7GOhHUG/Drought-Index-Simulator-%E2%80%93-Designs?node-id=0-1. It holds editable designs of every
 page (Overview, District Explorer for Rwamagana 2023 and Gatsibo 2022, Drought History, Basis Risk),
 plus mobile and dark-mode versions, with the app's colour and text styles saved as Figma styles. The Figma file shows the earlier
 sidebar design; the screenshots below show the current one.
@@ -273,8 +273,8 @@ paired with a plain-language label and every payout with the reason for it.
 **Design decisions**
 
 The layout follows public drought and climate dashboards rather than a generic app template:
-the [U.S. Drought Monitor](https://droughtmonitor.unl.edu/), [drought.gov](https://www.drought.gov/current-conditions)
-and [Our World in Data](https://ourworldindata.org/). The supervisor's 13th feedback asked for
+the U.S. Drought Monitor (https://droughtmonitor.unl.edu/), drought.gov (https://www.drought.gov/current-conditions)
+and Our World in Data (https://ourworldindata.org/). The supervisor's 13th feedback asked for
 cards that stack vertically, each on its own, and charts that each tell a story.
 
 - **Navigation:** a dark header bar with the pages in two labelled groups, **Analysis** and
@@ -294,7 +294,7 @@ cards that stack vertically, each on its own, and charts that each tell a story.
   basis risk have their own labelled class scales (basis risk in purple). Every coloured chart has a
   class legend with the range of each class, so no value depends on colour alone.
 - **The charts explain themselves, not the text:** following practitioner research on annotation
-  ([Rahman et al., 2026](https://arxiv.org/html/2604.07691)), labels sit on the chart next to what
+  (Rahman et al., 2026: https://arxiv.org/html/2604.07691), labels sit on the chart next to what
   they name. The scatter names its four outcomes in their corners, the payout bar names its three
   zones and pins the index and the real harvest, drought periods are labelled on the time charts,
   and counts are drawn as dots. The Overview opens with a four-step picture of how the index works.
@@ -302,10 +302,10 @@ cards that stack vertically, each on its own, and charts that each tell a story.
   without crowding the view.
 - **Learn by doing, not by reading:** three interactive features replace written explanation.
   A guided tour on the Overview steps through five seasons picked from the data, an approach shown
-  to onboard first-time dashboard users well ([D-Tour, IEEE VIS 2024](https://jku-vds-lab.at/publications/2025_d-tour/)).
+  to onboard first-time dashboard users well (D-Tour, IEEE VIS 2024: https://jku-vds-lab.at/publications/2025_d-tour/).
   A trigger simulator on Basis Risk lets the reader test the trade-off between missed seasons and
   false payouts themselves, as index insurers let clients simulate payouts
-  ([Arbol](https://www.arbol.io/post/how-parametric-insurance-pricing-works)). The Drought Map
+  (Arbol: https://www.arbol.io/post/how-parametric-insurance-pricing-works). The Drought Map
   plays through every season, so droughts can be watched spreading and clearing.
 - **Explorer controls:** district buttons and a season timeline replace dropdowns, so every option
   is visible (on phones the timeline becomes a dropdown, since only three years would fit). Seasons with yield data and documented drought years are marked on the timeline, and
@@ -408,7 +408,7 @@ flowchart LR
 ```
 
 The calibration (Ridge regression, leave-one-out validation, trigger and exit) runs once in the
-notebook ([notebook/drought_index.ipynb](notebook/drought_index.ipynb)) and is exported, so the API only serves precomputed results and applies the saved
+notebook (https://github.com/JokMaker/parametric-drought-simulator/blob/main/notebook/drought_index.ipynb) and is exported, so the API only serves precomputed results and applies the saved
 formula. This keeps every request fast (NFR1) and the thresholds reproducible (NFR5).
 
 ### API endpoints
@@ -469,7 +469,7 @@ payout_simulation   (simulation_id PK, district_id FK, season, index_value, payo
 
 With 56 calibration rows and 175 history rows, in-memory files meet the performance and
 reproducibility requirements; the database holds only what farmers create (policies, loss
-reports) and the SMS log, described under [Database](#database).
+reports) and the SMS log, described under Database above.
 
 ## Deployment
 
@@ -477,11 +477,11 @@ Live since 28 October 2026. Every push to `main` redeploys both services.
 
 | Part | Where | Settings |
 |---|---|---|
-| **Dashboard** | [Vercel](https://vercel.com), root directory `frontend/`: https://rdi-maize-insurance.vercel.app | `NEXT_PUBLIC_API_URL=https://rdi-drought-api.onrender.com`, `NEXT_PUBLIC_USE_MOCK=false` (read at build time) |
-| **API** | [Render](https://render.com), free web service in Frankfurt, built from `backend/Dockerfile` as described in `render.yaml`: https://rdi-drought-api.onrender.com | `DATABASE_URL`, `CORS_ORIGINS` (the dashboard's address), `AT_USERNAME`, `AT_API_KEY`, `AT_PHONE`, entered in Render, never in the repo |
-| **Database** | [Neon](https://neon.tech) Postgres, Frankfurt, next to the API | Tables created by the API on first start |
+| **Dashboard** | Vercel (https://vercel.com), root directory `frontend/`: https://rdi-maize-insurance.vercel.app | `NEXT_PUBLIC_API_URL=https://rdi-drought-api.onrender.com`, `NEXT_PUBLIC_USE_MOCK=false` (read at build time) |
+| **API** | Render (https://render.com), free web service in Frankfurt, built from `backend/Dockerfile` as described in `render.yaml`: https://rdi-drought-api.onrender.com | `DATABASE_URL`, `CORS_ORIGINS` (the dashboard's address), `AT_USERNAME`, `AT_API_KEY`, `AT_PHONE`, entered in Render, never in the repo |
+| **Database** | Neon (https://neon.tech) Postgres, Frankfurt, next to the API | Tables created by the API on first start |
 | **USSD** | Africa's Talking sandbox channel `*384*44698#`, callback `https://rdi-drought-api.onrender.com/api/ussd` | |
-| **Uptime** | [UptimeRobot](https://uptimerobot.com) checks `/api/health` every 5 minutes and emails on failure | Also keeps the free Render service awake: it sleeps after 15 idle minutes and takes about 50 s to wake, longer than a USSD session waits |
+| **Uptime** | UptimeRobot (https://uptimerobot.com) checks `/api/health` every 5 minutes and emails on failure | Also keeps the free Render service awake: it sleeps after 15 idle minutes and takes about 50 s to wake, longer than a USSD session waits |
 | **Updates** | Re-running the notebook writes the files into `backend/data/`; run `python backend/scripts/export_mock.py` to refresh the dashboard's offline data, update the tests' expected values, and push. | |
 
 ## Project structure
