@@ -2,11 +2,13 @@
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useRef } from "react";
+import { useT } from "@/lib/i18n";
 import { FIRST_SEASON, isDroughtSeason, LAST_SEASON, SEASONS, YIELD_SEASONS } from "@/lib/constants";
 
 /** Season A years as a strip that marks seasons with yield data and drought years. On a phone the
  *  strip would show only three years at a time, so it becomes a dropdown between the arrows. */
 export default function SeasonTimeline({ season, onSelect }: { season: number; onSelect: (s: number) => void }) {
+  const { t } = useT();
   const selected = useRef<HTMLButtonElement>(null);
   const mounted = useRef(false);
   useEffect(() => {
@@ -37,7 +39,7 @@ export default function SeasonTimeline({ season, onSelect }: { season: number; o
         onClick={() => step(-1)}
         disabled={season <= FIRST_SEASON}
         className="rounded-sm border border-line p-1.5 text-muted hover:bg-surface-2 hover:text-ink disabled:opacity-40"
-        aria-label="Previous season"
+        aria-label={t("Previous season", "Igihembwe kibanziriza")}
       >
         <ChevronLeft size={16} />
       </button>
@@ -45,11 +47,11 @@ export default function SeasonTimeline({ season, onSelect }: { season: number; o
         value={season}
         onChange={(e) => onSelect(Number(e.target.value))}
         className="tabular w-0 min-w-0 flex-1 rounded-sm border border-line bg-surface px-2 py-1.5 text-sm sm:hidden"
-        aria-label="Season A"
+        aria-label={t("Season A", "Igihembwe A")}
       >
         {[...SEASONS].reverse().map((y) => (
           <option key={y} value={y}>
-            {`${y}${YIELD_SEASONS.includes(y) ? " · harvest" : ""}${isDroughtSeason(y) ? " · drought" : ""}`}
+            {`${y}${YIELD_SEASONS.includes(y) ? t(" · harvest", " · umusaruro") : ""}${isDroughtSeason(y) ? t(" · drought", " · amapfa") : ""}`}
           </option>
         ))}
       </select>
@@ -64,7 +66,7 @@ export default function SeasonTimeline({ season, onSelect }: { season: number; o
               ref={active ? selected : undefined}
               onClick={() => onSelect(y)}
               aria-pressed={active}
-              title={`Season A ${y}${hasYield ? " · yield data" : ""}${drought ? " · documented drought" : ""}`}
+              title={`${t("Season A", "Igihembwe A")} ${y}${hasYield ? t(" · yield data", " · amakuru y'umusaruro") : ""}${drought ? t(" · documented drought", " · amapfa yanditswe") : ""}`}
               className={`relative flex min-w-[48px] flex-col items-center rounded-sm px-2 pt-2 pb-1.5 text-xs transition-colors ${
                 active ? "bg-ink font-semibold text-surface" : "text-muted hover:bg-surface-2 hover:text-ink"
               }`}
@@ -86,7 +88,7 @@ export default function SeasonTimeline({ season, onSelect }: { season: number; o
         onClick={() => step(1)}
         disabled={season >= LAST_SEASON}
         className="rounded-sm border border-line p-1.5 text-muted hover:bg-surface-2 hover:text-ink disabled:opacity-40"
-        aria-label="Next season"
+        aria-label={t("Next season", "Igihembwe gikurikira")}
       >
         <ChevronRight size={16} />
       </button>

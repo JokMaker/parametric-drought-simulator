@@ -53,3 +53,19 @@ export const GLOSSARY = {
 } as const;
 
 export type GlossaryKey = keyof typeof GLOSSARY;
+
+// Kinyarwanda for the terms on the farmer pages; any other term falls back to English.
+export const GLOSSARY_RW: Partial<Record<GlossaryKey, { term: string; text: string }>> = {
+  index: {
+    term: "Igipimo",
+    text: "Impinduka y'umusaruro w'ibigori moderi iteganya ishingiye ku mvura n'ubutoto bw'imyaka. -10% bivuga umusaruro uri hafi 10% munsi y'usanzwe mu karere.",
+  },
+  payoutRule: {
+    term: "Aho ingurane itangirira n'aho yuzurira",
+    text: "Nta ngurane itangwa igihe igipimo kiri hejuru ya -2%. Munsi yaho ingurane igenda yiyongera, kugeza ku gaciro kishingiwe kose kuri -22%.",
+  },
+  cover: {
+    term: "Agaciro kishingiwe",
+    text: "Amafaranga menshi ubwishingizi bushobora kwishyura mu gihembwe kimwe: 22% by'agaciro ibigori byitezweho, ku buryo ingurane yuzuye isimbura igihombo gikomeye.",
+  },
+};

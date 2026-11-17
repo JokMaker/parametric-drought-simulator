@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Mono, Josefin_Sans } from "next/font/google";
-import Link from "next/link";
 import Script from "next/script";
+import LanguageNote from "@/components/LanguageNote";
+import Say from "@/components/Say";
+import SiteFooter from "@/components/SiteFooter";
 import TopNav from "@/components/TopNav";
 import { USE_MOCK } from "@/lib/api";
+import { LANG_SCRIPT } from "@/lib/langScript";
 import "./globals.css";
 
 // Variable font: every weight from 100 to 700 in one file.
@@ -24,8 +27,8 @@ export const metadata: Metadata = {
     "Parametric drought-index insurance simulator for smallholder maize farmers in Eastern Rwanda.",
 };
 
-// Apply a saved theme before first paint so there is no flash.
-const THEME_SCRIPT = `try{var t=localStorage.getItem("theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}`;
+// Apply a saved theme and language before first paint so there is no flash.
+const THEME_SCRIPT = `try{var t=localStorage.getItem("theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}${LANG_SCRIPT}`;
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
@@ -40,21 +43,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           {THEME_SCRIPT}
         </Script>
         <TopNav />
+        <LanguageNote />
         {USE_MOCK && (
           <div className="border-b border-line bg-surface-2 px-4 py-1.5 text-center text-xs text-muted print:hidden">
-            Showing saved results: the backend is not connected.
+            <Say en="Showing saved results: the backend is not connected." rw="Herekanwa ibisubizo byabitswe: backend ntihuje." />
           </div>
         )}
         <main className="mx-auto w-full max-w-[1680px] flex-1 px-4 py-7 sm:px-6 lg:px-8 print:max-w-none print:p-0">{children}</main>
-        <footer className="border-t border-line print:hidden">
-          <div className="mx-auto max-w-[1680px] px-4 py-4 text-xs text-faint sm:px-6 lg:px-8">
-            Data: CHIRPS rainfall, MODIS NDVI (via Google Earth Engine), NISR Seasonal Agricultural
-            Survey. The model uses district-level data only; USSD sign-ups store a phone number.{" "}
-            <Link href="/privacy" className="underline underline-offset-2 hover:text-ink">
-              Privacy
-            </Link>
-          </div>
-        </footer>
+        <SiteFooter />
       </body>
     </html>
   );

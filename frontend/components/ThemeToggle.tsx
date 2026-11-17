@@ -2,6 +2,7 @@
 
 import { Moon, Sun } from "lucide-react";
 import { useSyncExternalStore } from "react";
+import { useT } from "@/lib/i18n";
 
 type Theme = "light" | "dark";
 const EVENT = "themechange";
@@ -24,6 +25,7 @@ function subscribe(onChange: () => void) {
 
 export default function ThemeToggle() {
   const theme = useSyncExternalStore(subscribe, current, () => "light" as Theme);
+  const { t } = useT();
 
   function toggle() {
     const next: Theme = theme === "dark" ? "light" : "dark";
@@ -38,10 +40,10 @@ export default function ThemeToggle() {
     <button
       onClick={toggle}
       className="flex items-center gap-1.5 rounded px-1.5 py-1 text-xs text-header-ink/80 transition-colors hover:text-header-ink"
-      aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+      aria-label={theme === "dark" ? t("Switch to light mode", "Hindura ujye ku rumuri") : t("Switch to dark mode", "Hindura ujye ku mwijima")}
     >
       {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
-      {theme === "dark" ? "Light" : "Dark"}
+      {theme === "dark" ? t("Light", "Urumuri") : t("Dark", "Umwijima")}
     </button>
   );
 }

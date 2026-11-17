@@ -2,7 +2,8 @@
 
 import { Info } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
-import { GLOSSARY, type GlossaryKey } from "@/lib/glossary";
+import { GLOSSARY, GLOSSARY_RW, type GlossaryKey } from "@/lib/glossary";
+import { useLang } from "@/lib/i18n";
 
 const WIDTH = 256;
 
@@ -10,7 +11,8 @@ const WIDTH = 256;
  *  a tap shows it on a phone; Escape, a tap elsewhere or moving away hides it. The note is
  *  placed in the viewport, so it never widens the page. */
 export default function Term({ k }: { k: GlossaryKey }) {
-  const { term, text } = GLOSSARY[k];
+  const lang = useLang();
+  const { term, text } = (lang === "rw" && GLOSSARY_RW[k]) || GLOSSARY[k];
   const id = useId();
   const button = useRef<HTMLButtonElement>(null);
   const [at, setAt] = useState<{ top?: number; bottom?: number; left: number } | null>(null);
@@ -47,7 +49,7 @@ export default function Term({ k }: { k: GlossaryKey }) {
       <button
         ref={button}
         type="button"
-        aria-label={`What is ${term.toLowerCase()}?`}
+        aria-label={lang === "rw" ? `Bisobanura iki: ${term}?` : `What is ${term.toLowerCase()}?`}
         aria-describedby={at ? id : undefined}
         aria-expanded={!!at}
         onClick={show}

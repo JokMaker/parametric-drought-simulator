@@ -11,12 +11,14 @@ import ValidationTable from "@/components/ValidationTable";
 import { getHistory, getModel, getSeasons } from "@/lib/api";
 import { classify, pct } from "@/lib/payout";
 import { YIELD_RANGE } from "@/lib/constants";
+import { useT } from "@/lib/i18n";
 import { useApi } from "@/lib/useApi";
 
 export default function Overview() {
   const model = useApi("model", getModel);
   const seasons = useApi("seasons", getSeasons);
   const history = useApi("history", getHistory);
+  const { t } = useT();
   const error = model.error ?? seasons.error ?? history.error;
   const m = model.data;
 
@@ -121,9 +123,9 @@ export default function Overview() {
       )}
       {body}
       <p className="mt-8 border-t border-line pt-4 text-sm text-muted">
-        Signing up over USSD stores your phone number.{" "}
+        {t("Signing up over USSD stores your phone number.", "Kwiyandikisha kuri USSD bibika nimero yawe ya telefoni.")}{" "}
         <Link href="/privacy" className="font-medium text-accent underline-offset-2 hover:underline">
-          Read how your data is handled
+          {t("Read how your data is handled", "Soma uko amakuru yawe afatwa")}
         </Link>
         .
       </p>

@@ -1,5 +1,6 @@
 import { AlertTriangle, Info } from "lucide-react";
 import type { ReactNode } from "react";
+import Say from "@/components/Say";
 import Term from "@/components/Term";
 import type { GlossaryKey } from "@/lib/glossary";
 
@@ -56,7 +57,7 @@ export function Card({
         <details className="group border-t border-line px-5 py-2 text-xs text-muted sm:px-6">
           <summary className="flex cursor-pointer list-none items-center gap-1.5 text-faint hover:text-ink [&::-webkit-details-marker]:hidden">
             <Info size={13} />
-            Source &amp; method
+            <Say en="Source & method" rw="Aho amakuru ava n'uburyo" />
           </summary>
           <p className="mt-1.5 max-w-3xl leading-5">{source}</p>
         </details>
@@ -200,6 +201,6 @@ export function ErrorNote({ message }: { message: string }) {
 }
 
 /** On a phone, wide tables scroll sideways; say so, since the hidden columns are easy to miss. */
-export function SwipeHint() {
-  return <p className="mb-1 text-xs text-muted sm:hidden">Swipe the table sideways for more columns →</p>;
+export function SwipeHint({ text = "Swipe the table sideways for more columns" }: { text?: string }) {
+  return <p className="mb-1 text-xs text-muted sm:hidden">{text} →</p>;
 }

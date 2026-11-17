@@ -6,6 +6,7 @@ import { useState, useRef } from "react";
 import { Card, PageHeader } from "@/components/ui";
 import { USE_MOCK, ussdPreview } from "@/lib/api";
 import { USSD_CODE } from "@/lib/constants";
+import { useT } from "@/lib/i18n";
 import { DEMO_POLICIES } from "@/lib/policies";
 
 const KEYS: [string, string][] = [
@@ -48,6 +49,7 @@ export default function UssdPage() {
   const [screen, setScreen] = useState(WELCOME);
   const [typed, setTyped] = useState("");
   const [busy, setBusy] = useState(false);
+  const { t } = useT();
   const newFarmer = caller === NEW_FARMER;
 
   // Bumped on every hang-up, so a reply that arrives after the call ended is dropped.
@@ -93,15 +95,18 @@ export default function UssdPage() {
 
   return (
     <>
-      <PageHeader title="USSD Menu" />
+      <PageHeader title={t("USSD Menu", "Menu ya USSD")} />
       <div className="grid grid-cols-1 gap-5 md:grid-cols-[minmax(0,1fr)_320px] md:items-start">
         <Card
-          label="How a farmer on a basic phone reaches the cover"
-          title="Dial a short code, answer with numbers: no smartphone, app or data bundle needed"
-          source={`USSD menus run on any mobile phone over the network's signalling channel, so they work without internet. This phone runs the backend's real menu, the same one Africa's Talking serves when ${USSD_CODE} is dialled on their simulator. As a new farmer it signs up with a demo number in a reserved range (+2507000…), creating a real policy in the database without texting anyone. A live scheme would use a short code allocated through the operators. Reports go to the Field Checks page; "Send me this by SMS" sends to the demo phone in backend/.env.`}
+          label={t("How a farmer on a basic phone reaches the cover", "Uko umuhinzi ufite telefoni isanzwe agera ku bwishingizi")}
+          title={t(
+            "Dial a short code, answer with numbers: no smartphone, app or data bundle needed",
+            "Kanda kode ngufi, usubize ukoresheje imibare: nta telefoni igezweho, porogaramu cyangwa interineti bikenewe",
+          )}
+          source={t(`USSD menus run on any mobile phone over the network's signalling channel, so they work without internet. This phone runs the backend's real menu, the same one Africa's Talking serves when ${USSD_CODE} is dialled on their simulator. As a new farmer it signs up with a demo number in a reserved range (+2507000…), creating a real policy in the database without texting anyone. A live scheme would use a short code allocated through the operators. Reports go to the Field Checks page; "Send me this by SMS" sends to the demo phone in backend/.env.`, `Menu za USSD zikora kuri telefoni igendanwa iyo ari yo yose binyuze ku murongo w'itumanaho w'umuyoboro, bityo zikora nta interineti. Iyi telefoni ikoresha menu nyayo ya backend, ari yo Africa's Talking itanga iyo ${USSD_CODE} ikanzwe kuri simulator yayo. Nk'umuhinzi mushya, yiyandikisha ikoresheje nimero y'icyitegererezo (+2507000…), igashyira ubwishingizi nyabwo mu bubiko bw'amakuru nta muntu yoherereje SMS. Serivisi nyayo yakoresha kode ngufi itangwa n'ibigo by'itumanaho. Raporo zijya kuri paji y'Igenzura mu murima; "Mbyoherereze kuri SMS" yohereza kuri telefoni y'icyitegererezo iri muri backend/.env.`)}
         >
           <label className="text-sm text-muted">
-            Dial as{" "}
+            {t("Dial as", "Hamagara nka")}{" "}
             <select
               value={caller}
               onChange={(e) => {
@@ -112,7 +117,7 @@ export default function UssdPage() {
               }}
               className="ml-1 max-w-full rounded-sm border border-line bg-surface px-2 py-1 text-sm text-ink"
             >
-              <option value={NEW_FARMER}>A new farmer (sign up for cover)</option>
+              <option value={NEW_FARMER}>{t("A new farmer (sign up for cover)", "Umuhinzi mushya (kwiyandikisha)")}</option>
               {DEMO_POLICIES.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.id} · {p.district} · {p.areaM2.toLocaleString("en-US")} m²
@@ -122,7 +127,8 @@ export default function UssdPage() {
           </label>
           {newFarmer && (
             <p className="mt-2 text-xs text-muted">
-              Demo number <span className="tabular text-ink">{demoPhone}</span>, not a real phone, so no SMS is sent.{" "}
+              {t("Demo number", "Nimero y'icyitegererezo")} <span className="tabular text-ink">{demoPhone}</span>
+              {t(", not a real phone, so no SMS is sent.", ", si telefoni nyayo, bityo nta SMS yoherezwa.")}{" "}
               <button
                 onClick={() => {
                   setDemoPhone(rememberDemoPhone(randomDemoPhone()));
@@ -130,35 +136,64 @@ export default function UssdPage() {
                 }}
                 className="text-accent underline-offset-2 hover:underline"
               >
-                Use a new number
+                {t("Use a new number", "Koresha nimero nshya")}
               </button>
             </p>
           )}
           <ol className="mt-4 space-y-1.5 text-sm text-muted">
-            <li><span className="font-medium text-ink">1.</span> Type <span className="tabular font-medium text-ink">{USSD_CODE}</span> and press the green call key (or Send).</li>
+            <li>
+              <span className="font-medium text-ink">1.</span> {t("Type", "Andika")} <span className="tabular font-medium text-ink">{USSD_CODE}</span>{" "}
+              {t("and press the green call key (or Send).", "ukande akabuto k'icyatsi ko guhamagara (cyangwa Send).")}
+            </li>
             {newFarmer ? (
               <>
-                <li><span className="font-medium text-ink">2.</span> 1 buys cover: pick your district, type your maize field size in m², then 1 confirms. The menu opens in Kinyarwanda; 5 switches to English.</li>
-                <li><span className="font-medium text-ink">3.</span> The screen shows your policy number and your menu straight away, so you can check your cover or report a loss (4) without dialling again. The policy is listed on the <Link href="/policies" className="text-accent hover:underline">Policies</Link> page as a web demo.</li>
+                <li>
+                  <span className="font-medium text-ink">2.</span>{" "}
+                  {t(
+                    "1 buys cover: pick your district, type your maize field size in m², then 1 confirms. The menu opens in Kinyarwanda; 5 switches to English.",
+                    "1 ni ukugura ubwishingizi: hitamo akarere kawe, andika ubuso bw'umurima w'ibigori muri m², hanyuma 1 wemeze. Menu ifunguka mu Kinyarwanda; 5 ihindura mu Cyongereza.",
+                  )}
+                </li>
+                <li>
+                  <span className="font-medium text-ink">3.</span>{" "}
+                  {t(
+                    "The screen shows your policy number and your menu straight away, so you can check your cover or report a loss (4) without dialling again. The policy is listed on the",
+                    "Ako kanya hagaragara nimero y'ubwishingizi bwawe na menu yawe, bityo ushobora kureba ubwishingizi bwawe cyangwa kumenyesha igihombo (4) utongeye guhamagara. Ubwishingizi bugaragara kuri paji ya",
+                  )}{" "}
+                  <Link href="/policies" className="text-accent hover:underline">{t("Policies", "Ubwishingizi bwatanzwe")}</Link>{" "}
+                  {t("page as a web demo.", "nk'icyitegererezo.")}
+                </li>
               </>
             ) : (
               <>
-                <li><span className="font-medium text-ink">2.</span> Answer with a number: 1 your cover, 2 this season, 3 your payouts, 4 report a crop loss, 5 English. The menu opens in Kinyarwanda.</li>
-                <li><span className="font-medium text-ink">3.</span> 0 goes back; on the main menu it exits.</li>
+                <li>
+                  <span className="font-medium text-ink">2.</span>{" "}
+                  {t(
+                    "Answer with a number: 1 your cover, 2 this season, 3 your payouts, 4 report a crop loss, 5 English. The menu opens in Kinyarwanda.",
+                    "Subiza ukoresheje umubare: 1 ubwishingizi bwawe, 2 iki gihembwe, 3 ingurane wahawe, 4 kumenyesha igihombo, 5 Icyongereza. Menu ifunguka mu Kinyarwanda.",
+                  )}
+                </li>
+                <li>
+                  <span className="font-medium text-ink">3.</span>{" "}
+                  {t("0 goes back; on the main menu it exits.", "0 isubira inyuma; kuri menu nkuru irasohoka.")}
+                </li>
               </>
             )}
           </ol>
           {USE_MOCK && (
             <p className="mt-4 rounded-sm border border-line bg-surface-2 px-3 py-2 text-xs text-muted">
-              The menu runs on the backend, so it needs the live API (it is not in the saved results).
+              {t(
+                "The menu runs on the backend, so it needs the live API (it is not in the saved results).",
+                "Menu ikorera kuri backend, bityo ikenera API ikora (ntiri mu bisubizo byabitswe).",
+              )}
             </p>
           )}
         </Card>
 
         <FeaturePhone
-          screen={busy ? "USSD code running…" : screen}
+          screen={busy ? t("USSD code running…", "Kode ya USSD irimo gukora…") : screen}
           typed={typed}
-          placeholder={session === null ? USSD_CODE : "Reply"}
+          placeholder={session === null ? USSD_CODE : t("Reply", "Subiza")}
           busy={busy}
           onType={setTyped}
           onKey={(k) => setTyped((t) => t + k)}
